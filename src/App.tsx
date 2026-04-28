@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react'; // 🌟 ئایکۆنی ئاگادارکردنەوەمان زیادکرد
 
 // هێنانی پەڕەکان بەپێی ناوی فایلەکانت بە پیتی گەورە
 import Home from './pages/Home';
@@ -18,33 +19,62 @@ const THEMES: any = {
   slate: { main: 'bg-slate-800', hover: 'bg-slate-900', text: 'text-slate-800', light: 'bg-slate-100', border: 'border-slate-300', grad: 'from-slate-700 to-slate-900', shadow: 'shadow-slate-300' }
 };
 
-// 🌟 کۆمپۆنێنتی داگرتنی ڕاستەوخۆ بەبێ کراشکردن و لەرزین 🌟
+// 🌟 کۆمپۆنێنتی داگرتنی ڕاستەوخۆ بە پشکنینی زیرەکەوە 🌟
 function ProfileOrApk({ settings }: { settings: any }) {
   const { slug } = useParams();
+  const [apkStatus, setApkStatus] = useState<'loading' | 'error' | null>(null);
 
   useEffect(() => {
     // ئەگەر فایلەکە بەرنامە بوو (.apk)
     if (slug?.endsWith('.apk')) {
-      // 1. ڕێگریکردن لە دووبارە ڕیفرێشبوونەوە لە ڕێگەی Timeout
-      const timer = setTimeout(() => {
-        // 2. دروستکردنی لینکی داگرتن بۆ فایلەکە لەناو فۆڵدەری public
-        const fileUrl = `/${slug}`;
-        
-        // 3. دروستکردنی تاگێکی a بە شێوەیەکی نەبینراو بۆ ناچارکردنی داگرتن
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.setAttribute('download', slug); // فەرمانی داگرتن
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }, 500); // نیو چرکە چاوەڕێ دەکات بۆ ئەوەی لۆدینگە جوانەکە دەربکەوێت
-
-      return () => clearTimeout(timer);
+      setApkStatus('loading');
+      const fileUrl = `/${slug}`;
+      
+      // پشکنینێکی خێرا (HEAD request) دەکەین بزانین فایلەکە لەسەر سێرڤەر هەیە؟
+      fetch(fileUrl, { method: 'HEAD' })
+        .then(res => {
+          if (res.ok) {
+            // فایلەکە هەیە، با دەست بکات بە داگرتن
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.setAttribute('download', slug);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            // ئەگەر 404 بوو (واتە سڕاوەتەوە یان نەماوە)
+            setApkStatus('error');
+          }
+        })
+        .catch(() => {
+          // ئەگەر هەر کێشەیەکی هێڵ هەبوو
+          setApkStatus('error');
+        });
     }
   }, [slug]);
 
-  // گەر بەکارهێنەر ویستی بەرنامە دابگرێت، تەنها ئەم لۆدینگە جوانە دەبینێت بێ ئەوەی پەڕەکە بگەڕێتەوە
+  // گەر بەکارهێنەر ویستی بەرنامە دابگرێت
   if (slug?.endsWith('.apk')) {
+    
+    // ئەگەر فایلەکە نەدۆزرایەوە ئەو پەیامەی تۆ دەردەکەوێت
+    if (apkStatus === 'error') {
+      return (
+        <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
+          <div className="bg-red-500/10 p-5 rounded-full mb-6 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+            <AlertCircle className="text-red-500 w-12 h-12" />
+          </div>
+          <h2 className="text-white font-black text-2xl mb-4 tracking-wide">بەرنامەکە نەدۆزرایەوە!</h2>
+          <p className="text-red-400 font-bold text-base max-w-sm leading-relaxed bg-red-500/5 p-4 rounded-2xl border border-red-500/10">
+            ئەم ئەپڵیکەیشنە نەدۆزرایەوە یان سڕاوەتەوە. دڵنیابە لە ناوی لینکەکە.
+          </p>
+          <button onClick={() => window.location.href = '/'} className="mt-8 px-8 py-3.5 bg-white text-black font-black rounded-xl hover:scale-105 transition-all shadow-lg">
+            گەڕانەوە بۆ سەرەتا
+          </button>
+        </div>
+      );
+    }
+
+    // ئەگەر فایلەکە هەبوو، لۆدینگە جوانەکە دەردەکەوێت
     return (
       <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
         <div className="relative mb-6">
@@ -53,8 +83,7 @@ function ProfileOrApk({ settings }: { settings: any }) {
         </div>
         <h2 className="text-white font-black text-2xl mb-2 tracking-wide">لە داگرتنی بەرنامەکەداین...</h2>
         <p className="text-neutral-400 font-bold text-sm max-w-sm">
-           تکایە چاوەڕێبە، فایلەکە بەشێوەیەکی خێرا دادەبەزێتە ناو ئامێرەکەت. 
-           گەر دەستی پێنەکرد، دڵنیابە ناوی فایلەکە دروستە.
+           تکایە چاوەڕێبە، فایلەکە بەشێوەیەکی خێرا دادەبەزێتە ناو ئامێرەکەت.
         </p>
       </div>
     );
@@ -148,6 +177,7 @@ function App() {
           element={user ? <Payment theme={currentTheme} /> : <Navigate to="/auth" />} 
         />
 
+        {/* 🔴 لێرەدا کۆمپۆنێنتە نوێیەکەمان (ProfileOrApk) داناوە */}
         <Route path="/:slug" element={<ProfileOrApk settings={settings} />} />
         
         <Route path="*" element={<Navigate to="/" />} />
