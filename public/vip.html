@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هەژماری پڕۆ - BioKurd</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .select-none { user-select: none; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen select-none relative overflow-x-hidden">
+
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
+        <div class="absolute -top-[20%] -right-[10%] w-[70%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]"></div>
+        <div class="absolute top-[40%] -left-[20%] w-[60%] h-[60%] rounded-full bg-amber-500/10 blur-[120px]"></div>
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
+    </div>
+
+    <header class="glass-panel border-b border-white/50 py-4 px-4 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-black flex items-center gap-3 text-slate-800">
+                <div class="p-2 bg-gradient-to-br from-amber-300 to-amber-500 rounded-xl shadow-lg shadow-amber-500/20">
+                    <i data-lucide="crown" class="text-white w-5 h-5"></i>
+                </div> 
+                هەژماری پڕۆ (Pro)
+            </h1>
+            <a href="/dashboard" class="px-5 py-2.5 bg-white hover:bg-slate-100 rounded-xl font-bold text-slate-600 transition-all flex items-center gap-2 active:scale-95 text-sm shadow-sm border border-slate-200">
+                گەڕانەوە <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 sm:p-6 py-8 relative z-10">
+        
+        <div class="text-center mb-16 mt-4">
+            <div class="inline-flex items-center justify-center p-4 rounded-2xl mb-6 shadow-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white animate-float">
+                <i data-lucide="gem" class="w-8 h-8 fill-indigo-400/50"></i>
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-6 leading-tight tracking-tight">
+                بەرزکردنەوە بۆ وەشانی <span class="text-transparent bg-clip-text bg-gradient-to-l from-amber-400 to-amber-600">پریمیۆم</span>
+            </h2>
+            <p class="text-base text-slate-500 max-w-xl mx-auto font-bold leading-relaxed">
+                بە تەنها ٥٠٠٠ دینار، سنورەکانی فێربوون بشکێنە و دەستی خۆت بگەیەنە بە هەموو زانیارییە پزیشکییە داخراوەکان.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6 lg:gap-10 mb-20 items-center">
+            
+            <div class="bg-white/80 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 relative overflow-hidden group hover:shadow-xl transition-all duration-500">
+                <h3 class="text-2xl font-black mb-8 text-slate-400 flex items-center gap-3">
+                    <div class="p-2.5 bg-slate-100 rounded-xl"><i data-lucide="user" class="w-6 h-6 text-slate-400"></i></div>
+                    هەژماری ئاسایی
+                </h3>
+                <ul class="space-y-5">
+                    <li class="flex items-center gap-4 text-slate-700 font-bold"><i data-lucide="check-circle-2" class="text-emerald-500 w-6 h-6"></i> بینینی دەرمانە گشتییەکان</li>
+                    <li class="flex items-center gap-4 text-slate-400 font-bold opacity-60"><i data-lucide="lock" class="w-5 h-5 ml-1"></i> کردنەوەی دەرمانە قوفڵکراوەکان</li>
+                    <li class="flex items-center gap-4 text-slate-400 font-bold opacity-60"><i data-lucide="lock" class="w-5 h-5 ml-1"></i> سەیرکردنی کۆرسە ڤیدیۆییەکان</li>
+                    <li class="flex items-center gap-4 text-slate-400 font-bold opacity-60"><i data-lucide="lock" class="w-5 h-5 ml-1"></i> بەشداریکردن لە کویزەکان</li>
+                </ul>
+                <div class="mt-10 pt-8 border-t border-slate-200/60 text-3xl font-black text-slate-300">٠ دینار</div>
+            </div>
+
+            <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 p-8 md:p-10 rounded-[2.5rem] shadow-2xl shadow-indigo-900/50 border border-white/10 text-white relative overflow-hidden transform lg:scale-105 z-10">
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/20 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute -left-12 -bottom-12 text-amber-500 opacity-[0.03] pointer-events-none rotate-12">
+                    <i data-lucide="crown" style="width: 250px; height: 250px;"></i>
+                </div>
+                
+                <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 px-4 py-1.5 rounded-full text-xs font-black mb-8 shadow-lg shadow-amber-500/30">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> باشترین هەڵبژاردە
+                </div>
+                
+                <h3 class="text-3xl md:text-4xl font-black mb-8 text-white relative z-10 flex items-center gap-3">
+                    هەژماری پڕۆ <i data-lucide="zap" class="text-amber-400 fill-amber-400 w-8 h-8 animate-pulse"></i>
+                </h3>
+                
+                <ul class="space-y-5 relative z-10">
+                    <li class="flex items-center gap-4 font-bold text-indigo-50"><div class="p-1 bg-amber-400/10 rounded-lg"><i data-lucide="check" class="text-amber-400 w-5 h-5"></i></div> کردنەوەی هەموو دەرمانە تایبەتەکان</li>
+                    <li class="flex items-center gap-4 font-bold text-indigo-50"><div class="p-1 bg-amber-400/10 rounded-lg"><i data-lucide="check" class="text-amber-400 w-5 h-5"></i></div> سەیرکردنی هەموو کۆرسە ڤیدیۆییەکان</li>
+                    <li class="flex items-center gap-4 font-bold text-indigo-50"><div class="p-1 bg-amber-400/10 rounded-lg"><i data-lucide="check" class="text-amber-400 w-5 h-5"></i></div> بەشداریکردن لە کویز و تاقیکردنەوەکان</li>
+                    <li class="flex items-center gap-4 font-bold text-indigo-50"><div class="p-1 bg-amber-400/10 rounded-lg"><i data-lucide="check" class="text-amber-400 w-5 h-5"></i></div> بەکارهێنانی بێسنوور بۆ هەمیشە</li>
+                </ul>
+                
+                <div class="mt-10 pt-8 border-t border-white/10 text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500 relative z-10">
+                    ٥٠٠٠ <span class="text-base font-bold text-white/50 tracking-wide">دینار / بۆ هەمیشە</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-white text-center relative overflow-hidden">
+            <div class="mx-auto bg-slate-50 text-slate-600 w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-inner border border-slate-100">
+                <i data-lucide="wallet" class="w-10 h-10"></i>
+            </div>
+            <h3 class="text-3xl font-black mb-4 text-slate-800">شێوازی پارەدان</h3>
+            <p class="text-slate-500 mb-10 max-w-lg mx-auto font-bold text-base leading-relaxed">
+                بۆ چالاککردنی هەژمارەکەت، بڕی <span class="text-indigo-600 font-black px-1">٥٠٠٠ دینار</span> بنێرە بە یەکێک لەم شێوازانەی خوارەوە.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-16 text-right" id="payment-list">
+                </div>
+
+            <div class="p-8 md:p-10 rounded-[2.5rem] border border-blue-100 bg-gradient-to-br from-[#f3f9ff] to-[#e4f4ff] max-w-2xl mx-auto flex flex-col items-center gap-6 shadow-lg shadow-blue-900/5 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 to-[#2AABEE]"></div>
+                
+                <div class="bg-white p-4 rounded-full shadow-sm mb-2">
+                    <svg viewBox="0 0 24 24" class="w-10 h-10 fill-[#2AABEE]"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z"/></svg>
+                </div>
+                
+                <h4 class="text-2xl font-black text-slate-800 z-10">هەنگاوی کۆتایی</h4>
+                <p class="text-sm font-bold text-slate-500 text-center max-w-sm z-10 leading-relaxed">
+                    دوای ناردنی باڵانسەکە، سکرین شۆتی (وەسڵ)ـەکە بنێرە بۆ تەلەگرامی ئەدمین بۆ ئەوەی ڕاستەوخۆ هەژمارەکەت بکرێتە پڕۆ.
+                </p>
+
+                <a href="https://t.me/kosratmama" target="_blank" class="relative group mt-4 inline-flex items-center justify-center px-10 py-5 bg-[#2AABEE] hover:bg-[#229ED9] text-white font-black text-lg rounded-2xl shadow-xl shadow-[#2AABEE]/30 hover:shadow-[#2AABEE]/50 hover:-translate-y-1 transition-all z-10 w-full sm:w-auto">
+                    ناردنی پسوڵە بۆ ئەدمین 
+                    <i data-lucide="send" class="w-5 h-5 mr-3 transform group-hover:-translate-x-1.5 transition-transform rotate-180"></i>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // داتای شێوازەکانی پارەدان بە ڕەنگ و ڕێنمایی تایبەتەوە
+        const PAYMENT_METHODS = [
+            { 
+                id: 'fastpay', 
+                name: 'FastPay', 
+                number: '07503221456', 
+                color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200', icon: 'wallet',
+                instructions: `
+                    <div class="flex flex-col gap-2.5 mt-4 pt-4 border-t border-pink-100/50">
+                        <span class="text-xs font-black text-pink-500 mb-1">چۆنیەتی ناردن:</span>
+                        <div class="flex items-center gap-3 text-sm font-bold text-slate-600 bg-white p-2.5 rounded-xl border border-pink-100 shadow-sm">
+                            <span class="bg-pink-100 text-pink-600 w-6 h-6 flex items-center justify-center rounded-lg shrink-0 text-xs">١</span>
+                            ئەپڵیکەیشنی فاستپەی بکەرەوە
+                        </div>
+                        <div class="flex items-center gap-3 text-sm font-bold text-slate-600 bg-white p-2.5 rounded-xl border border-pink-100 shadow-sm">
+                            <span class="bg-pink-100 text-pink-600 w-6 h-6 flex items-center justify-center rounded-lg shrink-0 text-xs">٢</span>
+                            کرتە لە دوگمەی <span class="bg-pink-500 text-white px-2 py-0.5 rounded text-xs">ناردن</span> بکە
+                        </div>
+                        <div class="flex items-center gap-3 text-sm font-bold text-slate-600 bg-white p-2.5 rounded-xl border border-pink-100 shadow-sm">
+                            <span class="bg-pink-100 text-pink-600 w-6 h-6 flex items-center justify-center rounded-lg shrink-0 text-xs">٣</span>
+                            ژمارەکە لێبدە و بڕی ٥٠٠٠ بنێرە
+                        </div>
+                    </div>
+                `
+            },
+            { 
+                id: 'korek', 
+                name: 'Korek Telecom', 
+                number: '07503221456', 
+                color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: 'phone',
+                instructions: `
+                    <div class="mt-4 pt-4 border-t border-blue-100/50">
+                        <span class="text-xs font-black text-blue-500 mb-2 block">چۆنیەتی ناردنی باڵانس:</span>
+                        <div class="bg-white rounded-xl p-2 flex items-center justify-between border border-blue-100 shadow-sm group">
+                            <div class="text-sm font-black text-blue-700 tracking-widest pl-3 font-mono" dir="ltr">*215*07503221456*5000#</div>
+                            <button onclick="copyNumber('*215*07503221456*5000#', this)" class="p-2 bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white rounded-lg transition-all active:scale-90">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `
+            },
+            { 
+                id: 'asiacell', 
+                name: 'Asiacell', 
+                number: '07706448043', 
+                color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', icon: 'phone',
+                instructions: `
+                    <div class="mt-4 pt-4 border-t border-red-100/50">
+                        <span class="text-xs font-black text-red-500 mb-2 block">چۆنیەتی ناردنی باڵانس:</span>
+                        <div class="bg-white rounded-xl p-2 flex items-center justify-between border border-red-100 shadow-sm group">
+                            <div class="text-sm font-black text-red-700 tracking-widest pl-3 font-mono" dir="ltr">*123*5000*07706448043#</div>
+                            <button onclick="copyNumber('*123*5000*07706448043#', this)" class="p-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all active:scale-90">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `
+            },
+            { 
+                id: 'fib', 
+                name: 'FIB', 
+                number: '07503221456', 
+                color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'landmark',
+                instructions: ''
+            },
+            { 
+                id: 'qicard', 
+                name: 'QiCard', 
+                number: '4156019301', 
+                color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', icon: 'credit-card',
+                instructions: ''
+            },
+        ];
+
+        const listContainer = document.getElementById('payment-list');
+
+        PAYMENT_METHODS.forEach(method => {
+            const div = document.createElement('div');
+            div.className = `${method.bg} p-6 rounded-[2rem] border border-white shadow-sm flex flex-col justify-start transition-all hover:shadow-lg relative overflow-hidden group`;
+            
+            // ئیفێکتی باکگراوند
+            const bgGlow = document.createElement('div');
+            bgGlow.className = `absolute top-0 right-0 w-32 h-32 opacity-20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 ${method.bg.replace('50', '300')}`;
+            
+            div.innerHTML = `
+                ${bgGlow.outerHTML}
+                <div class="relative z-10 flex flex-col h-full">
+                    <div class="flex items-center gap-4 mb-5">
+                        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-white/50">
+                            <i data-lucide="${method.icon}" class="${method.color} w-6 h-6"></i>
+                        </div>
+                        <div class="font-black text-xl ${method.color}">${method.name}</div>
+                    </div>
+                    
+                    <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-2 flex items-center justify-between border border-white shadow-sm mb-auto">
+                        <div class="text-xl font-black text-slate-700 tracking-widest pl-3 font-mono" dir="ltr">${method.number}</div>
+                        <button onclick="copyNumber('${method.number}', this)" class="p-3 bg-white text-slate-400 hover:text-slate-800 border border-slate-100 rounded-xl shadow-sm transition-all active:scale-90 hover:shadow">
+                            <i data-lucide="copy" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    
+                    ${method.instructions}
+                </div>
+            `;
+            listContainer.appendChild(div);
+        });
+
+        function copyNumber(num, btn) {
+            navigator.clipboard.writeText(num);
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="text-emerald-500 w-5 h-5"></i>';
+            btn.classList.add('!bg-emerald-50', '!border-emerald-200');
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalIcon;
+                btn.classList.remove('!bg-emerald-50', '!border-emerald-200');
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

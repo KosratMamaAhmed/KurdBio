@@ -1,0 +1,56 @@
+/* فۆنتە گوگڵەکان (عەرەبی و ئینگلیزی کالیگرافی) */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Lateef:wght@200;300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;700;900&family=Tajawal:wght@300;400;500;700;800;900&family=Vazirmatn:wght@300;400;500;700;900&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;700&family=Great+Vibes&family=Dancing+Script:wght@400;700&display=swap');
+
+/* فۆنتی سەمیم (Samim) بەستراوەتەوە بە CDN */
+@font-face {
+  font-family: 'Samim';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/samim-font@v3.1.0/dist/Samim.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* ١٠ فۆنتە لۆکاڵییەکەی خۆت لەناو فۆڵدەری public/font/ */
+@font-face { font-family: 'Custom1'; src: url('/font/1.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom2'; src: url('/font/2.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom3'; src: url('/font/3.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom4'; src: url('/font/4.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom5'; src: url('/font/5.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom6'; src: url('/font/6.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom7'; src: url('/font/7.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom8'; src: url('/font/8.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom9'; src: url('/font/9.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Custom10'; src: url('/font/10.ttf') format('truetype'); font-display: swap; }
+
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+    @apply bg-[#f8fafc] text-neutral-900 antialiased;
+    direction: rtl;
+    overscroll-behavior-y: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  #root {
+    @apply min-h-[100dvh] w-full overflow-x-hidden relative flex flex-col;
+  }
+  
+  input, textarea, button, select {
+    font-family: inherit;
+  }
+
+  /* 🌟 ئەم کلاسە وادەکات ئینگلیزی ڕاستەوخۆ بچێتە چەپ 🌟 */
+  .dir-auto {
+    unicode-bidi: plaintext;
+    text-align: start;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
