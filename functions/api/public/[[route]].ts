@@ -53,10 +53,20 @@ export async function onRequest(context: any) {
        const user = JSON.parse(userStr);
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
+       // 🌟 لێرەدا کێشەکە چارەسەر کرا: ڕەنگەکانمان زیادکرد بۆ ئەوەی بچنە ناو پەڕەکەوە 🌟
        const profileData = { 
-         id: user.id, displayName: escapeHTML(user.displayName || user.username), 
-         bio: escapeHTML(user.bio || ""), avatarUrl: user.avatarUrl, links: user.links || [], 
-         theme: user.theme, bgImage: user.bgImage, isPro: user.isPro, slug: user.slug
+         id: user.id, 
+         displayName: escapeHTML(user.displayName || user.username), 
+         bio: escapeHTML(user.bio || ""), 
+         avatarUrl: user.avatarUrl, 
+         links: user.links || [], 
+         theme: user.theme, 
+         bgImage: user.bgImage, 
+         isPro: user.isPro, 
+         slug: user.slug,
+         nameColor: user.nameColor,       // <--- زیادکرا
+         bioColor: user.bioColor,         // <--- زیادکرا
+         btnTextColor: user.btnTextColor  // <--- زیادکرا
        };
        const res = json(profileData, 200, { "Cache-Control": "public, max-age=180, s-maxage=180" });
        waitUntil(cache.put(cacheKey, res.clone()));

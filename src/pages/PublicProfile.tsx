@@ -33,15 +33,20 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   }, [profile?.id, slug]);
 
   const handleLinkClick = (url: string, linkId: number) => {
-    if(url && url.endsWith('.apk')) { window.location.href = url; return; }
+    if(!url) return;
     
+    // ١. سەرەتا هەژمارکردنی کلیکەکە ئەنجام دەدەین
     const clickKey = `clicked_link_${slug}_${linkId}`;
     const lastClick = localStorage.getItem(clickKey);
     if (!lastClick || Date.now() - parseInt(lastClick) > 24 * 60 * 60 * 1000) {
       fetch(`/api/public/click/${slug}`, { method: 'POST' }).catch(() => {});
       localStorage.setItem(clickKey, Date.now().toString());
     }
-    if(url) {
+
+    // ٢. پاشان بڕیار دەدەین چۆن لینکەکە بکاتەوە
+    if(url.endsWith('.apk')) { 
+      window.location.href = url; 
+    } else {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
