@@ -47,7 +47,15 @@ export default function Dashboard({ user, onLogout, theme, settings }: Props) {
     // 🌟 لێرەدا کێشەکە چارەسەر کرا: تەواوی داتاکانی پرۆفایل دەگرێتە خۆی بۆ ئەوەی ڕەنگەکان نەڕەشێنەوە 🌟
     const dataToSend = { ...profile, ...updates };
     
-    await fetch('/api/profile', { method: 'PUT', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSend) });
+    try {
+      await fetch('/api/profile', { 
+        method: 'PUT', 
+        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(dataToSend) 
+      });
+    } catch (error) {
+      console.error(error);
+    }
     setSaving(false);
   };
 
