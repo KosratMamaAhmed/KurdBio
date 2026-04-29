@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Share, PlusSquare, X, Download, Smartphone, Apple, Compass, Chrome, ExternalLink, AlertCircle } from 'lucide-react';
+import { Share, PlusSquare, X, Download, Smartphone, Apple, Compass, Chrome, ExternalLink, AlertCircle, MoreVertical } from 'lucide-react';
 
 interface AppPromptModalProps {
   apkUrl?: string; 
@@ -9,16 +9,26 @@ export default function AppPromptModal({ apkUrl = '/biokurd.apk' }: AppPromptMod
   const [deviceType, setDeviceType] = useState<'IOS' | 'ANDROID' | 'DESKTOP' | null>(null);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  
+  // 🌟 ئەم ستەیتە تایبەتە بە گرتنی فەرمانی ئینستاڵکردنی PWA لە ئەندرۆید
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // ڕێگریکردن لە دەرکەوتنی ئەگەر بەکارهێنەر ڕاستەوخۆ ویستی فایل دابگرێت
+    // ١. گرتنی فەرمانی PWA
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault(); // ڕێگریکردن لە دەرکەوتنی ئۆتۆماتیکی
+      setDeferredPrompt(e); // هەڵگرتنی بۆ ناو دوگمەکەمان
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // ڕێگریکردن لە دەرکەوتنی ئەگەر ڕاستەوخۆ ویستی APK دابگرێت
     if (window.location.pathname.endsWith('.apk')) return;
 
-    // پشکنین کە ئایا ئەپەکە پێشتر خراوەتە سەر شاشە (PWA Installed)
+    // پشکنین کە ئایا ئەپەکە پێشتر ئینستاڵ کراوە
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone);
-    if (isStandalone) return; // ئەگەر ئەپ بوو، هەرگیز پیشانی مەدە
+    if (isStandalone) return; 
 
-    // بۆ ئەوەی تەنها یەکجار لە جەلسەیەکدا پیشانی بدات
+    // بۆ ئەوەی تەنها یەکجار لە جەلسەیەکدا بێزاری بکات
     const hasSeenPrompt = sessionStorage.getItem('hasSeenAppPrompt');
     if (hasSeenPrompt) return;
 
@@ -47,11 +57,28 @@ export default function AppPromptModal({ apkUrl = '/biokurd.apk' }: AppPromptMod
     } else {
       setDeviceType('DESKTOP');
     }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   const handleClose = () => {
     setIsVisible(false);
     sessionStorage.setItem('hasSeenAppPrompt', 'true');
+  };
+
+  // 🌟 فەنکشنی سەرەکی بۆ ئینستاڵکردنی PWA لە ئەندرۆید
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt(); // پیشاندانی پەپئەپە فەرمییەکەی ئەندرۆید
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the PWA install');
+      }
+      setDeferredPrompt(null);
+      setIsVisible(false); // داخستنی کارتەکە دوای ئینستاڵکردن
+    }
   };
 
   if (!isVisible || !deviceType || deviceType === 'DESKTOP') return null;
@@ -123,20 +150,42 @@ export default function AppPromptModal({ apkUrl = '/biokurd.apk' }: AppPromptMod
               </>
             ) : 
             
+            /* 🤖 بەشی ئەندرۆید بە PWA 🤖 */
             (
               <>
-                <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-amber-400 to-orange-500 rounded-[1.8rem] flex items-center justify-center mb-5 shadow-lg shadow-orange-500/30 text-white relative">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-emerald-400 to-emerald-600 rounded-[1.8rem] flex items-center justify-center mb-5 shadow-lg shadow-emerald-500/30 text-white relative">
                     <Smartphone size={40} />
-                    <div className="absolute -bottom-2 -right-2 bg-white text-orange-500 p-1.5 rounded-full shadow-sm"><Download size={16} strokeWidth={3} /></div>
+                    <div className="absolute -bottom-2 -right-2 bg-white text-emerald-500 p-1.5 rounded-full shadow-sm"><Download size={16} strokeWidth={3} /></div>
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 mb-2">بەرنامەکەمان دابەزێنە</h2>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">خستنە سەر شاشە</h2>
                 <p className="text-sm text-slate-500 font-bold leading-relaxed mb-6 px-2">
-                   ئەپی <span className="text-amber-500 font-black">BioKurd</span> بەخۆڕایی دابەزێنە بۆ ئەوەی خێراتر و باشتر سودمەند بیت.
+                   ئەپی <span className="text-emerald-500 font-black">BioKurd</span> وەک بەرنامەیەکی فەرمی بخەرە سەر مۆبایلەکەت بۆ خێراتر گەیشتن.
                 </p>
                 <div className="space-y-3">
-                    <a href={apkUrl} onClick={handleClose} className="w-full flex items-center justify-center gap-3 p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black shadow-lg shadow-orange-500/20 active:scale-95 transition-all text-base">
-                        <Download size={22} /> داگرتنی ڕاستەوخۆ (APK)
-                    </a>
+                    
+                    {/* ئەگەر ئۆڤێنتی PWA ئامادە بوو، ئەم دوگمە جوانە پیشان دەدات */}
+                    {deferredPrompt ? (
+                        <button onClick={handleInstallPWA} className="w-full flex items-center justify-center gap-3 p-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-base">
+                            <Download size={22} /> دابەزاندنی بەرنامە (Install App)
+                        </button>
+                    ) : (
+                        /* ئەگەر براوسەرەکە کێشەی هەبوو لە گرتنی PWA، ئەم ڕێنماییە بەدیلە پیشان دەدات */
+                        <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                            <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-700 shrink-0">
+                                    <MoreVertical size={20} />
+                                </div>
+                                <p className="text-[13px] font-bold text-slate-600 text-right leading-tight">کرتە لە ٣ خاڵەکەی سەرەوە بکە و <span className="font-black text-slate-800">Install App</span> یان <span className="font-black text-slate-800">Add to Home screen</span> هەڵبژێرە.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* بەستەری لاوەکی ئەگەر بەکارهێنەر هەر حەزی کرد فایلە کۆنەکەی APK دابگرێت */}
+                    <div className="pt-2 text-center">
+                       <a href={apkUrl} className="text-xs font-bold text-slate-400 hover:text-emerald-600 underline underline-offset-4 transition-colors">
+                           یان ڕاستەوخۆ فایلی APK دابەزێنە
+                       </a>
+                    </div>
                 </div>
               </>
             )}
