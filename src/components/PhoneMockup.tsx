@@ -25,10 +25,15 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
   const designId = mockup?.buttonDesign || 'mockup';
   const t = THEME_STYLES[designId] || THEME_STYLES.mockup;
 
-  // وەرگرتنی ڕەنگەکان گەر بەکارهێنەر داینابوو، گەرنا ڕەنگی تێمەکە دادەنێت
-  const nameCol = mockup?.nameColor || t.text;
-  const bioCol = mockup?.bioColor || t.sub;
-  const btnTxtCol = mockup?.btnTextColor || t.text;
+  // 🌟 چارەسەری کێشەی ڕەنگەکان: جیاکردنەوەی کلاسەکان و ستایلەکان بەشێوەی دروست
+  const nameColorStyle = mockup?.nameColor ? { color: mockup.nameColor } : {};
+  const bioColorStyle = mockup?.bioColor ? { color: mockup.bioColor } : {};
+  const btnTextColorStyle = mockup?.btnTextColor ? { color: mockup.btnTextColor } : {};
+
+  // ئەگەر ڕەنگی تایبەت نەبوو، کلاسی تەیلویند بەکاردەهێنێت
+  const nameColorClass = mockup?.nameColor ? '' : t.text;
+  const bioColorClass = mockup?.bioColor ? '' : t.sub;
+  const btnTextColorClass = mockup?.btnTextColor ? '' : t.text;
 
   const containerClass = isPublic 
     ? `w-full min-h-[100dvh] sm:min-h-[auto] sm:max-w-[380px] sm:mx-auto sm:aspect-[9/19] sm:rounded-[3.5rem] sm:my-8 relative shrink-0 transition-all duration-500 sm:border-[8px] sm:shadow-2xl ${t.shell}`
@@ -66,7 +71,6 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
               </div>
             </div>
             
-            {/* 🌟 سەحە شینەکە لەسەر پرۆفایل و بەبێ باکگراوندی سپی 🌟 */}
             {mockup?.isPro && (
               <div className="absolute -top-1 -left-1 z-30 pointer-events-none">
                 <VerifiedBadge className="w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
@@ -75,13 +79,15 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
           </div>
 
           <div className="flex items-center justify-center gap-1.5 w-full px-2 mb-1">
-             <h3 className="text-xl sm:text-2xl tracking-wide text-center break-words font-black" style={{ color: nameCol }}>
+             <h3 className={`text-xl sm:text-2xl tracking-wide text-center break-words font-black ${nameColorClass}`} style={nameColorStyle}>
                {mockup?.name || 'کۆسرەت مامە'}
              </h3>
              {mockup?.isPro && <VerifiedBadge className="w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />}
           </div>
           
-          <p className="text-xs mb-8 font-bold text-center px-2" style={{ color: bioCol }}>{mockup?.bio || 'شارەزا لە تەکنەلۆژیا'}</p>
+          <p className={`text-xs mb-8 font-bold text-center px-2 ${bioColorClass}`} style={bioColorStyle}>
+             {mockup?.bio || 'شارەزا لە تەکنەلۆژیا'}
+          </p>
 
           <div className="w-full space-y-3 sm:space-y-4 px-1 sm:px-2 flex-none">
             {displayLinks.map((link: any, idx: number) => {
@@ -104,7 +110,6 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
 
                     <div className={`relative z-10 w-full rounded-2xl flex items-center justify-between p-2.5 shadow-inner border ${t.btn}`} style={{ backgroundColor: designId === 'gold' ? '#171717' : designId === 'light' ? '#ffffff' : '#1e293b' }}>
                       <div className="flex items-center gap-3 w-full pr-1">
-                        {/* 🌟 ئێرە بۆ ئایکۆنە گەورەکانە بە بێ بڕان (object-contain) 🌟 */}
                         <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[12px] flex items-center justify-center shrink-0 shadow-inner overflow-hidden ${t.iconBg}`}>
                           {link.imageUrl || link.icon?.startsWith('/') ? (
                              <img src={link.imageUrl || link.icon} className="w-full h-full object-contain" alt="Icon" />
@@ -112,7 +117,9 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
                              <Icon size={24} color={customColor} />
                           )}
                         </div>
-                        <span className="font-black text-[13px] sm:text-[15px] truncate" style={{ color: btnTxtCol }}>{link.name || link.title}</span>
+                        <span className={`font-black text-[13px] sm:text-[15px] truncate ${btnTextColorClass}`} style={btnTextColorStyle}>
+                           {link.name || link.title}
+                        </span>
                       </div>
                       <div className="pr-2 opacity-80 shrink-0" style={{ color: designId === 'gold' ? '#fbbf24' : customColor }}><ArrowUpRight size={20} strokeWidth={2.5} /></div>
                     </div>
