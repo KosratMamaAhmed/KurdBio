@@ -9,7 +9,6 @@ export default defineConfig({
     tailwindcss(), 
     VitePWA({
       registerType: 'autoUpdate',
-      // ئێرە گۆڕدرا بۆ ئەوەی فایلە .apk و فۆنتەکان بناسێت
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', '**/*.apk', 'font/*.ttf'],
       manifest: {
         name: 'BioKurd',
@@ -28,9 +27,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // ئێرە گۆڕدرا، ئێستا تەنها فایلەکانی کۆد دەخوێنێتەوە و واز لە فایلە گەورەکانی وەک apk دەهێنێت
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,ttf}'],
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // ڕێگەدان بە کشکردنی فایلی تا ١٠ مێگابایت ئەگەر پێویست بوو
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.qrserver\.com\/.*/i,
@@ -42,10 +40,9 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: { cacheName: 'api-cache', networkTimeoutSeconds: 5, expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 } }
           },
-          // 🌟 زیادکردنی ڕێگەیەکی تایبەت بۆ ئەوەی ئەگەر کەسێک بەدوای داگرتنی apk بوو بێ کێشە بڕوات
           {
              urlPattern: /.*\.apk$/i,
-             handler: 'NetworkOnly', // دڵنیابوون لەوەی کش نابێت و ڕاستەوخۆ دادەبەزێت
+             handler: 'NetworkOnly', 
           }
         ]
       }

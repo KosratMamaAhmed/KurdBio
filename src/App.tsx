@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react'; // 🌟 ئایکۆنی ئاگادارکردنەوەمان زیادکرد
+import { AlertCircle } from 'lucide-react'; 
 
-// هێنانی پەڕەکان بەپێی ناوی فایلەکانت بە پیتی گەورە
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import PublicProfile from './pages/PublicProfile';
 import Admin from './pages/Admin';
 import Payment from './pages/Payment';
+// 🌟 هێنانی کۆمپۆنێنتە زیرەکەکە
+import AppPromptModal from './components/AppPromptModal'; 
 
 const THEMES: any = {
   orange: { main: 'bg-orange-500', hover: 'bg-orange-600', text: 'text-orange-500', light: 'bg-orange-50', border: 'border-orange-200', grad: 'from-orange-500 to-amber-500', shadow: 'shadow-orange-200' },
@@ -19,22 +20,18 @@ const THEMES: any = {
   slate: { main: 'bg-slate-800', hover: 'bg-slate-900', text: 'text-slate-800', light: 'bg-slate-100', border: 'border-slate-300', grad: 'from-slate-700 to-slate-900', shadow: 'shadow-slate-300' }
 };
 
-// 🌟 کۆمپۆنێنتی داگرتنی ڕاستەوخۆ بە پشکنینی زیرەکەوە 🌟
 function ProfileOrApk({ settings }: { settings: any }) {
   const { slug } = useParams();
   const [apkStatus, setApkStatus] = useState<'loading' | 'error' | null>(null);
 
   useEffect(() => {
-    // ئەگەر فایلەکە بەرنامە بوو (.apk)
     if (slug?.endsWith('.apk')) {
       setApkStatus('loading');
       const fileUrl = `/${slug}`;
       
-      // پشکنینێکی خێرا (HEAD request) دەکەین بزانین فایلەکە لەسەر سێرڤەر هەیە؟
       fetch(fileUrl, { method: 'HEAD' })
         .then(res => {
           if (res.ok) {
-            // فایلەکە هەیە، با دەست بکات بە داگرتن
             const link = document.createElement('a');
             link.href = fileUrl;
             link.setAttribute('download', slug);
@@ -42,21 +39,16 @@ function ProfileOrApk({ settings }: { settings: any }) {
             link.click();
             document.body.removeChild(link);
           } else {
-            // ئەگەر 404 بوو (واتە سڕاوەتەوە یان نەماوە)
             setApkStatus('error');
           }
         })
         .catch(() => {
-          // ئەگەر هەر کێشەیەکی هێڵ هەبوو
           setApkStatus('error');
         });
     }
   }, [slug]);
 
-  // گەر بەکارهێنەر ویستی بەرنامە دابگرێت
   if (slug?.endsWith('.apk')) {
-    
-    // ئەگەر فایلەکە نەدۆزرایەوە ئەو پەیامەی تۆ دەردەکەوێت
     if (apkStatus === 'error') {
       return (
         <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
@@ -74,7 +66,6 @@ function ProfileOrApk({ settings }: { settings: any }) {
       );
     }
 
-    // ئەگەر فایلەکە هەبوو، لۆدینگە جوانەکە دەردەکەوێت
     return (
       <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
         <div className="relative mb-6">
@@ -89,7 +80,6 @@ function ProfileOrApk({ settings }: { settings: any }) {
     );
   }
 
-  // ئەگەر لینکەکە ئاسایی بوو (بۆ نموونە /kosrat)، ئەوا پرۆفایلەکەی بۆ بکەرەوە
   return <PublicProfile settings={settings} />;
 }
 
@@ -147,6 +137,10 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* 🌟 دانانی کۆمپۆنێنتی داگرتنی ئەپەکە لێرە بۆ ئەوەی بەسەر هەموو سایتەکەدا زاڵ بێت 🌟 */}
+      {/* تێبینی: دەتوانیت ناوی .apk ـەکە لێرەدا بگۆڕیت بەوی خۆت */}
+      <AppPromptModal apkUrl="/biokurd.apk" />
+
       <Routes>
         <Route path="/" element={<Home user={user} theme={currentTheme} settings={settings} />} />
         
@@ -177,7 +171,6 @@ function App() {
           element={user ? <Payment theme={currentTheme} /> : <Navigate to="/auth" />} 
         />
 
-        {/* 🔴 لێرەدا کۆمپۆنێنتە نوێیەکەمان (ProfileOrApk) داناوە */}
         <Route path="/:slug" element={<ProfileOrApk settings={settings} />} />
         
         <Route path="*" element={<Navigate to="/" />} />
