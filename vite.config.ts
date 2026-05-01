@@ -28,7 +28,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,ttf}'],
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        globStrict: false, // 🌟 ئەمە کێشەی Build ی PWA چارەسەر دەکات 🌟
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.qrserver\.com\/.*/i,
@@ -36,9 +37,9 @@ export default defineConfig({
             options: { cacheName: 'qr-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 } }
           },
           {
-            urlPattern: /\/api\/.*/i,
+            urlPattern: /\/api\/public\/.*/i, // لۆدکردنی پرۆفایلەکان لە دۆخی ئۆفلاین
             handler: 'NetworkFirst',
-            options: { cacheName: 'api-cache', networkTimeoutSeconds: 5, expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 } }
+            options: { cacheName: 'api-cache', networkTimeoutSeconds: 5, expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 } }
           },
           {
              urlPattern: /.*\.apk$/i,

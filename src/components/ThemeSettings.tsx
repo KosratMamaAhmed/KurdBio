@@ -34,6 +34,16 @@ const PRESET_COLORS = [
 ];
 
 export default function ThemeSettings({ profile, setProfile, handleUpdateProfile }: any) {
+  
+  // 🌟 فەنکشنەکان بۆ گۆڕینی ڕەنگ ڕاستەوخۆ و پاشەکەوتکردنی کاتێک پەنجەی لادەبات 🌟
+  const handleColorChange = (key: string, value: string) => {
+    setProfile((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const handleColorBlur = (key: string, value: string) => {
+    handleUpdateProfile({ [key]: value });
+  };
+
   return (
     <div className="bg-neutral-50 p-6 sm:p-8 rounded-[2.5rem] shadow-inner border border-neutral-200 flex flex-col xl:flex-row gap-10 items-center relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/40 rounded-full blur-3xl pointer-events-none"></div>
@@ -53,7 +63,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
               onClick={() => {
                 const updatedData = { 
                   theme: m.id,
-                  nameColor: '', 
+                  nameColor: '', // کاتێک ڕووکار دەگۆڕدرێت ڕەنگەکان پاک دەبنەوە
                   bioColor: '',
                   btnTextColor: ''
                 };
@@ -96,8 +106,8 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
               <span className="text-xs font-bold text-neutral-500">ڕەنگی ناو</span>
               <div className="flex items-center gap-2">
                 <input type="color" value={profile?.nameColor || '#ffffff'} 
-                  onChange={e => setProfile({...profile, nameColor: e.target.value})} 
-                  onBlur={e => handleUpdateProfile({ nameColor: e.target.value })} 
+                  onChange={e => handleColorChange('nameColor', e.target.value)} 
+                  onBlur={e => handleColorBlur('nameColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
                 <span className="text-xs font-mono uppercase text-neutral-400">{profile?.nameColor || 'بنەڕەتی'}</span>
@@ -108,8 +118,8 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
               <span className="text-xs font-bold text-neutral-500">ڕەنگی بایۆ</span>
               <div className="flex items-center gap-2">
                 <input type="color" value={profile?.bioColor || '#cccccc'} 
-                  onChange={e => setProfile({...profile, bioColor: e.target.value})} 
-                  onBlur={e => handleUpdateProfile({ bioColor: e.target.value })} 
+                  onChange={e => handleColorChange('bioColor', e.target.value)} 
+                  onBlur={e => handleColorBlur('bioColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
                 <span className="text-xs font-mono uppercase text-neutral-400">{profile?.bioColor || 'بنەڕەتی'}</span>
@@ -120,8 +130,8 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
               <span className="text-xs font-bold text-neutral-500">ڕەنگی ناو دوگمەکان</span>
               <div className="flex items-center gap-2">
                 <input type="color" value={profile?.btnTextColor || '#ffffff'} 
-                  onChange={e => setProfile({...profile, btnTextColor: e.target.value})} 
-                  onBlur={e => handleUpdateProfile({ btnTextColor: e.target.value })} 
+                  onChange={e => handleColorChange('btnTextColor', e.target.value)} 
+                  onBlur={e => handleColorBlur('btnTextColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
                 <span className="text-xs font-mono uppercase text-neutral-400">{profile?.btnTextColor || 'بنەڕەتی'}</span>

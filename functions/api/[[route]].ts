@@ -5,18 +5,17 @@ const escapeHTML = (str: string) => str.replace(/[&<>'"]/g,
   tag => ({ '&': '&', '<': '<', '>': '>', "'": "'", '"': '"' }[tag] || tag)
 );
 
-export async function onRequest({ request, env }: any) {
+export async function onRequest(context: any) {
+  const { request, env, waitUntil } = context;
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
 
-  // 🌟 زیادکردنی سکیوریتی و سیستەمی Cache بۆ کەمکردنەوەی تێچووی KV
+  // 🌟 سیستەمی Cache بۆ کەمکردنەوەی تێچووی KV
   const json = (data: any, status = 200, cacheType = "none") => {
     let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
     
     if (cacheType === "public") {
-        // ئەم هێدەرە وا دەکات کڵاودفلێر بۆ ماوەی ٥ خولەک داتاکە لای خۆی هەڵبگرێت
-        // واتە لە هەر ٥ خولەکێکدا تەنها ١ جار Read لەسەر هەژمارەکەت حساب دەکرێت نەک هەزاران جار!
         cacheHeader = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
     }
     
@@ -26,10 +25,10 @@ export async function onRequest({ request, env }: any) {
         "Content-Type": "application/json", 
         "Cache-Control": cacheHeader,
         "Access-Control-Allow-Origin": "*",
-        "X-Content-Type-Options": "nosniff", // ڕێگری لە گۆڕینی جۆری فایل
-        "X-Frame-Options": "DENY", // ڕێگری لەوەی سایتەکەت لەناو ئایفرەیمی سایتی تر بکرێتەوە
-        "X-XSS-Protection": "1; mode=block", // ڕێگری لە هێرشی XSS
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains" // زۆرکردنی بەکارهێنانی HTTPS
+        "X-Content-Type-Options": "nosniff", 
+        "X-Frame-Options": "DENY", 
+        "X-XSS-Protection": "1; mode=block", 
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains" 
       } 
     });
   };
@@ -46,9 +45,19 @@ export async function onRequest({ request, env }: any) {
   };
 
   try {
+    const cache = caches.default;
+    const cacheKey = new Request(url.toString(), request);
+
+    if (method === "GET") {
+      let cachedResponse = await cache.match(cacheKey);
+      if (cachedResponse) return cachedResponse; 
+    }
+
     if (method === "GET" && path === "/api/public/settings") {
        const settingsStr = await env.KV.get("site_settings");
-       return json(settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS, 200, "public");
+       const res = json(settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS, 200, "public");
+       waitUntil(cache.put(cacheKey, res.clone()));
+       return res;
     }
 
     if (method === "POST" && path.startsWith("/api/public/visit/")) {
@@ -91,11 +100,14 @@ export async function onRequest({ request, env }: any) {
        const user = JSON.parse(userStr);
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403, "public");
 
-       // لێرەدا Public Cache کار دەکات بۆ کەمکردنەوەی تێچوو
-       return json({ 
+       const res = json({ 
          id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, isPro: user.isPro
+         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, isPro: user.isPro,
+         nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor
        }, 200, "public");
+
+       waitUntil(cache.put(cacheKey, res.clone()));
+       return res;
     }
 
     const authHeader = request.headers.get("Authorization");
@@ -125,7 +137,18 @@ export async function onRequest({ request, env }: any) {
            await env.KV.put(`slug:${newSlug}`, userId.toString());
        }
        
-       const updatedUser = { ...user, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio || user.bio), slug: newSlug || user.slug, theme: updates.theme || user.theme, bgImage: updates.bgImage !== undefined ? updates.bgImage : user.bgImage, avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl };
+       const updatedUser = { 
+           ...user, 
+           displayName: escapeHTML(updates.displayName || user.displayName), 
+           bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio), 
+           slug: newSlug || user.slug, 
+           theme: updates.theme !== undefined ? updates.theme : user.theme, 
+           bgImage: updates.bgImage !== undefined ? updates.bgImage : user.bgImage, 
+           avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl,
+           nameColor: updates.nameColor !== undefined ? updates.nameColor : user.nameColor,
+           bioColor: updates.bioColor !== undefined ? updates.bioColor : user.bioColor,
+           btnTextColor: updates.btnTextColor !== undefined ? updates.btnTextColor : user.btnTextColor
+       };
        await env.KV.put(`user:${updatedUser.username}`, JSON.stringify(updatedUser));
        await env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser));
        return json(updatedUser);

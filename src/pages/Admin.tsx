@@ -28,15 +28,13 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const [settings, setSettings] = useState<any>({ 
     pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
     siteTheme: 'orange', 
-    // 🌟 تێبینی: ڕەنگەکان بە بەتاڵی جێهێڵراون بۆ ئەوەی ڕووکارە نوێیەکان کار بکەن
     mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', buttonDesign: 'mockup', nameColor: '', bioColor: '', btnTextColor: '' }, 
-    globalButtons: [], 
-    ads: [], 
-    socialPlatforms: []
+    globalButtons: [], ads: [], socialPlatforms: []
   });
   
   const [activeTab, setActiveTab] = useState('theme'); 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [search, setSearch] = useState('');
   
@@ -53,18 +51,29 @@ export default function Admin({ user, onLogout, theme }: Props) {
       if (uData && !uData.error && Array.isArray(uData)) setUsers(uData); else setUsers([]);
       if (sData && !sData.error) setSettings((prev: any) => ({ ...prev, ...sData }));
     } catch (err) {
-      console.error(err);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
+      console.error(err); setUsers([]);
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, []);
 
   const saveSettings = async () => {
-    await fetch('/api/admin/settings', { method: 'PUT', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
-    alert('ڕێکخستنەکان بە سەرکەوتوویی پاشەکەوت کران!');
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/settings', { 
+        method: 'PUT', 
+        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(settings) 
+      });
+      if(res.ok) {
+        alert('ڕێکخستنەکان بە سەرکەوتوویی پاشەکەوت کران!');
+      } else {
+        alert('کێشەیەک ڕوویدا لە کاتی پاشەکەوتکردن!');
+      }
+    } catch (e) {
+      alert('کێشەی هێڵ هەیە!');
+    }
+    setSaving(false);
   };
 
   const handleToggleUser = async (userId: string, currentStatus: boolean) => {
@@ -97,6 +106,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
     setEditingUser(null); fetchData();
   };
 
+  // 🌟 لێرەدا کێشەی نەگۆڕانی وێنەکان لە ئەدمین چارەسەر کرا 🌟
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons' | 'mockup', index?: number) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
@@ -109,12 +119,13 @@ export default function Admin({ user, onLogout, theme }: Props) {
         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
         canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
         const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        
         if (listType === 'ads' && index !== undefined) {
-          const newAds = [...(settings.ads || [])]; newAds[index].imageUrl = base64; setSettings({...settings, ads: newAds});
+          setSettings((prev: any) => ({ ...prev, ads: prev.ads.map((ad: any, i: number) => i === index ? { ...ad, imageUrl: base64 } : ad) }));
         } else if (listType === 'globalButtons' && index !== undefined) {
-          const newBtns = [...(settings.globalButtons || [])]; newBtns[index].imageUrl = base64; setSettings({...settings, globalButtons: newBtns});
+          setSettings((prev: any) => ({ ...prev, globalButtons: prev.globalButtons.map((btn: any, i: number) => i === index ? { ...btn, imageUrl: base64 } : btn) }));
         } else if (listType === 'mockup') {
-          setSettings({...settings, mockup: {...settings.mockup, avatar: base64}});
+          setSettings((prev: any) => ({ ...prev, mockup: { ...prev.mockup, avatar: base64 } }));
         }
       };
     };
@@ -125,10 +136,10 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
   const TABS = [
     { id: 'theme', label: 'ڕووکار و مۆکئەپ', icon: <Palette size={18}/> },
+    { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> }, // هێنامە پێشەوە
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
-    { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
     { id: 'buttons', label: 'بەستەرە گشتییەکان', icon: <LinkIcon size={18}/> },
-    { id: 'ads', label: 'ڕیکلامەکان', icon: <Star size={18}/> },
+    { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
     { id: 'pages', label: 'پەڕەکان', icon: <Settings size={18}/> }
   ];
 
@@ -143,19 +154,18 @@ return (
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
-        
         <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-bold whitespace-nowrap transition-all ${activeTab === t.id ? `${theme?.main || 'bg-orange-500'} text-white shadow-lg` : 'bg-white text-neutral-500 hover:bg-neutral-100'}`}>
               {t.icon} {t.label}
             </button>
           ))}
-          <button onClick={saveSettings} className={`mt-auto hidden lg:flex items-center justify-center gap-3 px-5 py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}><Save size={18}/> پاشەکەوتکردن</button>
+          <button onClick={saveSettings} disabled={saving} className={`mt-auto hidden lg:flex items-center justify-center gap-3 px-5 py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} disabled:opacity-50`}>
+            {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18}/> پاشەکەوتکردن</>}
+          </button>
         </div>
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
-
-          {/* TAB: Theme & Mockup */}
           {activeTab === 'theme' && (
             <div className="space-y-8">
               <div>
@@ -174,12 +184,12 @@ return (
                    
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">ناوی ناو مۆکئەپ</label>
-                     <input type="text" placeholder="کۆسرەت مامە" value={settings.mockup?.name || ''} onChange={e => setSettings({...settings, mockup: {...settings.mockup, name: e.target.value}})} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-black shadow-sm focus:border-orange-400 transition" />
+                     <input type="text" placeholder="کۆسرەت مامە" value={settings.mockup?.name || ''} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, name: e.target.value}}))} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-black shadow-sm focus:border-orange-400 transition" />
                    </div>
 
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">کورتەیەک (بایۆ)</label>
-                     <input type="text" placeholder="بایۆگرافی لێرە بنووسە" value={settings.mockup?.bio || ''} onChange={e => setSettings({...settings, mockup: {...settings.mockup, bio: e.target.value}})} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition" />
+                     <input type="text" placeholder="بایۆگرافی لێرە بنووسە" value={settings.mockup?.bio || ''} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, bio: e.target.value}}))} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition" />
                    </div>
 
                    <div>
@@ -193,22 +203,22 @@ return (
                            { name: 'زەمردی', col: { nameColor: '#10b981', bioColor: '#a7f3d0', btnTextColor: '#ffffff' } },
                            { name: 'سڕینەوە', col: { nameColor: '', bioColor: '', btnTextColor: '' } }
                          ].map(p => (
-                           <button type="button" key={p.name} onClick={() => setSettings({...settings, mockup: {...settings.mockup, ...p.col}})} className={`px-2 py-1 text-[10px] font-bold rounded-md border ${p.name === 'سڕینەوە' ? 'bg-red-50 text-red-500 border-red-200' : ''}`} style={p.name !== 'سڕینەوە' ? { backgroundColor: p.col.nameColor + '15', color: p.col.nameColor, borderColor: p.col.nameColor } : {}}>{p.name}</button>
+                           <button type="button" key={p.name} onClick={() => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, ...p.col}}))} className={`px-2 py-1 text-[10px] font-bold rounded-md border ${p.name === 'سڕینەوە' ? 'bg-red-50 text-red-500 border-red-200' : ''}`} style={p.name !== 'سڕینەوە' ? { backgroundColor: p.col.nameColor + '15', color: p.col.nameColor, borderColor: p.col.nameColor } : {}}>{p.name}</button>
                          ))}
                        </div>
                      </div>
                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی ناو</span>
-                          <input type="color" value={settings.mockup?.nameColor || '#ffffff'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, nameColor: e.target.value}})} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
+                          <input type="color" value={settings.mockup?.nameColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, nameColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
                         </div>
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی بایۆ</span>
-                          <input type="color" value={settings.mockup?.bioColor || '#ffffff'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, bioColor: e.target.value}})} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
+                          <input type="color" value={settings.mockup?.bioColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, bioColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
                         </div>
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی دوگمە</span>
-                          <input type="color" value={settings.mockup?.btnTextColor || '#ffffff'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, btnTextColor: e.target.value}})} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
+                          <input type="color" value={settings.mockup?.btnTextColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, btnTextColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
                         </div>
                      </div>
                    </div>
@@ -216,26 +226,16 @@ return (
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">جۆری دیزاین</label>
                      <select value={settings.mockup?.buttonDesign || 'mockup'} onChange={e => {
-                         setSettings({...settings, mockup: {...settings.mockup, buttonDesign: e.target.value, nameColor: '', bioColor: '', btnTextColor: ''}});
+                         setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, buttonDesign: e.target.value, nameColor: '', bioColor: '', btnTextColor: ''}}));
                      }} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition cursor-pointer">
                         <option value="mockup">تاریکی شاهانە (Executive)</option>
                         <option value="light">سپی پلاتینی (Pearl)</option>
                         <option value="gold">ئاڵتوونی و ڕەش (Luxury)</option>
                         <option value="neon">شوشەیی نیۆن (Cyber)</option>
                         <option value="emerald">زەمردی متمانە (Emerald)</option>
-                        <option value="vintage">قاوەیی کلاسیک (Vintage)</option>
-                        <option value="crimson">خوێناوی تاریک (Crimson)</option>
-                        <option value="navy">سرمەیی مۆدێرن (Navy)</option>
-                        <option value="royal">مۆر و ڕۆزگۆڵد (Royal)</option>
-                        <option value="minimal">مینیماڵی خاوێن (Minimal)</option>
                         <option value="cyberpunk">سایبەرپەنک</option>
                         <option value="glassmorphism">شوشەیی ڕەنگاوڕەنگ</option>
                         <option value="dracula">دراکولا</option>
-                        <option value="aurora">شەبەنگی باکوور</option>
-                        <option value="sunset">خۆرئاوابوون</option>
-                        <option value="ocean">زەریای قوڵ</option>
-                        <option value="forest">دارستانی تاریک</option>
-                        <option value="candy">پەمەیی شیرین</option>
                         <option value="hacker">هاکەر (ماتریکس)</option>
                         <option value="luxury">ڕۆزگۆڵدی ڤی ئای پی</option>
                      </select>
@@ -256,11 +256,8 @@ return (
                 <div className="shrink-0 w-full sm:w-auto flex justify-center lg:justify-end relative z-10 pointer-events-none scale-90 sm:scale-100 origin-center lg:origin-left">
                    <PhoneMockup 
                      mockup={{...settings.mockup, isPro: true}} 
-                     mockupLinks={[
-                       { name: 'فەیسبووک', icon: '/social/facebook.png', color: '#1877F2' },
-                       { name: 'ئینستاگرام', icon: '/social/instagram.png', color: '#E4405F' }
-                     ]} 
-                     sponsoredLinks={settings.globalButtons || []}
+                     mockupLinks={[{ name: 'فەیسبووک', icon: '/social/facebook.png', color: '#1877F2' }]} 
+                     sponsoredLinks={settings.ads || []}
                    />
                 </div>
               </div>
@@ -273,9 +270,9 @@ return (
               <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
                  <div>
                    <h2 className="text-xl font-black text-neutral-900">بەستەرە گشتییەکان (Global Links)</h2>
-                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە لای هەموو بەکارهێنەران لە بەشی سپۆنسەر دەردەکەون.</p>
+                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە لای هەموو بەکارهێنەران وەک بەستەری ئاسایی دەردەکەون.</p>
                  </div>
-                 <button onClick={() => setSettings({...settings, globalButtons: [...(settings.globalButtons||[]), { id: Date.now(), title: '', url: '', icon: 'Globe', imageUrl: '' }]})} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ بەستەری نوێ</button>
+                 <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: [...(prev.globalButtons||[]), { id: Date.now(), title: '', url: '', icon: 'Globe', imageUrl: '' }] }))} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ بەستەری نوێ</button>
               </div>
               
               <div className="space-y-4">
@@ -286,12 +283,12 @@ return (
                       {btn.imageUrl ? <img src={btn.imageUrl} className="w-full h-full object-contain" alt="Icon" /> : <LinkIcon size={28} className="text-neutral-400" />}
                     </div>
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full">
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی دوگمە</label><input type="text" value={btn.title} onChange={e => { const n = [...settings.globalButtons]; n[idx].title = e.target.value; setSettings({...settings, globalButtons: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold" /></div>
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">بەستەر (URL)</label><input type="url" value={btn.url} onChange={e => { const n = [...settings.globalButtons]; n[idx].url = e.target.value; setSettings({...settings, globalButtons: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold text-xs" dir="ltr" /></div>
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی ئایکۆن (ئەگەر وێنە نەبوو)</label><input type="text" value={btn.icon || ''} onChange={e => { const n = [...settings.globalButtons]; n[idx].icon = e.target.value; setSettings({...settings, globalButtons: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold text-indigo-600" dir="ltr" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی دوگمە</label><input type="text" value={btn.title} onChange={e => setSettings((prev:any) => ({...prev, globalButtons: prev.globalButtons.map((b:any, i:number) => i === idx ? {...b, title: e.target.value} : b)}))} className="w-full p-3 rounded-xl border outline-none font-bold" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">بەستەر (URL)</label><input type="url" value={btn.url} onChange={e => setSettings((prev:any) => ({...prev, globalButtons: prev.globalButtons.map((b:any, i:number) => i === idx ? {...b, url: e.target.value} : b)}))} className="w-full p-3 rounded-xl border outline-none font-bold text-xs" dir="ltr" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی ئایکۆن (ئەگەر وێنە نەبوو)</label><input type="text" value={btn.icon || ''} onChange={e => setSettings((prev:any) => ({...prev, globalButtons: prev.globalButtons.map((b:any, i:number) => i === idx ? {...b, icon: e.target.value} : b)}))} className="w-full p-3 rounded-xl border outline-none font-bold text-indigo-600" dir="ltr" /></div>
                       <div className="flex gap-2 items-end">
                         <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'globalButtons', idx); fileInputRef.current!.click(); }} className="flex-1 p-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-bold rounded-xl transition h-[46px] flex items-center justify-center"><Camera size={18}/></button>
-                        <button onClick={() => { const n = settings.globalButtons.filter((_:any, i:number) => i !== idx); setSettings({...settings, globalButtons: n}); }} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition h-[46px]"><Trash2 size={20}/></button>
+                        <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: prev.globalButtons.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition h-[46px]"><Trash2 size={20}/></button>
                       </div>
                     </div>
                   </div>
@@ -299,14 +296,70 @@ return (
               </div>
             </div>
           )}
-{/* TAB: Social Platforms */}
+{/* 🌟 TAB: Ads (Sponsor) - نوێکرایەوە و کێشەکانی چارەسەر کرا 🌟 */}
+          {activeTab === 'ads' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between border-b border-neutral-200 pb-4 gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-neutral-900">سپۆنسەر و ڕیکلامەکان (VIP)</h2>
+                  <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە بە ئیفێکتێکی ئاگرین وەک VIP لە سەرەوەی پرۆفایلی هەمووان دەردەکەون.</p>
+                </div>
+                <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`px-6 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی ڕیکلام</button>
+              </div>
+              
+              <div className="space-y-6">
+                <input type="file" ref={fileInputRef} accept="image/*" className="hidden" />
+                {(settings.ads||[]).map((ad: any, idx: number) => (
+                  <div key={ad.id} className="relative p-6 bg-gradient-to-br from-amber-50 to-orange-50/30 rounded-[2rem] border-2 border-amber-200/50 shadow-sm overflow-hidden">
+                    {ad.isActive === false && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10"></div>}
+                    
+                    <div className="flex flex-col lg:flex-row gap-6 relative z-20 items-center">
+                      {/* وێنەی ڕیکلامەکە */}
+                      <div className="w-24 h-24 shrink-0 rounded-2xl bg-white border-2 border-amber-300 p-2 shadow-inner relative group">
+                        {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-xl" alt="Ad" /> : <Star size={32} className="text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+                        <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'ads', idx); fileInputRef.current!.click(); }} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white cursor-pointer"><Camera size={24}/></button>
+                      </div>
+
+                      {/* زانیارییەکانی ڕیکلامەکە */}
+                      <div className="flex-1 w-full space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-amber-700 mb-1 block">سەردێڕی ڕیکلام</label>
+                            <input type="text" value={ad.title} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, title: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-amber-700 mb-1 block">بەستەری ڕیکلام</label>
+                            <input type="url" value={ad.url} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, url: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition text-left" dir="ltr" placeholder="https://" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-3">
+                          <select value={ad.targetOS} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, targetOS: e.target.value} : a)}))} className="p-3 rounded-xl border border-amber-200 font-bold bg-white outline-none cursor-pointer flex-1 min-w-[150px]">
+                            <option value="all">📱 هەموو ئامێرەکان</option><option value="android">🤖 تەنها Android</option><option value="ios">🍏 تەنها iPhone</option><option value="windows">💻 تەنها Windows</option>
+                          </select>
+                          
+                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, isActive: !a.isActive} : a)}))} className={`p-3 rounded-xl font-bold flex items-center justify-center gap-2 transition flex-1 min-w-[120px] ${ad.isActive !== false ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200' : 'bg-neutral-200 text-neutral-600 border border-neutral-300 z-20 relative'}`}>
+                            {ad.isActive !== false ? <><Eye size={18}/> چالاکە</> : <><EyeOff size={18}/> ڕاگیراوە</>}
+                          </button>
+                          
+                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition border border-red-200 z-20 relative px-4"><Trash2 size={20}/></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: Social Platforms */}
           {activeTab === 'socials' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                 <h2 className="text-xl font-black">ڕێکخستنی تۆڕە کۆمەڵایەتییەکان</h2>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  <button onClick={() => { if(confirm('دڵنیایت لەم کارە؟')) setSettings({...settings, socialPlatforms: DEFAULT_SOCIALS}); }} className="px-4 py-2.5 rounded-xl font-bold bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition">گەڕاندنەوەی بنەڕەتییەکان</button>
-                  <button onClick={() => { const newSocials = [...(settings.socialPlatforms || [])]; newSocials.push({ id: `platform_${Date.now()}`, name: '', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#000000' }); setSettings({...settings, socialPlatforms: newSocials}); }} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی تۆڕ</button>
+                  <button onClick={() => { if(confirm('دڵنیایت لەم کارە؟')) setSettings((prev:any) => ({...prev, socialPlatforms: DEFAULT_SOCIALS})); }} className="px-4 py-2.5 rounded-xl font-bold bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition">گەڕاندنەوەی بنەڕەتییەکان</button>
+                  <button onClick={() => setSettings((prev:any) => ({...prev, socialPlatforms: [...(prev.socialPlatforms || []), { id: `platform_${Date.now()}`, name: '', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#000000' }]}))} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی تۆڕ</button>
                 </div>
               </div>
               <div className="space-y-4">
@@ -316,15 +369,15 @@ return (
                       {social.imageUrl ? <img src={social.imageUrl} className="w-full h-full object-contain" /> : <Globe color={social.color} size={28} />}
                     </div>
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full">
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی تۆڕ</label><input type="text" value={social.name} onChange={e => { const n = [...settings.socialPlatforms]; n[idx].name = e.target.value; setSettings({...settings, socialPlatforms: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold text-sm" /></div>
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">بەستەری بنەڕەت (Base URL)</label><input type="text" value={social.baseUrl} onChange={e => { const n = [...settings.socialPlatforms]; n[idx].baseUrl = e.target.value; setSettings({...settings, socialPlatforms: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold text-sm" dir="ltr" /></div>
-                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">وێنەی ئایکۆن</label><input type="text" value={social.imageUrl} onChange={e => { const n = [...settings.socialPlatforms]; n[idx].imageUrl = e.target.value; setSettings({...settings, socialPlatforms: n}); }} className="w-full p-3 rounded-xl border outline-none font-bold text-indigo-600 text-sm" dir="ltr" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">ناوی تۆڕ</label><input type="text" value={social.name} onChange={e => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.map((s:any, i:number) => i === idx ? {...s, name: e.target.value} : s)}))} className="w-full p-3 rounded-xl border outline-none font-bold text-sm" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">بەستەری بنەڕەت (Base URL)</label><input type="text" value={social.baseUrl} onChange={e => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.map((s:any, i:number) => i === idx ? {...s, baseUrl: e.target.value} : s)}))} className="w-full p-3 rounded-xl border outline-none font-bold text-sm" dir="ltr" /></div>
+                      <div><label className="text-xs font-bold text-neutral-500 mb-1 block">وێنەی ئایکۆن</label><input type="text" value={social.imageUrl} onChange={e => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.map((s:any, i:number) => i === idx ? {...s, imageUrl: e.target.value} : s)}))} className="w-full p-3 rounded-xl border outline-none font-bold text-indigo-600 text-sm" dir="ltr" /></div>
                       <div className="flex gap-3 items-end">
                         <div className="flex-1 border bg-white rounded-xl p-1.5 h-[46px] flex items-center gap-2">
-                          <input type="color" value={social.color} onChange={e => { const n = [...settings.socialPlatforms]; n[idx].color = e.target.value; setSettings({...settings, socialPlatforms: n}); }} className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0" />
-                          <input type="text" value={social.color} onChange={e => { const n = [...settings.socialPlatforms]; n[idx].color = e.target.value; setSettings({...settings, socialPlatforms: n}); }} className="w-full text-xs font-bold outline-none" dir="ltr" />
+                          <input type="color" value={social.color} onChange={e => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.map((s:any, i:number) => i === idx ? {...s, color: e.target.value} : s)}))} className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0" />
+                          <input type="text" value={social.color} onChange={e => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.map((s:any, i:number) => i === idx ? {...s, color: e.target.value} : s)}))} className="w-full text-xs font-bold outline-none" dir="ltr" />
                         </div>
-                        <button onClick={() => { const n = settings.socialPlatforms.filter((_:any, i:number) => i !== idx); setSettings({...settings, socialPlatforms: n}); }} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition h-[46px]"><Trash2 size={20}/></button>
+                        <button onClick={() => setSettings((prev:any) => ({...prev, socialPlatforms: prev.socialPlatforms.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition h-[46px]"><Trash2 size={20}/></button>
                       </div>
                     </div>
                   </div>
@@ -332,8 +385,7 @@ return (
               </div>
             </div>
           )}
-
-          {/* TAB: Users */}
+{/* TAB: Users */}
           {activeTab === 'users' && (
              <div className="space-y-6">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -386,22 +438,23 @@ return (
                </div>
              </div>
           )}
-{/* TAB: Pages Content */}
+
+          {/* TAB: Pages Content */}
           {activeTab === 'pages' && (
             <div className="space-y-12">
               <h2 className="text-xl font-black">دەستکاریکردنی پەڕە گشتییەکان</h2>
               {['about', 'terms', 'works'].map((pageType) => (
                 <div key={pageType} className="p-6 bg-neutral-50 rounded-3xl border border-neutral-200 space-y-4">
                   <h3 className="text-lg font-bold text-neutral-800">{pageType === 'about' ? 'دەربارەی ئێمە' : pageType === 'terms' ? 'یاساکان' : 'کارەکانم'}</h3>
-                  <textarea value={settings.pages?.[pageType]?.text || ''} onChange={e => { const newPages = {...(settings.pages || {})}; if(!newPages[pageType]) newPages[pageType] = {text: '', links: []}; newPages[pageType].text = e.target.value; setSettings({...settings, pages: newPages}); }} className="w-full p-4 bg-white border border-neutral-300 rounded-2xl h-32 outline-none focus:border-neutral-500 font-medium" placeholder="نوسینەکان لێرە بنووسە..." />
+                  <textarea value={settings.pages?.[pageType]?.text || ''} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...(prev.pages[pageType] || {links:[]}), text: e.target.value}}}))} className="w-full p-4 bg-white border border-neutral-300 rounded-2xl h-32 outline-none focus:border-neutral-500 font-medium" placeholder="نوسینەکان لێرە بنووسە..." />
                   <div className="pt-4">
-                    <button onClick={() => { const newPages = {...(settings.pages || {})}; if(!newPages[pageType]) newPages[pageType] = {text: '', links: []}; newPages[pageType].links.push({ title: '', url: '' }); setSettings({...settings, pages: newPages}); }} className="px-4 py-2 bg-neutral-200 text-neutral-700 font-bold rounded-xl mb-4 hover:bg-neutral-300 transition">+ زیادکردنی دوگمە</button>
+                    <button onClick={() => setSettings((prev:any) => { const links = prev.pages[pageType]?.links || []; return {...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: [...links, {title: '', url: ''}]}}}; })} className="px-4 py-2 bg-neutral-200 text-neutral-700 font-bold rounded-xl mb-4 hover:bg-neutral-300 transition">+ زیادکردنی دوگمە</button>
                     <div className="space-y-2">
                       {(settings.pages?.[pageType]?.links || []).map((link: any, idx: number) => (
                         <div key={idx} className="flex flex-col sm:flex-row gap-2">
-                          <input type="text" placeholder="ناوی دوگمە" value={link.title} onChange={e => { const newPages = {...settings.pages}; newPages[pageType].links[idx].title = e.target.value; setSettings({...settings, pages: newPages}); }} className="flex-1 p-3 rounded-xl border" />
-                          <input type="url" placeholder="لینکی دوگمە" value={link.url} onChange={e => { const newPages = {...settings.pages}; newPages[pageType].links[idx].url = e.target.value; setSettings({...settings, pages: newPages}); }} className="flex-1 p-3 rounded-xl border" dir="ltr" />
-                          <button onClick={() => { const newPages = {...settings.pages}; newPages[pageType].links = newPages[pageType].links.filter((_:any, i:number) => i !== idx); setSettings({...settings, pages: newPages}); }} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200"><Trash2 size={18}/></button>
+                          <input type="text" placeholder="ناوی دوگمە" value={link.title} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.map((l:any, i:number) => i === idx ? {...l, title: e.target.value} : l)}}}))} className="flex-1 p-3 rounded-xl border" />
+                          <input type="url" placeholder="لینکی دوگمە" value={link.url} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.map((l:any, i:number) => i === idx ? {...l, url: e.target.value} : l)}}}))} className="flex-1 p-3 rounded-xl border" dir="ltr" />
+                          <button onClick={() => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.filter((_:any, i:number) => i !== idx)}}}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200"><Trash2 size={18}/></button>
                         </div>
                       ))}
                     </div>
@@ -411,42 +464,14 @@ return (
             </div>
           )}
 
-          {/* TAB: Ads */}
-          {activeTab === 'ads' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-black mb-4">ڕیکلامی ئاڵتوونی لای بەکارهێنەران</h2>
-              <button onClick={() => setSettings({...settings, ads: [...(settings.ads||[]), { id: Date.now(), title: '', url: '', imageUrl: '', targetOS: 'all', isActive: true }]})} className={`px-6 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ ڕیکلامی نوێ</button>
-              <div className="space-y-6 mt-6">
-                <input type="file" ref={fileInputRef} accept="image/*" className="hidden" />
-                {(settings.ads||[]).map((ad: any, idx: number) => (
-                  <div key={ad.id} className="flex flex-col gap-4 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-3xl border-2 border-yellow-200 shadow-sm">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <input type="text" placeholder="سەردێڕی ڕیکلام" value={ad.title} onChange={e => { const n = [...settings.ads]; n[idx].title = e.target.value; setSettings({...settings, ads: n}); }} className="flex-1 p-4 rounded-xl outline-none border border-yellow-300 font-bold" />
-                      <select value={ad.targetOS} onChange={e => { const n = [...settings.ads]; n[idx].targetOS = e.target.value; setSettings({...settings, ads: n}); }} className="p-4 rounded-xl outline-none border border-yellow-300 font-bold bg-white cursor-pointer">
-                        <option value="all">هەموو ئامێرەکان</option><option value="android">تەنها Android</option><option value="ios">تەنها iPhone / iPad</option><option value="windows">تەنها کۆمپیوتەر Windows</option>
-                      </select>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <input type="url" placeholder="بەستەری ڕیکلامەکە" value={ad.url} onChange={e => { const n = [...settings.ads]; n[idx].url = e.target.value; setSettings({...settings, ads: n}); }} className="flex-1 p-4 rounded-xl outline-none border border-yellow-300 font-bold" dir="ltr" />
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={() => { const n = [...settings.ads]; const currentStatus = n[idx].isActive !== false; n[idx].isActive = !currentStatus; setSettings({...settings, ads: n}); }} className={`px-4 py-4 rounded-xl font-bold flex items-center gap-2 transition ${ad.isActive !== false ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'}`}>{ad.isActive !== false ? <><Eye size={18}/> چالاکە</> : <><EyeOff size={18}/> شاراوەیە</>}</button>
-                        <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'ads', idx); fileInputRef.current!.click(); }} className="px-4 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl whitespace-nowrap transition"><Camera size={20}/></button>
-                        <button onClick={() => { const n = settings.ads.filter((_:any, i:number) => i !== idx); setSettings({...settings, ads: n}); }} className="p-4 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition"><Trash2 size={20}/></button>
-                      </div>
-                    </div>
-                    {ad.imageUrl && <img src={ad.imageUrl} className="h-20 w-20 object-cover rounded-xl border border-yellow-400 shadow-sm" alt="Ad Preview" />}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
         </div>
       </div>
       
       {/* Mobile Save Button */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-200 z-40">
-         <button onClick={saveSettings} className={`w-full py-4 rounded-2xl font-black text-white shadow-xl ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} flex justify-center gap-2`}><Save size={20}/> پاشەکەوتکردنی هەمووی</button>
+         <button onClick={saveSettings} disabled={saving} className={`w-full py-4 rounded-2xl font-black text-white shadow-xl ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} flex justify-center items-center gap-2 disabled:opacity-50`}>
+           {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={20}/> پاشەکەوتکردنی هەمووی</>}
+         </button>
       </div>
 
       {/* Edit User Modal */}
