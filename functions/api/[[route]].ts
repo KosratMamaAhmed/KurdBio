@@ -67,11 +67,22 @@ export async function onRequest(context: any) {
        return json({success: true}); 
     }
 
-    // 🌟 چارەسەری Login (یەک خانە و Case Insensitive) 🌟
+    // 🌟 چارەسەری Login (چوونەژوورەوەی ئەدمین بە دروستی) 🌟
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
        const { identifier, password } = await request.json();
        if (!identifier || !password) return json({ error: "زانیارییەکان ناتەواون" }, 400);
 
+       // 🌟 ١. یەکەم شت پشکنین دەکەین بزانین ئەدمینە پێش ئەوەی بچینە ناو داتابەیس[cite: 10] 🌟
+       const adminUsername = env.ADMIN_USERNAME || "admin";
+       if (identifier === adminUsername || identifier.toLowerCase() === adminUsername.toLowerCase()) {
+           if (password === (env.ADMIN_PASSWORD || "admin123")) {
+               const token = await jwt.sign({ id: "admin", role: "admin", exp: Math.floor(Date.now() / 1000) + 86400 }, env.JWT_SECRET);
+               return json({ success: true, token, user: { id: "admin", username: adminUsername, isAdmin: true, isPro: true } });
+           }
+           return json({ error: "تێپەڕەوشەی بەڕێوەبەر هەڵەیە" }, 401);
+       }
+
+       // ٢. ئەگەر ئەدمین نەبوو، ئەوکات بەدوای بەکارهێنەردا دەگەڕێین
        const normalizedId = identifier.toLowerCase().trim();
 
        let userStr = await env.KV.get(`user:${normalizedId}`); 
@@ -85,11 +96,6 @@ export async function onRequest(context: any) {
        }
 
        if (!userStr) {
-           // پشکنین بۆ ئەدمین
-           if (normalizedId === "admin" && password === (env.ADMIN_PASSWORD || "admin123")) {
-               const token = await jwt.sign({ id: "admin", role: "admin", exp: Math.floor(Date.now() / 1000) + 86400 }, env.JWT_SECRET);
-               return json({ token, user: { id: "admin", username: "admin", isAdmin: true, isPro: true } });
-           }
            return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
        }
 
@@ -100,11 +106,11 @@ export async function onRequest(context: any) {
        const isValid = await bcrypt.compare(password, user.password);
        if (!isValid) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
 
-       const token = await jwt.sign({ id: user.id, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
-       return json({ token, user: { id: user.id, username: user.username, isAdmin: user.isAdmin === 1 || user.isAdmin === true, isPro: user.isPro } });
+       const token = await jwt.sign({ id: user.id, username: user.username, role: user.isAdmin ? "admin" : "user" }, env.JWT_SECRET);
+       delete user.password;
+       return json({ success: true, token, user });
     }
 
-    // 🌟 چارەسەری Register (پاسوۆردی ٨ پیتی، بچووککردنەوەی یوزەر، Auto-login) 🌟
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
         const { name, username, email, phone, password, dob } = await request.json();
         
@@ -213,7 +219,6 @@ export async function onRequest(context: any) {
        return json(userStr ? JSON.parse(userStr) : { error: "بەکارهێنەر نەدۆزرایەوە" });
     }
 
-    // 🌟 سڕینەوەی یوزەرنەیمی کۆن کاتێک دەگۆڕدرێت 🌟
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);
