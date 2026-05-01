@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Download, Loader2, Palette, Type, Move, Droplet, LayoutTemplate } from 'lucide-react';
+import { X, Download, Loader2, Palette, Type, Move, Droplet, LayoutTemplate, Star } from 'lucide-react';
 
 interface CardProps {
   profile: any;
   onClose: () => void;
 }
 
-// 🌟 دیزاینە پریمیمەکانی کارت و مۆکئەپ 🌟
-// تێبینی: دیزاینی یەکەم (تاریکی شاهانە) ڕەنگی کالیگرافیەکەی (calligCol) کرا بە ڕەش '#000000'
+// 🌟 ١٠ دیزاینە پریمیم و خەیاڵییەکەی کارتی بازرگانی 🌟
 const CARD_DESIGNS = [
-  { id: 0, name: 'تاریکی شاهانە', bg: ['#0f172a', '#020617'], shape: '#fbbf24', shapeShadow: 'rgba(251, 191, 36, 0.4)', text: '#FFFFFF', subText: '#94a3b8', qrFg: '0f172a', calligCol: '#000000' },
-  { id: 1, name: 'سپی پلاتینی', bg: ['#ffffff', '#f8fafc'], shape: '#0f172a', shapeShadow: 'rgba(15, 23, 42, 0.3)', text: '#0f172a', subText: '#475569', qrFg: '000000', calligCol: '#0f172a' },
-  { id: 2, name: 'ئاڵتوونی و ڕەش', bg: ['#171717', '#000000'], shape: '#d97706', shapeShadow: 'rgba(217, 119, 6, 0.5)', text: '#fef3c7', subText: '#a1a1aa', qrFg: '000000', calligCol: '#fbbf24' },
-  { id: 3, name: 'شوشەیی نیۆن', bg: ['#082f49', '#020617'], shape: '#38bdf8', shapeShadow: 'rgba(56, 189, 248, 0.6)', text: '#e0f2fe', subText: '#bae6fd', qrFg: '082f49', calligCol: '#38bdf8' },
-  { id: 4, name: 'زەمردی متمانە', bg: ['#064e3b', '#022c22'], shape: '#10b981', shapeShadow: 'rgba(16, 185, 129, 0.4)', text: '#ecfdf5', subText: '#6ee7b7', qrFg: '064e3b', calligCol: '#34d399' },
-  { id: 5, name: 'قاوەیی کلاسیک', bg: ['#451a03', '#2e1065'], shape: '#f59e0b', shapeShadow: 'rgba(245, 158, 11, 0.4)', text: '#fef3c7', subText: '#d6d3d1', qrFg: '451a03', calligCol: '#fcd34d' },
-  { id: 6, name: 'خوێناوی تاریک', bg: ['#450a0a', '#000000'], shape: '#ef4444', shapeShadow: 'rgba(239, 68, 68, 0.5)', text: '#fef2f2', subText: '#fca5a5', qrFg: '450a0a', calligCol: '#f87171' },
-  { id: 7, name: 'سرمەیی مۆدێرن', bg: ['#1e3a8a', '#0f172a'], shape: '#60a5fa', shapeShadow: 'rgba(96, 165, 250, 0.4)', text: '#eff6ff', subText: '#93c5fd', qrFg: '1e3a8a', calligCol: '#93c5fd' },
-  { id: 8, name: 'مۆر و ڕۆزگۆڵد', bg: ['#3b0764', '#171717'], shape: '#f472b6', shapeShadow: 'rgba(244, 114, 182, 0.5)', text: '#fdf2f8', subText: '#fbcfe8', qrFg: '3b0764', calligCol: '#f472b6' },
-  { id: 9, name: 'مینیماڵی خاوێن', bg: ['#f1f5f9', '#e2e8f0'], shape: '#64748b', shapeShadow: 'rgba(100, 116, 139, 0.3)', text: '#0f172a', subText: '#334155', qrFg: '000000', calligCol: '#1e293b' },
-  { id: 10, name: 'سایبەرپەنک', bg: ['#000000', '#111827'], shape: '#ec4899', shapeShadow: 'rgba(236, 72, 153, 0.5)', text: '#fdf2f8', subText: '#fbcfe8', qrFg: '000000', calligCol: '#ec4899' },
-  { id: 11, name: 'ئاوی قووڵ', bg: ['#020617', '#082f49'], shape: '#06b6d4', shapeShadow: 'rgba(6, 182, 212, 0.4)', text: '#ecfeff', subText: '#a5f3fc', qrFg: '020617', calligCol: '#22d3ee' },
-  { id: 12, name: 'دارستانی تاریک', bg: ['#022c22', '#064e3b'], shape: '#059669', shapeShadow: 'rgba(5, 150, 105, 0.4)', text: '#ecfdf5', subText: '#6ee7b7', qrFg: '022c22', calligCol: '#10b981' },
-  { id: 13, name: 'لاڤێندەری ئارام', bg: ['#f3e8ff', '#e9d5ff'], shape: '#a855f7', shapeShadow: 'rgba(168, 85, 247, 0.3)', text: '#3b0764', subText: '#6b21a8', qrFg: '3b0764', calligCol: '#7e22ce' },
-  { id: 14, name: 'شەبەنگی شەو', bg: ['#1e1b4b', '#312e81'], shape: '#8b5cf6', shapeShadow: 'rgba(139, 92, 246, 0.4)', text: '#e0e7ff', subText: '#a5b4fc', qrFg: '1e1b4b', calligCol: '#8b5cf6' },
-  { id: 15, name: 'خاکیی سادە', bg: ['#fffbeb', '#fef3c7'], shape: '#b45309', shapeShadow: 'rgba(180, 83, 9, 0.2)', text: '#78350f', subText: '#92400e', qrFg: '78350f', calligCol: '#b45309' }
+  { id: 0, name: 'تاریکی شاهانە (Executive)', bg: ['#0f172a', '#020617'], shape: '#fbbf24', shapeShadow: 'rgba(251, 191, 36, 0.5)', text: '#fcd34d', subText: '#94a3b8', qrFg: '0f172a', calligCol: '#ffffff' },
+  { id: 1, name: 'سپی پلاتینی (Platinum)', bg: ['#ffffff', '#f8fafc'], shape: '#0f172a', shapeShadow: 'rgba(15, 23, 42, 0.4)', text: '#0f172a', subText: '#475569', qrFg: '000000', calligCol: '#334155' },
+  { id: 2, name: 'ئاڵتوونی و ڕەش (Luxury VIP)', bg: ['#111111', '#000000'], shape: '#d97706', shapeShadow: 'rgba(217, 119, 6, 0.6)', text: '#fbbf24', subText: '#a1a1aa', qrFg: '000000', calligCol: '#fef3c7' },
+  { id: 3, name: 'شوشەیی نیۆن (Cyber Neon)', bg: ['#082f49', '#020617'], shape: '#0ea5e9', shapeShadow: 'rgba(14, 165, 233, 0.7)', text: '#38bdf8', subText: '#7dd3fc', qrFg: '082f49', calligCol: '#e0f2fe' },
+  { id: 4, name: 'زەمردی متمانە (Emerald)', bg: ['#064e3b', '#022c22'], shape: '#10b981', shapeShadow: 'rgba(16, 185, 129, 0.6)', text: '#34d399', subText: '#6ee7b7', qrFg: '064e3b', calligCol: '#ecfdf5' },
+  { id: 5, name: 'سایبەرپەنک (Cyberpunk)', bg: ['#000000', '#111827'], shape: '#ec4899', shapeShadow: 'rgba(236, 72, 153, 0.7)', text: '#f472b6', subText: '#fbcfe8', qrFg: '000000', calligCol: '#fdf2f8' },
+  { id: 6, name: 'خوێناوی تاریک (Crimson)', bg: ['#450a0a', '#171717'], shape: '#ef4444', shapeShadow: 'rgba(239, 68, 68, 0.6)', text: '#f87171', subText: '#fca5a5', qrFg: '450a0a', calligCol: '#fef2f2' },
+  { id: 7, name: 'مۆر و ڕۆزگۆڵد (Royal Purple)', bg: ['#3b0764', '#171717'], shape: '#f472b6', shapeShadow: 'rgba(244, 114, 182, 0.6)', text: '#fbcfe8', subText: '#f472b6', qrFg: '3b0764', calligCol: '#fdf2f8' },
+  { id: 8, name: 'دارستانی تاریک (Deep Forest)', bg: ['#022c22', '#064e3b'], shape: '#059669', shapeShadow: 'rgba(5, 150, 105, 0.5)', text: '#6ee7b7', subText: '#a7f3d0', qrFg: '022c22', calligCol: '#ecfdf5' },
+  { id: 9, name: 'شەبەنگی شەو (Night Aurora)', bg: ['#1e1b4b', '#312e81'], shape: '#8b5cf6', shapeShadow: 'rgba(139, 92, 246, 0.6)', text: '#a5b4fc', subText: '#c7d2fe', qrFg: '1e1b4b', calligCol: '#e0e7ff' }
 ];
 
-// 🌟 لیستی فراوانکراوی فۆنتەکان 🌟
 const FONTS = [
   { id: 'Amiri', name: 'ئەمیری (کالیگرافی)' },
   { id: 'Aref Ruqaa', name: 'عارف ڕوقعە' },
@@ -39,15 +31,7 @@ const FONTS = [
   { id: 'Great Vibes', name: 'ئینگلیزی کالیگرافی ١' },
   { id: 'Dancing Script', name: 'ئینگلیزی کالیگرافی ٢' },
   { id: 'Custom1', name: 'فۆنتی تایبەتی ١' },
-  { id: 'Custom2', name: 'فۆنتی تایبەتی ٢' },
-  { id: 'Custom3', name: 'فۆنتی تایبەتی ٣' },
-  { id: 'Custom4', name: 'فۆنتی تایبەتی ٤' },
-  { id: 'Custom5', name: 'فۆنتی تایبەتی ٥' },
-  { id: 'Custom6', name: 'فۆنتی تایبەتی ٦' },
-  { id: 'Custom7', name: 'فۆنتی تایبەتی ٧' },
-  { id: 'Custom8', name: 'فۆنتی تایبەتی ٨' },
-  { id: 'Custom9', name: 'فۆنتی تایبەتی ٩' },
-  { id: 'Custom10', name: 'فۆنتی تایبەتی ١٠' }
+  { id: 'Custom2', name: 'فۆنتی تایبەتی ٢' }
 ];
 
 export default function Card({ profile, onClose }: CardProps) {
@@ -57,21 +41,22 @@ export default function Card({ profile, onClose }: CardProps) {
   
   const [activeDesign, setActiveDesign] = useState(0);
   
-  // 🌟 جێگیرکردنی ڕێکخستنە داواکراوەکان
-  const [selectedFont, setSelectedFont] = useState('Noto Sans Arabic'); // فۆنتی بنەڕەتی
+  const [selectedFont, setSelectedFont] = useState('Noto Sans Arabic');
   const [customText, setCustomText] = useState('سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم');
-  const [fontSize, setFontSize] = useState(28); // قەبارەی 28px
-  const [posX, setPosX] = useState(211); // X: 211
-  const [posY, setPosY] = useState(569); // Y: 569
+  const [fontSize, setFontSize] = useState(28); 
+  const [posX, setPosX] = useState(211); 
+  const [posY, setPosY] = useState(569); 
 
+  // 🌟 ڕەنگەکان بەپێی دیزاینەکە خۆکارانە دەگۆڕێن 🌟
   const [nameColor, setNameColor] = useState(CARD_DESIGNS[0].text);
   const [bioColor, setBioColor] = useState(CARD_DESIGNS[0].subText);
-  const [customTextColor, setCustomTextColor] = useState(CARD_DESIGNS[0].calligCol); // ئێستا ڕەشە بۆ دیزاینی یەکەم
+  const [customTextColor, setCustomTextColor] = useState(CARD_DESIGNS[0].calligCol); 
 
   const [debouncedSettings, setDebouncedSettings] = useState({ text: customText, nameCol: nameColor, bioCol: bioColor, customCol: customTextColor, x: posX, y: posY, font: selectedFont, size: fontSize });
 
   const changeTheme = (idx: number) => {
     setActiveDesign(idx);
+    // گۆڕینی ڕەنگەکان ڕاستەوخۆ بەپێی ئەو ڕووکارەی هەڵیبژاردووە
     setNameColor(CARD_DESIGNS[idx].text);
     setBioColor(CARD_DESIGNS[idx].subText);
     setCustomTextColor(CARD_DESIGNS[idx].calligCol);
@@ -111,7 +96,6 @@ export default function Card({ profile, onClose }: CardProps) {
       const design = CARD_DESIGNS[activeDesign];
       const fontPrimary = `"${debouncedSettings.font}", "Vazirmatn", sans-serif`;
       
-      // دیاریکردنی ئاراستەی نووسین، گەر ئینگلیزی بوو با بچێتە چەپ
       const isEnglish = /^[A-Za-z]/.test(debouncedSettings.text);
 
       roundRect(ctx, 0, 0, 1050, 600, 40);
@@ -123,6 +107,7 @@ export default function Card({ profile, onClose }: CardProps) {
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, 1050, 600);
 
+      // بریقەی سەر شاشەی کارتەکە
       const glow1 = ctx.createRadialGradient(850, 100, 50, 850, 100, 400);
       glow1.addColorStop(0, design.shapeShadow); glow1.addColorStop(1, 'transparent');
       ctx.fillStyle = glow1; ctx.fillRect(0, 0, 1050, 600);
@@ -133,12 +118,12 @@ export default function Card({ profile, onClose }: CardProps) {
 
       ctx.save();
       ctx.translate(525, 300); ctx.rotate(-Math.PI / 8);
-      ctx.fillStyle = (activeDesign === 1 || activeDesign === 9 || activeDesign === 13 || activeDesign === 15) ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)'; 
+      ctx.fillStyle = (activeDesign === 1) ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)'; 
       ctx.font = `900 250px ${fontPrimary}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(profile.slug.toUpperCase(), 0, 0);
       ctx.restore();
 
-      ctx.fillStyle = (activeDesign === 1 || activeDesign === 9 || activeDesign === 13 || activeDesign === 15) ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.03)';
+      ctx.fillStyle = (activeDesign === 1) ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.04)';
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1050, 0); ctx.lineTo(1050, 250); ctx.lineTo(0, 450); ctx.closePath(); ctx.fill();
 
       ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 40; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 10;
@@ -153,7 +138,7 @@ export default function Card({ profile, onClose }: CardProps) {
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`https://biokurd.com/${profile.slug}`)}&margin=1&color=${design.qrFg}&bgcolor=ffffff`;
       const xQ = 80; const yQ = 80; const wQ = 320; const hQ = 320;
 
-      ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 15; ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 20; ctx.fillStyle = '#FFFFFF';
       roundRect(ctx, xQ - 15, yQ - 15, wQ + 30, hQ + 30, 30); ctx.fill(); ctx.shadowColor = 'transparent';
 
       try {
@@ -168,11 +153,11 @@ export default function Card({ profile, onClose }: CardProps) {
 
       const textCenterX = 750; const avatarY = 160; const avatarRadius = 85;
 
-      ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 25;
-      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 6, 0, Math.PI * 2); ctx.fillStyle = design.shape; ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 35;
+      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 8, 0, Math.PI * 2); ctx.fillStyle = design.shape; ctx.fill(); ctx.shadowColor = 'transparent';
 
-      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 2, 0, Math.PI * 2);
-      ctx.fillStyle = (activeDesign === 1 || activeDesign === 9 || activeDesign === 13 || activeDesign === 15) ? '#ffffff' : '#000000'; ctx.fill();
+      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 3, 0, Math.PI * 2);
+      ctx.fillStyle = (activeDesign === 1) ? '#ffffff' : '#000000'; ctx.fill();
 
       if (profile.avatarUrl) {
         try {
@@ -184,35 +169,33 @@ export default function Card({ profile, onClose }: CardProps) {
 
       const nameY = 290; ctx.textBaseline = 'top'; ctx.textAlign = 'center';
       ctx.fillStyle = debouncedSettings.nameCol;
-      ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 15; ctx.shadowOffsetY = 2;
-      ctx.font = `900 60px ${fontPrimary}`; ctx.fillText(profile.displayName || 'کۆسرەت', textCenterX, nameY);
+      ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 20; ctx.shadowOffsetY = 3;
+      ctx.font = `900 65px ${fontPrimary}`; ctx.fillText(profile.displayName || 'کۆسرەت', textCenterX, nameY);
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
       ctx.fillStyle = debouncedSettings.bioCol; 
-      ctx.font = `400 28px ${fontPrimary}`;
+      ctx.font = `500 30px ${fontPrimary}`;
       const bioText = profile.bio || 'باشترین بەستەرەکانم لێرە ببینە';
-      wrapText(ctx, bioText, textCenterX, 380, 42, 480);
+      wrapText(ctx, bioText, textCenterX, 390, 45, 500);
 
-      // 🌟 جێبەجێکردنی ئاراستەی نووسین (ئینگلیزی بۆ چەپ) و فۆنتەکان
       const customRenderText = debouncedSettings.text.trim();
       if (customRenderText !== '') {
           ctx.fillStyle = debouncedSettings.customCol;
           ctx.font = `700 ${debouncedSettings.size}px ${fontPrimary}`; 
           ctx.textBaseline = 'middle'; 
           
-          // ئەگەر ئینگلیزی بوو با بچێتە چەپ
           if (isEnglish) {
             ctx.direction = 'ltr';
             ctx.textAlign = 'left';
           } else {
             ctx.direction = 'rtl';
-            ctx.textAlign = 'center'; // بۆ کوردی وەکو خۆی دەمێنێتەوە
+            ctx.textAlign = 'center'; 
           }
           
           ctx.fillText(customRenderText, debouncedSettings.x, debouncedSettings.y);
       }
 
-      ctx.fillStyle = design.shape; ctx.font = `900 24px sans-serif`;
+      ctx.fillStyle = design.shape; ctx.font = `900 26px sans-serif`;
       ctx.direction = 'ltr'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
       ctx.fillText("BioKurd.com", 1010, 570);
 
@@ -223,7 +206,7 @@ export default function Card({ profile, onClose }: CardProps) {
   };
 
   const drawAvatarFallback = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, name: string, font: string, textColor: string) => {
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = (activeDesign === 1 || activeDesign === 9 || activeDesign === 13 || activeDesign === 15) ? '#f3f4f6' : '#1e293b'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = (activeDesign === 1) ? '#f3f4f6' : '#1e293b'; ctx.fill();
     ctx.fillStyle = CARD_DESIGNS[activeDesign].shape; ctx.font = `bold 80px ${font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(name?.charAt(0).toUpperCase() || 'U', x, y + 5);
   };
@@ -243,70 +226,77 @@ export default function Card({ profile, onClose }: CardProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-50 z-50 flex flex-col lg:flex-row overflow-hidden font-sans" dir="rtl">
+    <div className="fixed inset-0 bg-[#0a0a0a] z-50 flex flex-col lg:flex-row overflow-hidden font-sans" dir="rtl">
       
-      <div className="w-full lg:w-[60%] h-[45vh] lg:h-full bg-gradient-to-br from-neutral-900 to-black relative flex flex-col items-center justify-center p-4 sm:p-8 border-b lg:border-b-0 lg:border-l border-neutral-800">
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-3 z-20">
-           <div className="p-2.5 sm:p-3 bg-white/10 backdrop-blur-md text-white rounded-2xl shadow-lg flex items-center justify-center">
-             <LayoutTemplate size={24}/>
+      {/* 🌟 بەشی بینینی کارتەکە بە شێوەیەکی زۆر پڕۆفیشناڵ 🌟 */}
+      <div className="w-full lg:w-[65%] h-[45vh] lg:h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-[#050505] relative flex flex-col items-center justify-center p-4 sm:p-8">
+        
+        {/* بریقەی پاشبنەماکە */}
+        <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-4 z-20">
+           <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl shadow-2xl flex items-center justify-center">
+             <LayoutTemplate size={28} className="text-amber-400"/>
            </div>
            <div>
-             <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">ستۆدیۆی دیزاین</h2>
-             <p className="text-[10px] sm:text-xs font-bold text-white/50">BioKurd Studio</p>
+             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">ستۆدیۆی کارتی تایبەت</h2>
+             <p className="text-[11px] sm:text-sm font-bold text-amber-400/80 uppercase tracking-widest mt-0.5">BioKurd Premium</p>
            </div>
         </div>
 
-        <button onClick={onClose} className="absolute top-4 left-4 sm:top-6 sm:left-6 p-3 bg-white/10 hover:bg-red-500/80 text-white rounded-full transition-colors active:scale-90 z-20">
-          <X size={20} strokeWidth={3}/>
+        <button onClick={onClose} className="absolute top-4 left-4 sm:top-8 sm:left-8 p-3.5 bg-white/5 hover:bg-red-500 border border-white/10 hover:border-red-400 text-white rounded-2xl transition-all active:scale-90 z-20 shadow-lg">
+          <X size={22} strokeWidth={3}/>
         </button>
 
-        <div className="w-full max-w-2xl relative flex items-center justify-center mt-12 sm:mt-0">
+        <div className="w-full max-w-[800px] relative flex items-center justify-center mt-12 sm:mt-0 z-20 perspective-1000">
           {generating ? (
-            <div className="flex flex-col items-center text-amber-500 gap-4 py-12">
-               <Loader2 className="animate-spin" size={48} strokeWidth={3} />
-               <span className="font-black text-sm sm:text-base animate-pulse text-white">لە دروستکردنی دیزاینەکەداین...</span>
+            <div className="flex flex-col items-center gap-6 py-20">
+               <div className="relative w-20 h-20 flex items-center justify-center">
+                 <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+                 <div className="absolute inset-0 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                 <Star size={32} className="text-amber-400 animate-pulse" />
+               </div>
+               <span className="font-black text-lg animate-pulse text-white tracking-wide">دروستکردنی کارتەکەت بەکوالێتی بەرز...</span>
             </div>
           ) : (
             cardImage && (
               <motion.img 
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
-                src={cardImage} alt="Preview" 
-                className="w-full max-h-[30vh] lg:max-h-[70vh] object-contain rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] border border-white/10" 
+                initial={{ opacity: 0, scale: 0.8, rotateY: 15 }} animate={{ opacity: 1, scale: 1, rotateY: 0 }} transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                src={cardImage} alt="Business Card" 
+                className="w-full max-h-[35vh] lg:max-h-[75vh] object-contain rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] border border-white/10 hover:scale-[1.02] transition-transform duration-500 cursor-pointer" 
               />
             )
           )}
         </div>
         
-        <div className="absolute bottom-4 left-0 w-full flex justify-center z-20 px-4 hidden lg:flex">
-            <button onClick={downloadBusinessCard} disabled={generating || !cardImage} className={`w-full max-w-sm py-4 text-neutral-900 rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 disabled:opacity-60 text-sm sm:text-base`}>
-              <Download size={20} strokeWidth={3} /> داگرتنی کارتەکەم (PNG)
+        <div className="absolute bottom-6 left-0 w-full flex justify-center z-20 px-6 hidden lg:flex">
+            <button onClick={downloadBusinessCard} disabled={generating || !cardImage} className={`w-full max-w-md py-5 text-black rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-[0_10px_30px_rgba(251,191,36,0.3)] bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:brightness-110 disabled:opacity-50 text-base uppercase tracking-wide`}>
+              <Download size={22} strokeWidth={3} /> داگرتنی کارتەکەم بە کوالێتی HD
             </button>
         </div>
       </div>
 
-      <div className="w-full lg:w-[40%] h-[55vh] lg:h-full bg-white flex flex-col relative z-30 shadow-2xl lg:shadow-none">
+      {/* 🌟 بەشی ڕێکخستنەکان (ئەوپەڕی پێشکەوتوو و شوشەیی) 🌟 */}
+      <div className="w-full lg:w-[35%] h-[55vh] lg:h-full bg-neutral-900 border-l border-white/5 flex flex-col relative z-30 shadow-2xl">
          
-         <div className="flex p-2 bg-neutral-100 m-4 rounded-2xl shrink-0">
-            <button onClick={() => setActiveTab('themes')} className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'themes' ? 'bg-white shadow-sm text-orange-600' : 'text-neutral-500 hover:text-neutral-700'}`}><Palette size={16}/> ڕووکارەکان</button>
-            <button onClick={() => setActiveTab('text')} className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'text' ? 'bg-white shadow-sm text-orange-600' : 'text-neutral-500 hover:text-neutral-700'}`}><Droplet size={16}/> ڕەنگ و دەق</button>
-            <button onClick={() => setActiveTab('position')} className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'position' ? 'bg-white shadow-sm text-orange-600' : 'text-neutral-500 hover:text-neutral-700'}`}><Move size={16}/> فۆنت و شوێن</button>
+         <div className="flex p-2 bg-black/40 backdrop-blur-xl border border-white/5 m-5 rounded-2xl shrink-0">
+            <button onClick={() => setActiveTab('themes')} className={`flex-1 py-3.5 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'themes' ? 'bg-amber-500 shadow-md text-black' : 'text-white/60 hover:text-white hover:bg-white/5'}`}><Palette size={18}/> دیزاینەکان</button>
+            <button onClick={() => setActiveTab('text')} className={`flex-1 py-3.5 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'text' ? 'bg-amber-500 shadow-md text-black' : 'text-white/60 hover:text-white hover:bg-white/5'}`}><Droplet size={18}/> ڕەنگ و دەق</button>
+            <button onClick={() => setActiveTab('position')} className={`flex-1 py-3.5 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'position' ? 'bg-amber-500 shadow-md text-black' : 'text-white/60 hover:text-white hover:bg-white/5'}`}><Move size={18}/> فۆنت و شوێن</button>
          </div>
 
-         <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
+         <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
             <AnimatePresence mode="wait">
                {activeTab === 'themes' && (
                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                    <label className="text-sm font-black text-neutral-800 block mb-2">دیزاینێکی پڕۆفیشناڵ هەڵبژێرە</label>
-                    <div className="block sm:hidden">
-                       <select value={activeDesign} onChange={(e) => changeTheme(Number(e.target.value))} className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-2xl font-black text-sm outline-none focus:border-orange-500 appearance-none">
-                         {CARD_DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                       </select>
-                    </div>
-                    <div className="hidden sm:grid grid-cols-2 gap-3">
+                    <label className="text-sm font-black text-white/90 block mb-3 flex items-center gap-2"><Star size={16} className="text-amber-400"/> دیزاینێکی پریمیم هەڵبژێرە</label>
+                    <div className="grid grid-cols-2 gap-4">
                        {CARD_DESIGNS.map(design => (
-                          <button key={design.id} onClick={() => changeTheme(design.id)} className={`p-4 rounded-2xl border-2 text-right transition-all flex flex-col gap-2 ${activeDesign === design.id ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-neutral-100 bg-white hover:border-orange-200'}`}>
-                             <div className="flex gap-1.5"><span className="w-4 h-4 rounded-full border border-black/10" style={{background: design.bg[0]}}></span><span className="w-4 h-4 rounded-full border border-black/10" style={{background: design.shape}}></span></div>
-                             <span className="font-black text-sm text-neutral-800">{design.name}</span>
+                          <button key={design.id} onClick={() => changeTheme(design.id)} className={`p-4 rounded-2xl border-2 text-right transition-all flex flex-col gap-3 relative overflow-hidden group ${activeDesign === design.id ? 'border-amber-400 bg-white/10 shadow-[0_0_20px_rgba(251,191,36,0.15)]' : 'border-white/5 bg-black/20 hover:border-white/20'}`}>
+                             <div className="absolute -right-4 -top-4 w-12 h-12 rounded-full blur-[15px] opacity-50 group-hover:opacity-100 transition-opacity" style={{background: design.shape}}></div>
+                             <div className="flex gap-2 relative z-10"><span className="w-5 h-5 rounded-full shadow-inner border border-white/20" style={{background: design.bg[0]}}></span><span className="w-5 h-5 rounded-full shadow-inner border border-white/20" style={{background: design.shape}}></span></div>
+                             <span className={`font-black text-sm relative z-10 ${activeDesign === design.id ? 'text-amber-400' : 'text-white/80'}`}>{design.name}</span>
                           </button>
                        ))}
                     </div>
@@ -315,25 +305,36 @@ export default function Card({ profile, onClose }: CardProps) {
 
                {activeTab === 'text' && (
                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                    <div className="space-y-3 bg-neutral-50 p-5 rounded-3xl border border-neutral-100">
-                       <label className="text-sm font-black text-neutral-800 flex items-center gap-2"><Type size={16} className="text-orange-500"/> دەقی سەر کارتەکە</label>
-                       {/* 🌟 لێرەدا dir-auto کار دەکات بۆ ئەوەی ئینگلیزی بچێتە چەپ */}
-                       <input type="text" dir="auto" placeholder="دەقێک لێرە بنووسە..." value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full p-4 bg-white border border-neutral-200 rounded-2xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm dir-auto" />
+                    <div className="space-y-3 bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
+                       <label className="text-sm font-black text-white/90 flex items-center gap-2"><Type size={16} className="text-amber-400"/> دەقی سەر کارتەکە بنووسە</label>
+                       <input type="text" dir="auto" placeholder="دەقێک لێرە بنووسە..." value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-amber-400 font-bold text-sm shadow-sm dir-auto text-white placeholder-white/30 transition-all" />
                     </div>
 
                     <div className="space-y-4">
-                       <label className="text-sm font-black text-neutral-800 flex items-center gap-2"><Droplet size={16} className="text-orange-500"/> گۆڕینی ڕەنگەکان</label>
-                       <div className="flex items-center justify-between bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
-                         <span className="text-xs font-bold text-neutral-600">ڕەنگی ناو (Name)</span>
-                         <input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" />
+                       <label className="text-sm font-black text-white/90 flex items-center gap-2"><Droplet size={16} className="text-amber-400"/> گۆڕینی ڕەنگەکان بە ئارەزووی خۆت</label>
+                       
+                       <div className="flex items-center justify-between bg-black/30 p-4 rounded-2xl border border-white/5">
+                         <span className="text-xs font-bold text-white/70">ڕەنگی ناو (Name)</span>
+                         <div className="flex items-center gap-3">
+                           <span className="text-[10px] font-mono text-white/40 uppercase">{nameColor}</span>
+                           <input type="color" value={nameColor} onChange={(e) => setNameColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0 shadow-inner" />
+                         </div>
                        </div>
-                       <div className="flex items-center justify-between bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
-                         <span className="text-xs font-bold text-neutral-600">ڕەنگی بایۆ (Bio)</span>
-                         <input type="color" value={bioColor} onChange={(e) => setBioColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" />
+                       
+                       <div className="flex items-center justify-between bg-black/30 p-4 rounded-2xl border border-white/5">
+                         <span className="text-xs font-bold text-white/70">ڕەنگی بایۆ (Bio)</span>
+                         <div className="flex items-center gap-3">
+                           <span className="text-[10px] font-mono text-white/40 uppercase">{bioColor}</span>
+                           <input type="color" value={bioColor} onChange={(e) => setBioColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0 shadow-inner" />
+                         </div>
                        </div>
-                       <div className="flex items-center justify-between bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
-                         <span className="text-xs font-bold text-neutral-600">ڕەنگی دەقی خوارەوە</span>
-                         <input type="color" value={customTextColor} onChange={(e) => setCustomTextColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" />
+                       
+                       <div className="flex items-center justify-between bg-black/30 p-4 rounded-2xl border border-white/5">
+                         <span className="text-xs font-bold text-white/70">ڕەنگی دەقی خوارەوە</span>
+                         <div className="flex items-center gap-3">
+                           <span className="text-[10px] font-mono text-white/40 uppercase">{customTextColor}</span>
+                           <input type="color" value={customTextColor} onChange={(e) => setCustomTextColor(e.target.value)} className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0 shadow-inner" />
+                         </div>
                        </div>
                     </div>
                  </motion.div>
@@ -341,33 +342,33 @@ export default function Card({ profile, onClose }: CardProps) {
 
                {activeTab === 'position' && (
                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                    <div className="space-y-4 bg-neutral-50 p-5 rounded-3xl border border-neutral-100">
-                       <label className="text-sm font-black text-neutral-800 flex items-center gap-2"><Type size={16} className="text-orange-500"/> جۆری فۆنت</label>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-1">
+                    <div className="space-y-4 bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
+                       <label className="text-sm font-black text-white/90 flex items-center gap-2"><Type size={16} className="text-amber-400"/> جۆری فۆنت</label>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-1 pr-2">
                          {FONTS.map(font => (
-                           <button key={font.id} onClick={() => setSelectedFont(font.id)} className={`p-3 rounded-xl border text-center transition-all font-black text-sm ${selectedFont === font.id ? 'bg-orange-500 text-white border-orange-600 shadow-md' : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100'}`} style={{fontFamily: `"${font.id}", sans-serif`}}>
+                           <button key={font.id} onClick={() => setSelectedFont(font.id)} className={`p-3.5 rounded-xl border text-center transition-all font-black text-sm shadow-sm ${selectedFont === font.id ? 'bg-amber-500 text-black border-amber-400' : 'bg-white/5 text-white/70 border-white/5 hover:bg-white/10 hover:text-white'}`} style={{fontFamily: `"${font.id}", sans-serif`}}>
                              {font.name}
                            </button>
                          ))}
                        </div>
                     </div>
 
-                    <div className="space-y-6 bg-neutral-50 p-5 rounded-3xl border border-neutral-100">
-                       <label className="text-sm font-black text-neutral-800 flex items-center gap-2"><Move size={16} className="text-orange-500"/> ڕێکخستنی دەقی خوارەوە</label>
+                    <div className="space-y-8 bg-black/30 p-6 rounded-3xl border border-white/5 shadow-inner">
+                       <label className="text-sm font-black text-white/90 flex items-center gap-2"><Move size={16} className="text-amber-400"/> ڕێکخستنی دەقی خوارەوە</label>
                        
-                       {/* 🌟 سلایدەری قەبارەی فۆنت */}
-                       <div>
-                         <div className="flex justify-between text-xs font-bold text-neutral-500 mb-2"><span>قەبارەی فۆنت (Size)</span> <span className="text-neutral-400">{fontSize}px</span></div>
-                         <input type="range" min="16" max="60" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="w-full accent-orange-500" />
+                       <div className="pt-2">
+                         <div className="flex justify-between text-xs font-bold text-white/60 mb-3"><span>قەبارەی فۆنت (Size)</span> <span className="text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded">{fontSize}px</span></div>
+                         <input type="range" min="16" max="60" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                        </div>
 
                        <div>
-                         <div className="flex justify-between text-xs font-bold text-neutral-500 mb-2"><span>لەلای ڕاست و چەپ (X)</span> <span className="text-neutral-400">{posX}</span></div>
-                         <input type="range" min="50" max="1000" value={posX} onChange={(e) => setPosX(Number(e.target.value))} className="w-full accent-orange-500" />
+                         <div className="flex justify-between text-xs font-bold text-white/60 mb-3"><span>لەلای ڕاست و چەپ (X)</span> <span className="text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded">{posX}</span></div>
+                         <input type="range" min="50" max="1000" value={posX} onChange={(e) => setPosX(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                        </div>
+                       
                        <div>
-                         <div className="flex justify-between text-xs font-bold text-neutral-500 mb-2"><span>لەلای سەرەوە و خوارەوە (Y)</span> <span className="text-neutral-400">{posY}</span></div>
-                         <input type="range" min="30" max="580" value={posY} onChange={(e) => setPosY(Number(e.target.value))} className="w-full accent-orange-500" />
+                         <div className="flex justify-between text-xs font-bold text-white/60 mb-3"><span>لەلای سەرەوە و خوارەوە (Y)</span> <span className="text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded">{posY}</span></div>
+                         <input type="range" min="30" max="580" value={posY} onChange={(e) => setPosY(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                        </div>
                     </div>
                  </motion.div>
@@ -375,9 +376,9 @@ export default function Card({ profile, onClose }: CardProps) {
             </AnimatePresence>
          </div>
 
-         <div className="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-neutral-100 lg:hidden z-40">
-            <button onClick={downloadBusinessCard} disabled={generating || !cardImage} className={`w-full py-4 text-neutral-900 rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500 disabled:opacity-60 text-sm`}>
-              <Download size={20} strokeWidth={3} /> داگرتنی کارتەکە
+         <div className="absolute bottom-0 left-0 w-full p-5 bg-neutral-900/90 backdrop-blur-xl border-t border-white/5 lg:hidden z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+            <button onClick={downloadBusinessCard} disabled={generating || !cardImage} className={`w-full py-4 text-black rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-[0_10px_20px_rgba(251,191,36,0.2)] bg-gradient-to-r from-amber-400 to-yellow-500 disabled:opacity-50 text-sm uppercase`}>
+              <Download size={20} strokeWidth={3} /> داگرتنی کارتەکەم
             </button>
          </div>
       </div>
