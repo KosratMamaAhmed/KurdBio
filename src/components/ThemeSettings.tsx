@@ -1,6 +1,28 @@
 import { Palette, Droplet, Sparkles } from 'lucide-react';
 import PhoneMockup from './PhoneMockup';
-import { MOCKUP_DESIGNS } from './PhoneMockup';
+
+export const MOCKUP_DESIGNS = [
+  { id: 'mockup', name: 'تاریکی شاهانە' },
+  { id: 'light', name: 'سپی پلاتینی' },
+  { id: 'gold', name: 'ئاڵتوونی و ڕەش' },
+  { id: 'neon', name: 'شوشەیی نیۆن' },
+  { id: 'emerald', name: 'زەمردی متمانە' },
+  { id: 'vintage', name: 'قاوەیی کلاسیک' },
+  { id: 'crimson', name: 'خوێناوی تاریک' },
+  { id: 'navy', name: 'سرمەیی مۆدێرن' },
+  { id: 'royal', name: 'مۆر و ڕۆزگۆڵد' },
+  { id: 'minimal', name: 'مینیماڵی خاوێن' },
+  { id: 'cyberpunk', name: 'سایبەرپەنک' },
+  { id: 'glassmorphism', name: 'شوشەیی ڕەنگاوڕەنگ' },
+  { id: 'dracula', name: 'دراکولا' },
+  { id: 'aurora', name: 'شەبەنگی باکوور' },
+  { id: 'sunset', name: 'خۆرئاوابوون' },
+  { id: 'ocean', name: 'زەریای قوڵ' },
+  { id: 'forest', name: 'دارستانی تاریک' },
+  { id: 'candy', name: 'پەمەیی شیرین' },
+  { id: 'hacker', name: 'هاکەر (ماتریکس)' },
+  { id: 'luxury', name: 'ڕۆزگۆڵدی ڤی ئای پی' }
+];
 
 const PRESET_COLORS = [
   { id: 'gold', name: 'ئاڵتوونی', colors: { nameColor: '#fbbf24', bioColor: '#fcd34d', btnTextColor: '#ffffff' } },
@@ -8,7 +30,7 @@ const PRESET_COLORS = [
   { id: 'emerald', name: 'زەمردی', colors: { nameColor: '#10b981', bioColor: '#a7f3d0', btnTextColor: '#ffffff' } },
   { id: 'cyber', name: 'سایبەر', colors: { nameColor: '#000000', bioColor: '#1f2937', btnTextColor: '#06b6d4' } },
   { id: 'royal', name: 'شاهانە', colors: { nameColor: '#d8b4fe', bioColor: '#e9d5ff', btnTextColor: '#ffffff' } },
-  { id: 'reset', name: 'بنەڕەتی (سڕینەوە)', colors: { nameColor: '', bioColor: '', btnTextColor: '' } }
+  { id: 'reset', name: 'سڕینەوەی ڕەنگ', colors: { nameColor: '', bioColor: '', btnTextColor: '' } }
 ];
 
 export default function ThemeSettings({ profile, setProfile, handleUpdateProfile }: any) {
@@ -60,7 +82,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
                      setProfile({...profile, ...p.colors});
                      handleUpdateProfile(p.colors);
                    }}
-                   className={`px-3 py-1.5 rounded-lg text-[11px] font-black border transition-transform hover:scale-105 active:scale-95 ${p.id === 'reset' ? 'bg-red-50 text-red-500 border-red-200' : ''}`}
+                   className={`px-3 py-1.5 rounded-lg text-[11px] font-black border transition-transform hover:scale-105 active:scale-95 ${p.id === 'reset' ? 'bg-red-50 text-red-500 border-red-200 shadow-sm' : ''}`}
                    style={p.id !== 'reset' ? { backgroundColor: p.colors.nameColor + '15', borderColor: p.colors.nameColor, color: p.colors.nameColor === '#000000' || p.colors.nameColor === '#0f172a' ? '#333' : p.colors.nameColor } : {}}
                  >
                    {p.name}
