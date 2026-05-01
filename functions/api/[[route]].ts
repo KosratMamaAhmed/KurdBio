@@ -11,7 +11,6 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
-  // 🌟 سیستەمی Cache بۆ کەمکردنەوەی تێچووی KV
   const json = (data: any, status = 200, cacheType = "none") => {
     let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
     
@@ -61,22 +60,113 @@ export async function onRequest(context: any) {
     }
 
     if (method === "POST" && path.startsWith("/api/public/visit/")) {
-       return json({success: true}); // 0 Writes!
+       return json({success: true}); 
     }
 
     if (method === "POST" && path.startsWith("/api/public/click/")) {
-       return json({success: true}); // 0 Writes!
+       return json({success: true}); 
+    }
+
+    // 🌟 چارەسەری Login (یەک خانە و Case Insensitive) 🌟
+    if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
+       const { identifier, password } = await request.json();
+       if (!identifier || !password) return json({ error: "زانیارییەکان ناتەواون" }, 400);
+
+       const normalizedId = identifier.toLowerCase().trim();
+
+       let userStr = await env.KV.get(`user:${normalizedId}`); 
+       if (!userStr && normalizedId.includes('@')) {
+          const idFromEmail = await env.KV.get(`email:${normalizedId}`);
+          if (idFromEmail) userStr = await env.KV.get(`user_id:${idFromEmail}`);
+       }
+       if (!userStr && /^\d+$/.test(normalizedId)) {
+          const idFromPhone = await env.KV.get(`phone:${normalizedId}`);
+          if (idFromPhone) userStr = await env.KV.get(`user_id:${idFromPhone}`);
+       }
+
+       if (!userStr) {
+           // پشکنین بۆ ئەدمین
+           if (normalizedId === "admin" && password === (env.ADMIN_PASSWORD || "admin123")) {
+               const token = await jwt.sign({ id: "admin", role: "admin", exp: Math.floor(Date.now() / 1000) + 86400 }, env.JWT_SECRET);
+               return json({ token, user: { id: "admin", username: "admin", isAdmin: true, isPro: true } });
+           }
+           return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
+       }
+
+       let user = JSON.parse(userStr);
+       
+       if (user.isActive === false) return json({ error: "هەژمارەکەت ڕاگیراوە لەلایەن بەڕێوەبەرەوە" }, 403);
+
+       const isValid = await bcrypt.compare(password, user.password);
+       if (!isValid) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
+
+       const token = await jwt.sign({ id: user.id, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
+       return json({ token, user: { id: user.id, username: user.username, isAdmin: user.isAdmin === 1 || user.isAdmin === true, isPro: user.isPro } });
+    }
+
+    // 🌟 چارەسەری Register (پاسوۆردی ٨ پیتی، بچووککردنەوەی یوزەر، Auto-login) 🌟
+    if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
+        const { name, username, email, phone, password, dob } = await request.json();
+        
+        if (!name || !username || !email || !phone || !password || !dob) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
+        if (password.length < 8) return json({ error: "پاسوۆرد دەبێت لانی کەم ٨ پیت یان ژمارە بێت" }, 400);
+
+        const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+        const normalizedEmail = email.toLowerCase().trim();
+        const normalizedPhone = phone.trim().replace(/\s+/g, '');
+
+        const [existingUser, existingEmail, existingPhone] = await Promise.all([
+          env.KV.get(`user:${normalizedUsername}`),
+          env.KV.get(`email:${normalizedEmail}`),
+          env.KV.get(`phone:${normalizedPhone}`)
+        ]);
+
+        if (existingUser) return json({ error: "ئەم یوزەرنەیمە پێشتر بەکارهاتووە" }, 409);
+        if (existingEmail) return json({ error: "ئەم ئیمێڵە پێشتر بەکارهاتووە" }, 409);
+        if (existingPhone) return json({ error: "ئەم ژمارە مۆبایلە پێشتر بەکارهاتووە" }, 409);
+
+        const userId = Date.now().toString();
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const slug = normalizedUsername;
+
+        const newUser = {
+          id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
+          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: slug,
+          theme: 'mockup', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', bgImage: '',
+          isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
+        };
+
+        await Promise.all([
+          env.KV.put(`user_id:${userId}`, JSON.stringify(newUser)),
+          env.KV.put(`user:${normalizedUsername}`, JSON.stringify(newUser)),
+          env.KV.put(`email:${normalizedEmail}`, userId),
+          env.KV.put(`phone:${normalizedPhone}`, userId),
+          env.KV.put(`slug:${slug}`, userId)
+        ]);
+
+        const allUsersStr = await env.KV.get("all_users_list");
+        const allUsersList = allUsersStr ? JSON.parse(allUsersStr) : [];
+        allUsersList.push(userId);
+        await env.KV.put("all_users_list", JSON.stringify(allUsersList));
+
+        const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
+        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: false } });
     }
 
     if (method === "POST" && path === "/api/public/reset-password") {
        const { identifier, dob, newPassword } = await request.json();
        if (!identifier || !dob || !newPassword) return json({ error: "زانیارییەکان ناتەواون" }, 400);
+       if (newPassword.length < 8) return json({ error: "پاسوۆرد دەبێت لانی کەم ٨ پیت یان ژمارە بێت" }, 400);
 
        const normalizedId = identifier.toLowerCase().trim();
        let targetUserId = await env.KV.get(`user:${normalizedId}`); 
        if (!targetUserId && normalizedId.includes('@')) {
           const idFromEmail = await env.KV.get(`email:${normalizedId}`);
           if (idFromEmail) targetUserId = await env.KV.get(`user_id:${idFromEmail}`);
+       }
+       if (!targetUserId && /^\d+$/.test(normalizedId)) {
+          const idFromPhone = await env.KV.get(`phone:${normalizedId}`);
+          if (idFromPhone) targetUserId = await env.KV.get(`user_id:${idFromPhone}`);
        }
 
        if (!targetUserId) return json({ error: "هیچ هەژمارێک بوونی نییە" }, 404);
@@ -85,7 +175,6 @@ export async function onRequest(context: any) {
        if (user.dob !== dob) return json({ error: "ڕۆژی لەدایکبوونەکە هەڵەیە!" }, 403);
 
        user.password = await bcrypt.hash(newPassword, 10);
-       user.failedAttempts = 0; user.lockUntil = null;
        await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
        await env.KV.put(`user:${user.username}`, JSON.stringify(user));
        return json({ success: true });
@@ -124,24 +213,38 @@ export async function onRequest(context: any) {
        return json(userStr ? JSON.parse(userStr) : { error: "بەکارهێنەر نەدۆزرایەوە" });
     }
 
+    // 🌟 سڕینەوەی یوزەرنەیمی کۆن کاتێک دەگۆڕدرێت 🌟
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);
        const user = JSON.parse(userStr);
        
+       const oldUsername = user.username;
        const oldSlug = user.slug || user.username;
-       let newSlug = updates.slug;
-       if (newSlug && newSlug !== oldSlug) {
-           newSlug = newSlug.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+       
+       let newUsername = updates.username ? updates.username.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldUsername;
+       let newSlug = updates.slug ? updates.slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldSlug;
+       
+       if (newUsername !== oldUsername) {
+           const checkTaken = await env.KV.get(`user:${newUsername}`);
+           if(checkTaken) return json({error: "ئەم یوزەرنەیمە گیراوە"}, 400);
+           await env.KV.delete(`user:${oldUsername}`);
+       }
+
+       if (newSlug !== oldSlug) {
+           const checkTakenSlug = await env.KV.get(`slug:${newSlug}`);
+           if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400);
+           
            await env.KV.delete(`slug:${oldSlug}`);
            await env.KV.put(`slug:${newSlug}`, userId.toString());
        }
        
        const updatedUser = { 
            ...user, 
+           username: newUsername,
            displayName: escapeHTML(updates.displayName || user.displayName), 
            bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio), 
-           slug: newSlug || user.slug, 
+           slug: newSlug, 
            theme: updates.theme !== undefined ? updates.theme : user.theme, 
            bgImage: updates.bgImage !== undefined ? updates.bgImage : user.bgImage, 
            avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl,
@@ -149,7 +252,7 @@ export async function onRequest(context: any) {
            bioColor: updates.bioColor !== undefined ? updates.bioColor : user.bioColor,
            btnTextColor: updates.btnTextColor !== undefined ? updates.btnTextColor : user.btnTextColor
        };
-       await env.KV.put(`user:${updatedUser.username}`, JSON.stringify(updatedUser));
+       await env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser));
        await env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser));
        return json(updatedUser);
     }

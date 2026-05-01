@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle, CalendarDays, KeyRound, User, Mail, Phone, Lock } from 'lucide-react';
@@ -19,39 +19,45 @@ export default function Auth({ onLogin, theme }: Props) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({ 
-    identifier: '', username: '', email: '', phone: '', 
+    identifier: '', username: '', email: '', phone: '', displayName: '', 
     password: '', confirmPassword: '', 
     dobDay: '', dobMonth: '', dobYear: '' 
   });
 
-  const isStrongPassword = (pass: string) => {
-    return pass.length >= 8 && /[A-Za-z]/.test(pass) && /[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass);
-  };
+  const isStrongPassword = (pass: string) => pass.length >= 8;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setSuccessMsg('');
 
     if (mode === 'register') {
-      if (formData.password !== formData.confirmPassword) return setError('تێپەڕەوشەکان وەک یەک نین!');
-      if (!isStrongPassword(formData.password)) return setError('تێپەڕەوشە دەبێت ٨ پیت، ژمارەیەک و هێمایەکی (@#$) تێدابێت.');
+      if (!isStrongPassword(formData.password)) return setError('تێپەڕەوشە دەبێت لانی کەم ٨ پیت یان ژمارە بێت.');
       if (!formData.dobDay || !formData.dobMonth || !formData.dobYear) return setError('تکایە ڕۆژی لەدایکبوون بەتەواوی هەڵبژێرە.');
     }
 
     if (mode === 'forgot') {
       if (formData.password !== formData.confirmPassword) return setError('تێپەڕەوشە نوێیەکان وەک یەک نین!');
-      if (!isStrongPassword(formData.password)) return setError('تێپەڕەوشەی نوێ دەبێت بەهێز بێت.');
+      if (!isStrongPassword(formData.password)) return setError('تێپەڕەوشەی نوێ دەبێت لانی کەم ٨ پیت یان ژمارە بێت.');
       if (!formData.dobDay || !formData.dobMonth || !formData.dobYear) return setError('تکایە ڕۆژی لەدایکبوون بنووسە.');
     }
 
     setLoading(true);
-    const endpoint = mode === 'login' ? '/api/login' : mode === 'register' ? '/api/register' : '/api/public/reset-password';
+    
+    // لەبەر ئەوەی بەکارهێنەر کۆدەکانی login و register جیا کردووەتەوە یان نا لە route دا، بەکارهێنانی api گشتی باشترە کە پێشتر داماننا
+    const endpoint = mode === 'login' ? '/api/auth/login' : mode === 'register' ? '/api/auth/register' : '/api/public/reset-password';
     
     const dob = `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`;
     const body = mode === 'login' 
       ? { identifier: formData.identifier, password: formData.password } 
       : mode === 'forgot'
       ? { identifier: formData.identifier, dob, newPassword: formData.password }
-      : { ...formData, dob };
+      : { 
+          name: formData.displayName, 
+          username: formData.username, 
+          email: formData.email, 
+          phone: formData.phone, 
+          password: formData.password,
+          dob 
+        };
     
     try {
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -61,16 +67,35 @@ export default function Auth({ onLogin, theme }: Props) {
       if (mode === 'login') { 
         onLogin(data); 
       } else if (mode === 'register') { 
-        setSuccessMsg('هەژمارەکەت بە سەرکەوتوویی دروستکرا! ئێستا دەتوانیت بچیتە ژوورەوە.'); 
-        setMode('login');
-        setFormData({ ...formData, password: '', confirmPassword: '' });
+        // 🌟 چوونەژوورەوەی ڕاستەوخۆ دوای دروستکردنی هەژمار 🌟
+        onLogin(data); 
       } else {
         setSuccessMsg('تێپەڕەوشەکەت بە سەرکەوتوویی گۆڕدرا! ئێستا بچۆ ژوورەوە.');
         setMode('login');
         setFormData({ ...formData, password: '', confirmPassword: '' });
       }
     } catch (err: any) { 
-      setError(err.message); 
+      // 🌟 ئەگەر هەڵەی api بوو چونکە فایلەکەمان یەک route یە، هەوڵ دەدەین بە شێوازی پێشوو بینێرین
+      if (err.message.includes('ڕوویدا') || err.message.includes('Not Found')) {
+         const oldEndpoint = mode === 'login' ? '/api/login' : mode === 'register' ? '/api/register' : '/api/public/reset-password';
+         try {
+            const res2 = await fetch(oldEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            const data2 = await res2.json();
+            if (!res2.ok) throw new Error(data2.error || 'هەڵەیەک ڕوویدا');
+            
+            if (mode === 'login' || mode === 'register') { 
+               onLogin(data2); 
+            } else {
+               setSuccessMsg('تێپەڕەوشەکەت بە سەرکەوتوویی گۆڕدرا! ئێستا بچۆ ژوورەوە.');
+               setMode('login');
+               setFormData({ ...formData, password: '', confirmPassword: '' });
+            }
+         } catch(err2: any) {
+             setError(err2.message);
+         }
+      } else {
+         setError(err.message); 
+      }
     } finally { 
       setLoading(false); 
     }
@@ -85,7 +110,6 @@ export default function Auth({ onLogin, theme }: Props) {
   return (
     <div className="min-h-[100dvh] bg-neutral-100 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden" dir="rtl">
       
-      {/* پاشبنەمای ڕەنگاوڕەنگی مۆدێرن */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
          <div className={`absolute -top-[20%] -right-[10%] w-[70%] h-[60%] ${theme?.main || 'bg-orange-500'} rounded-full blur-[120px] opacity-20 animate-pulse`}></div>
          <div className={`absolute top-[40%] -left-[10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[120px] opacity-10`}></div>
@@ -95,7 +119,6 @@ export default function Auth({ onLogin, theme }: Props) {
         گەڕانەوە
       </Link>
 
-      {/* دیزاینی فلاش کارت (Flash Card) */}
       <div className="w-full max-w-[460px] relative z-10 perspective-1000">
         <AnimatePresence mode="wait">
           <motion.div
@@ -132,12 +155,13 @@ export default function Auth({ onLogin, theme }: Props) {
               
               {mode === 'login' && (
                 <>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><User size={20} /></div>
-                    <input type="text" placeholder="ناو، ئیمێڵ یان مۆبایل" required value={formData.identifier} onChange={e => setFormData({...formData, identifier: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><User size={20} /></div>
+                    <input type="text" placeholder="یوزەرنەیم، ئیمێڵ، یان ژمارە مۆبایل" required value={formData.identifier} onChange={e => setFormData({...formData, identifier: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><Lock size={20} /></div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Lock size={20} /></div>
+                    {/* 🌟 pl-12 بەکارهێنراوە بۆ ئەوەی ئایکۆنی چاوەکە نەچێتە سەر پاسوۆردەکە 🌟 */}
                     <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشە (Password)" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-12 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400 hover:text-neutral-700 transition">
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -153,16 +177,21 @@ export default function Auth({ onLogin, theme }: Props) {
 
               {mode === 'register' && (
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto px-1 pb-2 scrollbar-hide">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><User size={20} /></div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><User size={20} /></div>
+                    <input type="text" placeholder="ناوی تەواو" required value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" />
+                  </div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><User size={20} /></div>
+                    {/* 🌟 یوزەرنەیم ڕاستەوخۆ دەبێت بە بچووک و بۆشایی نامێنێت 🌟 */}
                     <input type="text" placeholder="ناوی بەکارهێنەر (بۆ نمونە: kosrat99)" required value={formData.username} onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><Mail size={20} /></div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Mail size={20} /></div>
                     <input type="email" placeholder="ئیمێڵی ڕاستەقینە" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><Phone size={20} /></div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Phone size={20} /></div>
                     <input type="tel" placeholder="ژمارە مۆبایل" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
 
@@ -185,28 +214,22 @@ export default function Auth({ onLogin, theme }: Props) {
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <div className="relative">
-                      <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ (Password)" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Lock size={20} /></div>
+                      <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ (لانی کەم ٨ پیت)" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-12 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400 hover:text-neutral-700 transition">
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
-                    <div className="relative">
-                      <input type={showConfirmPassword ? "text" : "password"} placeholder="دڵنیابوونەوە لە تێپەڕەوشە" required value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} className="w-full px-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400 hover:text-neutral-700 transition">
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
-                    <p className="text-[11px] font-bold text-neutral-400 leading-relaxed text-right">پێویستە ٨ پیت، ژمارە، و هێمایەکی تێدابێت. نموونە: <span className="text-neutral-600 bg-neutral-100 px-1 rounded" dir="ltr">Kosrat@2026</span></p>
                   </div>
                 </div>
               )}
 
               {mode === 'forgot' && (
                 <div className="space-y-4">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400"><User size={20} /></div>
-                    <input type="text" placeholder="ناوی بەکارهێنەر یان ئیمێڵەکەت" required value={formData.identifier} onChange={e => setFormData({...formData, identifier: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><User size={20} /></div>
+                    <input type="text" placeholder="ناوی بەکارهێنەر، ئیمێڵ، یان ژمارە مۆبایل" required value={formData.identifier} onChange={e => setFormData({...formData, identifier: e.target.value})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
                   
                   <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
@@ -227,12 +250,15 @@ export default function Auth({ onLogin, theme }: Props) {
                     </div>
                   </div>
 
-                  <div className="relative">
-                    <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" dir="ltr" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Lock size={20} /></div>
+                    <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ (لانی کەم ٨ پیت)" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-12 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" dir="ltr" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400"><Eye size={20} /></button>
                   </div>
-                  <div className="relative">
-                    <input type={showConfirmPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ دووبارە بکەرەوە" required value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} className="w-full px-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" dir="ltr" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Lock size={20} /></div>
+                    <input type={showConfirmPassword ? "text" : "password"} placeholder="تێپەڕەوشەی نوێ دووبارە بکەرەوە" required value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} className="w-full pl-12 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 outline-none font-bold text-sm transition-all" dir="ltr" />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400"><Eye size={20} /></button>
                   </div>
                 </div>
               )}
