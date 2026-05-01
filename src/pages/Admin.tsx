@@ -28,6 +28,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const [settings, setSettings] = useState<any>({ 
     pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
     siteTheme: 'orange', 
+    // 🌟 تێبینی: ڕەنگەکان بە بەتاڵی جێهێڵراون بۆ ئەوەی ڕووکارە نوێیەکان کار بکەن
     mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', buttonDesign: 'mockup', nameColor: '', bioColor: '', btnTextColor: '' }, 
     globalButtons: [], ads: [], socialPlatforms: []
   });
@@ -106,7 +107,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
     setEditingUser(null); fetchData();
   };
 
-  // 🌟 لێرەدا کێشەی نەگۆڕانی وێنەکان لە ئەدمین چارەسەر کرا 🌟
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons' | 'mockup', index?: number) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
@@ -136,7 +136,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
   const TABS = [
     { id: 'theme', label: 'ڕووکار و مۆکئەپ', icon: <Palette size={18}/> },
-    { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> }, // هێنامە پێشەوە
+    { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> },
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
     { id: 'buttons', label: 'بەستەرە گشتییەکان', icon: <LinkIcon size={18}/> },
     { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
@@ -144,7 +144,8 @@ export default function Admin({ user, onLogout, theme }: Props) {
   ];
 
   if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center"><div className={`w-8 h-8 border-4 ${theme?.border || 'border-orange-200'} border-t-transparent rounded-full animate-spin`}></div></div>;
-return (
+
+  return (
     <div className="min-h-[100dvh] bg-neutral-50 font-sans pb-20" dir="rtl">
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -166,6 +167,8 @@ return (
         </div>
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
+          
+          {/* TAB: Theme & Mockup */}
           {activeTab === 'theme' && (
             <div className="space-y-8">
               <div>
@@ -264,6 +267,60 @@ return (
             </div>
           )}
 
+          {/* TAB: Ads */}
+          {activeTab === 'ads' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between border-b border-neutral-200 pb-4 gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-neutral-900">سپۆنسەر و ڕیکلامەکان (VIP)</h2>
+                  <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە بە ئیفێکتێکی ئاگرین وەک VIP لە سەرەوەی پرۆفایلی هەمووان دەردەکەون.</p>
+                </div>
+                <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`px-6 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی ڕیکلام</button>
+              </div>
+              
+              <div className="space-y-6">
+                <input type="file" ref={fileInputRef} accept="image/*" className="hidden" />
+                {(settings.ads||[]).map((ad: any, idx: number) => (
+                  <div key={ad.id} className="relative p-6 bg-gradient-to-br from-amber-50 to-orange-50/30 rounded-[2rem] border-2 border-amber-200/50 shadow-sm overflow-hidden">
+                    {ad.isActive === false && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10"></div>}
+                    
+                    <div className="flex flex-col lg:flex-row gap-6 relative z-20 items-center">
+                      <div className="w-24 h-24 shrink-0 rounded-2xl bg-white border-2 border-amber-300 p-2 shadow-inner relative group">
+                        {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-xl" alt="Ad" /> : <Star size={32} className="text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+                        <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'ads', idx); fileInputRef.current!.click(); }} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white cursor-pointer"><Camera size={24}/></button>
+                      </div>
+
+                      <div className="flex-1 w-full space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-amber-700 mb-1 block">سەردێڕی ڕیکلام</label>
+                            <input type="text" value={ad.title} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, title: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-amber-700 mb-1 block">بەستەری ڕیکلام</label>
+                            <input type="url" value={ad.url} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, url: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition text-left" dir="ltr" placeholder="https://" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-3">
+                          <select value={ad.targetOS} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, targetOS: e.target.value} : a)}))} className="p-3 rounded-xl border border-amber-200 font-bold bg-white outline-none cursor-pointer flex-1 min-w-[150px]">
+                            <option value="all">📱 هەموو ئامێرەکان</option><option value="android">🤖 تەنها Android</option><option value="ios">🍏 تەنها iPhone</option><option value="windows">💻 تەنها Windows</option>
+                          </select>
+                          
+                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, isActive: !a.isActive} : a)}))} className={`p-3 rounded-xl font-bold flex items-center justify-center gap-2 transition flex-1 min-w-[120px] ${ad.isActive !== false ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200' : 'bg-neutral-200 text-neutral-600 border border-neutral-300 z-20 relative'}`}>
+                            {ad.isActive !== false ? <><Eye size={18}/> چالاکە</> : <><EyeOff size={18}/> ڕاگیراوە</>}
+                          </button>
+                          
+                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition border border-red-200 z-20 relative px-4"><Trash2 size={20}/></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* TAB: Global Buttons */}
           {activeTab === 'buttons' && (
             <div className="space-y-6">
@@ -289,61 +346,6 @@ return (
                       <div className="flex gap-2 items-end">
                         <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'globalButtons', idx); fileInputRef.current!.click(); }} className="flex-1 p-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-bold rounded-xl transition h-[46px] flex items-center justify-center"><Camera size={18}/></button>
                         <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: prev.globalButtons.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition h-[46px]"><Trash2 size={20}/></button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-{/* 🌟 TAB: Ads (Sponsor) - نوێکرایەوە و کێشەکانی چارەسەر کرا 🌟 */}
-          {activeTab === 'ads' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between border-b border-neutral-200 pb-4 gap-4">
-                <div>
-                  <h2 className="text-xl font-black text-neutral-900">سپۆنسەر و ڕیکلامەکان (VIP)</h2>
-                  <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە بە ئیفێکتێکی ئاگرین وەک VIP لە سەرەوەی پرۆفایلی هەمووان دەردەکەون.</p>
-                </div>
-                <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`px-6 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی ڕیکلام</button>
-              </div>
-              
-              <div className="space-y-6">
-                <input type="file" ref={fileInputRef} accept="image/*" className="hidden" />
-                {(settings.ads||[]).map((ad: any, idx: number) => (
-                  <div key={ad.id} className="relative p-6 bg-gradient-to-br from-amber-50 to-orange-50/30 rounded-[2rem] border-2 border-amber-200/50 shadow-sm overflow-hidden">
-                    {ad.isActive === false && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10"></div>}
-                    
-                    <div className="flex flex-col lg:flex-row gap-6 relative z-20 items-center">
-                      {/* وێنەی ڕیکلامەکە */}
-                      <div className="w-24 h-24 shrink-0 rounded-2xl bg-white border-2 border-amber-300 p-2 shadow-inner relative group">
-                        {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-xl" alt="Ad" /> : <Star size={32} className="text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
-                        <button onClick={() => { fileInputRef.current!.onchange = (e:any) => handleImageUpload(e, 'ads', idx); fileInputRef.current!.click(); }} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white cursor-pointer"><Camera size={24}/></button>
-                      </div>
-
-                      {/* زانیارییەکانی ڕیکلامەکە */}
-                      <div className="flex-1 w-full space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-xs font-black text-amber-700 mb-1 block">سەردێڕی ڕیکلام</label>
-                            <input type="text" value={ad.title} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, title: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-black text-amber-700 mb-1 block">بەستەری ڕیکلام</label>
-                            <input type="url" value={ad.url} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, url: e.target.value} : a)}))} className="w-full p-3.5 rounded-xl border border-amber-200 outline-none font-bold bg-white focus:border-amber-500 transition text-left" dir="ltr" placeholder="https://" />
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap items-center gap-3">
-                          <select value={ad.targetOS} onChange={e => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, targetOS: e.target.value} : a)}))} className="p-3 rounded-xl border border-amber-200 font-bold bg-white outline-none cursor-pointer flex-1 min-w-[150px]">
-                            <option value="all">📱 هەموو ئامێرەکان</option><option value="android">🤖 تەنها Android</option><option value="ios">🍏 تەنها iPhone</option><option value="windows">💻 تەنها Windows</option>
-                          </select>
-                          
-                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.map((a:any, i:number) => i === idx ? {...a, isActive: !a.isActive} : a)}))} className={`p-3 rounded-xl font-bold flex items-center justify-center gap-2 transition flex-1 min-w-[120px] ${ad.isActive !== false ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200' : 'bg-neutral-200 text-neutral-600 border border-neutral-300 z-20 relative'}`}>
-                            {ad.isActive !== false ? <><Eye size={18}/> چالاکە</> : <><EyeOff size={18}/> ڕاگیراوە</>}
-                          </button>
-                          
-                          <button onClick={() => setSettings((prev:any) => ({...prev, ads: prev.ads.filter((_:any, i:number) => i !== idx)}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition border border-red-200 z-20 relative px-4"><Trash2 size={20}/></button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -385,7 +387,8 @@ return (
               </div>
             </div>
           )}
-{/* TAB: Users */}
+
+          {/* TAB: Users */}
           {activeTab === 'users' && (
              <div className="space-y-6">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">

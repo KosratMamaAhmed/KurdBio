@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(), 
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', '**/*.apk', 'font/*.ttf'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'font/*.ttf'],
       manifest: {
         name: 'BioKurd',
         short_name: 'BioKurd',
@@ -27,8 +27,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,ttf}'],
-        globStrict: false, // 🌟 ئەمە کێشەی Build ی PWA چارەسەر دەکات 🌟
+        // 🌟 لێرەدا فایلە زیادەکان و globStrict مان لابرد بۆ ئەوەی ١٠٠٪ کار بکات 🌟
+        globPatterns: ['**/*.{js,css,html,ico,png,ttf}'],
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         runtimeCaching: [
           {
@@ -37,7 +37,7 @@ export default defineConfig({
             options: { cacheName: 'qr-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 } }
           },
           {
-            urlPattern: /\/api\/public\/.*/i, // لۆدکردنی پرۆفایلەکان لە دۆخی ئۆفلاین
+            urlPattern: /\/api\/public\/.*/i,
             handler: 'NetworkFirst',
             options: { cacheName: 'api-cache', networkTimeoutSeconds: 5, expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 } }
           },
