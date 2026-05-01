@@ -22,13 +22,13 @@ export default function Dashboard({ user, onLogout, theme, settings }: Props) {
     fetch('/api/profile', { headers: { 'Authorization': `Bearer ${user.token}` } })
     .then(res => res.json())
     .then(data => { 
-      // 🌟 دانانی ڕەنگە ئاڵتوونییەکان و ڕووکاری تاریکی شاهانە وەک بنەڕەت 🌟
       const loadedProfile = {
         ...data,
         theme: data.theme || 'mockup',
-        nameColor: data.nameColor || '#fbbf24',
-        bioColor: data.bioColor || '#fcd34d',
-        btnTextColor: data.btnTextColor || '#ffffff'
+        // 🌟 چارەسەری کێشەکە: نابێت لێرە بە زۆر ڕەنگ دابنێین با ڕووکارەکان دیزاینی خۆیان پیشان بدەن
+        nameColor: data.nameColor || '',
+        bioColor: data.bioColor || '',
+        btnTextColor: data.btnTextColor || ''
       };
       setProfile(loadedProfile); 
       setLoading(false); 
@@ -44,7 +44,6 @@ export default function Dashboard({ user, onLogout, theme, settings }: Props) {
 
   const handleUpdateProfile = async (updates: any = {}) => {
     setSaving(true);
-    // 🌟 لێرەدا کێشەکە چارەسەر کرا: تەواوی داتاکانی پرۆفایل دەگرێتە خۆی بۆ ئەوەی ڕەنگەکان نەڕەشێنەوە 🌟
     const dataToSend = { ...profile, ...updates };
     
     try {

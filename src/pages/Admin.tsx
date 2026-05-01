@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Users, LogOut, Trash2, Edit, Settings, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Smartphone, Camera, Lock, Share2, Globe, Eye, EyeOff, Image as ImageIcon, Palette, Search } from 'lucide-react';
 import PhoneMockup from '../components/PhoneMockup';
 
-interface Props { 
-  user: any; 
-  onLogout: () => void; 
-  theme: any; 
-}
+interface Props { user: any; onLogout: () => void; theme: any; }
 
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
@@ -32,7 +28,8 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const [settings, setSettings] = useState<any>({ 
     pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
     siteTheme: 'orange', 
-    mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', buttonDesign: 'mockup', nameColor: '#ffffff', bioColor: '#a3a3a3', btnTextColor: '#ffffff' }, 
+    // 🌟 تێبینی: ڕەنگەکان بە بەتاڵی جێهێڵراون بۆ ئەوەی ڕووکارە نوێیەکان کار بکەن
+    mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', buttonDesign: 'mockup', nameColor: '', bioColor: '', btnTextColor: '' }, 
     globalButtons: [], 
     ads: [], 
     socialPlatforms: []
@@ -136,8 +133,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
   ];
 
   if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center"><div className={`w-8 h-8 border-4 ${theme?.border || 'border-orange-200'} border-t-transparent rounded-full animate-spin`}></div></div>;
-
-  return (
+return (
     <div className="min-h-[100dvh] bg-neutral-50 font-sans pb-20" dir="rtl">
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -195,9 +191,9 @@ export default function Admin({ user, onLogout, theme }: Props) {
                            { name: 'ئاڵتوونی', col: { nameColor: '#fbbf24', bioColor: '#fcd34d', btnTextColor: '#ffffff' } },
                            { name: 'زەریایی', col: { nameColor: '#38bdf8', bioColor: '#bae6fd', btnTextColor: '#ffffff' } },
                            { name: 'زەمردی', col: { nameColor: '#10b981', bioColor: '#a7f3d0', btnTextColor: '#ffffff' } },
-                           { name: 'پریمیم', col: { nameColor: '#d8b4fe', bioColor: '#e9d5ff', btnTextColor: '#ffffff' } }
+                           { name: 'سڕینەوە', col: { nameColor: '', bioColor: '', btnTextColor: '' } }
                          ].map(p => (
-                           <button type="button" key={p.name} onClick={() => setSettings({...settings, mockup: {...settings.mockup, ...p.col}})} className="px-2 py-1 text-[10px] font-bold rounded-md border" style={{ backgroundColor: p.col.nameColor + '15', color: p.col.nameColor, borderColor: p.col.nameColor }}>{p.name}</button>
+                           <button type="button" key={p.name} onClick={() => setSettings({...settings, mockup: {...settings.mockup, ...p.col}})} className={`px-2 py-1 text-[10px] font-bold rounded-md border ${p.name === 'سڕینەوە' ? 'bg-red-50 text-red-500 border-red-200' : ''}`} style={p.name !== 'سڕینەوە' ? { backgroundColor: p.col.nameColor + '15', color: p.col.nameColor, borderColor: p.col.nameColor } : {}}>{p.name}</button>
                          ))}
                        </div>
                      </div>
@@ -208,7 +204,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                         </div>
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی بایۆ</span>
-                          <input type="color" value={settings.mockup?.bioColor || '#a3a3a3'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, bioColor: e.target.value}})} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
+                          <input type="color" value={settings.mockup?.bioColor || '#ffffff'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, bioColor: e.target.value}})} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
                         </div>
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی دوگمە</span>
@@ -219,7 +215,9 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">جۆری دیزاین</label>
-                     <select value={settings.mockup?.buttonDesign || 'mockup'} onChange={e => setSettings({...settings, mockup: {...settings.mockup, buttonDesign: e.target.value}})} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition cursor-pointer">
+                     <select value={settings.mockup?.buttonDesign || 'mockup'} onChange={e => {
+                         setSettings({...settings, mockup: {...settings.mockup, buttonDesign: e.target.value, nameColor: '', bioColor: '', btnTextColor: ''}});
+                     }} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition cursor-pointer">
                         <option value="mockup">تاریکی شاهانە (Executive)</option>
                         <option value="light">سپی پلاتینی (Pearl)</option>
                         <option value="gold">ئاڵتوونی و ڕەش (Luxury)</option>
@@ -230,6 +228,16 @@ export default function Admin({ user, onLogout, theme }: Props) {
                         <option value="navy">سرمەیی مۆدێرن (Navy)</option>
                         <option value="royal">مۆر و ڕۆزگۆڵد (Royal)</option>
                         <option value="minimal">مینیماڵی خاوێن (Minimal)</option>
+                        <option value="cyberpunk">سایبەرپەنک</option>
+                        <option value="glassmorphism">شوشەیی ڕەنگاوڕەنگ</option>
+                        <option value="dracula">دراکولا</option>
+                        <option value="aurora">شەبەنگی باکوور</option>
+                        <option value="sunset">خۆرئاوابوون</option>
+                        <option value="ocean">زەریای قوڵ</option>
+                        <option value="forest">دارستانی تاریک</option>
+                        <option value="candy">پەمەیی شیرین</option>
+                        <option value="hacker">هاکەر (ماتریکس)</option>
+                        <option value="luxury">ڕۆزگۆڵدی ڤی ئای پی</option>
                      </select>
                    </div>
 
@@ -291,8 +299,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
               </div>
             </div>
           )}
-
-          {/* TAB: Social Platforms */}
+{/* TAB: Social Platforms */}
           {activeTab === 'socials' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -379,8 +386,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                </div>
              </div>
           )}
-
-          {/* TAB: Pages Content */}
+{/* TAB: Pages Content */}
           {activeTab === 'pages' && (
             <div className="space-y-12">
               <h2 className="text-xl font-black">دەستکاریکردنی پەڕە گشتییەکان</h2>

@@ -35,7 +35,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
-    // ١. سەرەتا هەژمارکردنی کلیکەکە ئەنجام دەدەین
     const clickKey = `clicked_link_${slug}_${linkId}`;
     const lastClick = localStorage.getItem(clickKey);
     if (!lastClick || Date.now() - parseInt(lastClick) > 24 * 60 * 60 * 1000) {
@@ -43,7 +42,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       localStorage.setItem(clickKey, Date.now().toString());
     }
 
-    // ٢. پاشان بڕیار دەدەین چۆن لینکەکە بکاتەوە
     if(url.endsWith('.apk')) { 
       window.location.href = url; 
     } else {
@@ -73,9 +71,9 @@ export default function PublicProfile({ settings }: { settings?: any }) {
              bio: profile.bio, 
              avatar: profile.avatarUrl, 
              buttonDesign: profile.theme || 'mockup',
-             nameColor: profile.nameColor || '#fbbf24',
-             bioColor: profile.bioColor || '#fcd34d',
-             btnTextColor: profile.btnTextColor || '#ffffff',
+             nameColor: profile.nameColor, 
+             bioColor: profile.bioColor,
+             btnTextColor: profile.btnTextColor,
              isPro: profile.isPro 
            }} 
            mockupLinks={profile.links || []} 
