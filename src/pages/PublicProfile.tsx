@@ -61,10 +61,10 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   ];
 
   return (
-    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-gradient-to-br from-neutral-950 to-black p-0 sm:p-4 overflow-hidden relative touch-manipulation" dir="rtl">
-       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0,transparent_100%)] pointer-events-none"></div>
+    // 🌟 لێرەدا پادینگی دەرەوەم زۆر کەم کردەوە بۆ ئەوەی مۆکئەپەکە فول سکرین بێت 🌟
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-800 via-[#0a0a0a] to-black p-0 sm:p-4 overflow-hidden relative touch-manipulation" dir="rtl">
        
-       <div className="relative z-10 w-full animate-[fadeIn_0.5s_ease-out]">
+       <div className="relative z-10 w-full flex justify-center animate-[fadeIn_0.5s_ease-out]">
          <PhoneMockup 
            mockup={{ 
              name: profile.displayName, 

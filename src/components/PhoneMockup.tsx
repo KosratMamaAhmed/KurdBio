@@ -35,7 +35,6 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
   const designId = mockup?.buttonDesign || 'mockup';
   const t = THEME_STYLES[designId] || THEME_STYLES.mockup;
 
-  // 🌟 لێرەدا ڕەنگەکان ڕاستەوخۆ دەخوێنرێنەوە ئەگەر بەکارهێنەر دیاری کردبوو 🌟
   const nameStyle = mockup?.nameColor ? { color: mockup.nameColor } : undefined;
   const bioStyle = mockup?.bioColor ? { color: mockup.bioColor } : undefined;
   const btnTextStyle = mockup?.btnTextColor ? { color: mockup.btnTextColor } : undefined;
@@ -44,12 +43,13 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
   const bioClass = mockup?.bioColor ? '' : t.sub;
   const btnTextClass = mockup?.btnTextColor ? '' : t.text;
 
-  // 🌟 شاشەی مۆبایلەکان لێرەدا ڕێکخراوە بۆ ئەوەی ١٠٠٪ Responsive بێت 🌟
+  // 🌟 لێرەدا قەبارەیم فول سکرین کرد بۆ پەڕەی گشتی (٩٧٪ ی شاشەکە دەگرێت) 🌟
   const containerClass = isPublic 
-    ? `w-full max-w-[320px] sm:max-w-[380px] mx-auto aspect-[9/19] sm:aspect-[9/18] rounded-[2.5rem] sm:rounded-[3rem] p-2 relative shrink-0 border-[6px] sm:border-[8px] shadow-[0_30px_60px_rgba(0,0,0,0.6)] ${t.shell} my-4`
+    ? `w-[96%] sm:w-full max-w-[420px] sm:max-w-[460px] h-[97dvh] sm:h-[94dvh] mx-auto rounded-[2.5rem] sm:rounded-[3.5rem] p-1.5 sm:p-2.5 relative shrink-0 border-[5px] sm:border-[8px] shadow-[0_40px_80px_rgba(0,0,0,0.8)] ${t.shell}`
     : `w-full max-w-[280px] sm:max-w-[320px] mx-auto aspect-[9/19] rounded-[2rem] sm:rounded-[2.5rem] p-2 relative shrink-0 transition-all duration-500 transform-gpu hover:scale-[1.02] border-[4px] sm:border-[6px] shadow-2xl ${t.shell}`;
 
-  const innerRounded = "rounded-[2rem] sm:rounded-[2.5rem]";
+  // 🌟 لێوارەکانی ناوەوە کەمێک بچووکتر کرانەوە بۆ ئەوەی ڕووبەرەکە گەورەتر بێت 🌟
+  const innerRounded = isPublic ? "rounded-[2.2rem] sm:rounded-[3rem]" : "rounded-[1.6rem] sm:rounded-[2rem]";
   
   const safeMockupLinks = Array.isArray(mockupLinks) ? mockupLinks : [];
   const safeSponsoredLinks = Array.isArray(sponsoredLinks) ? sponsoredLinks : [];
@@ -62,19 +62,18 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
       <div className={`w-full h-full ${innerRounded} relative overflow-hidden flex flex-col ${t.inner}`}>
         <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-white/10 to-transparent z-0 pointer-events-none"></div>
         
-        {/* Notch - کامێرای سەرەوە */}
+        {/* Notch - کامێرای مۆبایل */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 sm:w-24 sm:h-6 bg-black rounded-full z-30 flex items-center justify-center gap-2 shadow-sm border border-white/5">
           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/20"></div>
           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/10"></div>
         </div>
 
-        <div className={`flex-1 flex flex-col items-center pt-10 sm:pt-14 px-3 pb-6 z-20 w-full overflow-y-auto scrollbar-hide ${isPublic ? 'pb-28' : ''}`}>
+        <div className={`flex-1 flex flex-col items-center pt-12 sm:pt-16 px-4 pb-6 z-20 w-full overflow-y-auto scrollbar-hide ${isPublic ? 'pb-32' : ''}`}>
           
-          {/* بەشی وێنەی پرۆفایل */}
-          <div className="relative mb-3 shrink-0 mt-2">
-            <div className="relative w-20 h-20 rounded-[1.4rem] p-[2px] overflow-hidden group shadow-xl">
+          <div className="relative mb-4 shrink-0 mt-2 sm:mt-0">
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[1.6rem] p-[2px] overflow-hidden group shadow-xl">
               <div className="absolute top-1/2 left-1/2 w-[250%] h-[250%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0_280deg,rgba(255,255,255,0.9)_360deg)] animate-[spin_3s_linear_infinite] z-0"></div>
-              <div className="relative z-10 w-full h-full rounded-[1.3rem] overflow-hidden flex items-center justify-center bg-neutral-900 border-[2px] border-white/20">
+              <div className="relative z-10 w-full h-full rounded-[1.5rem] overflow-hidden flex items-center justify-center bg-neutral-900 border-[2px] border-white/20">
                  {mockup?.avatar ? (
                    <img src={mockup.avatar} className="w-full h-full object-cover" alt="Profile" />
                  ) : (
@@ -84,53 +83,52 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
             </div>
             {mockup?.isPro && (
               <div className="absolute -top-1 -left-1 z-30 pointer-events-none">
-                <VerifiedBadge className="w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
+                <VerifiedBadge className="w-[20px] h-[20px] sm:w-[24px] sm:h-[24px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
               </div>
             )}
           </div>
 
           <div className="flex items-center justify-center gap-1.5 w-full px-2 mb-1">
-             <h3 className={`text-lg sm:text-xl tracking-wide text-center break-words font-black ${nameClass}`} style={nameStyle}>
+             <h3 className={`text-xl sm:text-2xl tracking-wide text-center break-words font-black ${nameClass}`} style={nameStyle}>
                {mockup?.name || 'کۆسرەت مامە'}
              </h3>
              {mockup?.isPro && <VerifiedBadge className="w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />}
           </div>
           
-          <p className={`text-[11px] sm:text-xs mb-6 font-bold text-center px-2 ${bioClass}`} style={bioStyle}>
+          <p className={`text-xs sm:text-[13px] mb-8 font-bold text-center px-2 ${bioClass}`} style={bioStyle}>
              {mockup?.bio || 'شارەزا لە تەکنەلۆژیا'}
           </p>
 
-          <div className="w-full space-y-3 px-1 flex-none">
+          <div className="w-full space-y-3 sm:space-y-4 px-1 sm:px-2 flex-none">
             {displayLinks.map((link: any, idx: number) => {
                const IconName = link.iconName || link.icon || 'Globe';
                const Icon = (icons as any)[IconName] || icons.Globe;
                const customColor = link.color || '#1877F2';
 
                const btnContent = (
-                  <div className={`relative w-full rounded-2xl p-[2px] overflow-hidden group transition-transform hover:scale-[1.02] active:scale-95 shadow-md`}>
+                  <div className={`relative w-full rounded-[1.3rem] p-[2px] sm:p-[2.5px] overflow-hidden group transition-transform hover:scale-[1.03] active:scale-95 shadow-[0_5px_15px_rgba(0,0,0,0.1)]`}>
                     
                     {/* 🔥 ئیفێکتی ئاگر و پلازما 🔥 */}
-                    <div className="absolute top-1/2 left-1/2 w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_2.5s_linear_infinite] z-0">
+                    <div className="absolute top-1/2 left-1/2 w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_2s_linear_infinite] z-0">
                       <div className="absolute inset-0 opacity-80 blur-[8px]" style={{ background: `conic-gradient(from 90deg, transparent 0 180deg, ${customColor}50 270deg, ${customColor} 360deg)` }}></div>
                       <div className="absolute top-1/2 right-[10%] w-10 h-10 -translate-y-1/2 rounded-full blur-[6px] opacity-90" style={{ backgroundColor: customColor, boxShadow: `0 0 30px 10px ${customColor}` }}></div>
                       <div className="absolute top-1/2 right-[12%] w-3 h-3 -translate-y-1/2 bg-white rounded-full blur-[1px] shadow-[0_0_10px_#fff]"></div>
                     </div>
 
-                    {/* 🌟 لێرەدا کێشەی (inherit)ی باکگراوندەکە سڕایەوە بۆ ئەوەی ڕووکارەکان ڕەنگی خۆیان نیشان بدەن 🌟 */}
-                    <div className={`relative z-10 w-full rounded-[14px] flex items-center justify-between p-2 shadow-inner border ${t.btn}`} style={['gold', 'light', 'cyberpunk'].includes(designId) ? { backgroundColor: designId === 'gold' ? '#171717' : designId === 'light' ? '#ffffff' : '#000000' } : {}}>
-                      <div className="flex items-center gap-2.5 w-full pr-1">
-                        <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-inner overflow-hidden ${t.iconBg}`}>
+                    <div className={`relative z-10 w-full rounded-[1.1rem] flex items-center justify-between p-2.5 shadow-inner border ${t.btn}`} style={['gold', 'light', 'cyberpunk'].includes(designId) ? { backgroundColor: designId === 'gold' ? '#171717' : designId === 'light' ? '#ffffff' : '#000000' } : {}}>
+                      <div className="flex items-center gap-3 w-full pr-1">
+                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[12px] flex items-center justify-center shrink-0 shadow-inner overflow-hidden ${t.iconBg}`}>
                           {link.imageUrl || link.icon?.startsWith('/') ? (
                              <img src={link.imageUrl || link.icon} className="w-full h-full object-contain" alt="Icon" />
                           ) : (
-                             <Icon size={20} color={customColor} />
+                             <Icon size={24} color={customColor} />
                           )}
                         </div>
-                        <span className={`font-black text-xs sm:text-[14px] truncate ${btnTextClass}`} style={btnTextStyle}>
+                        <span className={`font-black text-[13px] sm:text-[16px] truncate ${btnTextClass}`} style={btnTextStyle}>
                            {link.name || link.title}
                         </span>
                       </div>
-                      <div className="pr-2 opacity-80 shrink-0" style={{ color: designId === 'gold' ? '#fbbf24' : customColor }}><ArrowUpRight size={18} strokeWidth={2.5} /></div>
+                      <div className="pr-2 opacity-80 shrink-0" style={{ color: designId === 'gold' ? '#fbbf24' : customColor }}><ArrowUpRight size={20} strokeWidth={2.5} /></div>
                     </div>
                   </div>
                );
@@ -162,7 +160,6 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
                       <div className="absolute -top-1 -left-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)] border border-yellow-300 z-30 rotate-[-12deg]">VIP</div>
                       <div className="relative w-full rounded-[1.8rem] p-[2px] sm:p-[3px] overflow-hidden">
                         
-                        {/* 🔥 ئیفێکتی ئاگر بۆ دوگمەی VIP بە ڕەنگی زەرد و سوور 🔥 */}
                         <div className="absolute top-1/2 left-1/2 w-[300%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_1.5s_linear_infinite] z-0">
                            <div className="absolute inset-0 opacity-90 blur-[10px]" style={{ background: `conic-gradient(from 90deg, transparent 0 160deg, #ef4444 240deg, #f97316 300deg, #fbbf24 360deg)` }}></div>
                            <div className="absolute top-1/2 right-[10%] w-12 h-12 -translate-y-1/2 rounded-full blur-[8px] bg-yellow-400 shadow-[0_0_30px_10px_#f97316]"></div>
@@ -202,8 +199,9 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
           )}
         </div>
 
+        {/* 🌟 ئەم دوگمەیە باشتر جێگیر کرا بۆ ئەوەی بێ کێشە لە خوارەوە دەربکەوێت 🌟 */}
         {isPublic && (
-          <div className="absolute bottom-0 left-0 w-full pt-12 pb-6 sm:pb-8 px-4 bg-gradient-to-t from-black via-black/80 to-transparent z-40 flex justify-center pointer-events-none">
+          <div className="absolute bottom-0 left-0 w-full pt-16 pb-6 px-4 bg-gradient-to-t from-black via-black/80 to-transparent z-40 flex justify-center pointer-events-none">
             <a href="https://biokurd.com" className="relative p-[2.5px] rounded-full overflow-hidden group hover:scale-105 active:scale-95 transition-all duration-300 w-full max-w-[300px] shadow-[0_0_40px_-10px_rgba(251,191,36,0.5)] pointer-events-auto">
               <div className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0_160deg,#fbbf24_220deg,#f59e0b_280deg,#fffbeb_360deg)] animate-[spin_2s_linear_infinite] z-0"></div>
               <div className="relative z-10 flex items-center justify-center gap-3 px-5 py-3 sm:py-3.5 bg-gradient-to-r from-neutral-950 via-neutral-900 to-neutral-950 backdrop-blur-xl rounded-full w-full h-full border border-white/10 overflow-hidden shadow-[inset_0_0_20px_rgba(251,191,36,0.05)]">
@@ -216,6 +214,7 @@ export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPub
         )}
       </div>
 
+      {/* دوگمەکانی کەناری مۆبایل */}
       <div className="absolute top-20 -left-1 sm:-left-1.5 w-1.5 h-8 bg-neutral-800 rounded-l-md"></div>
       <div className="absolute top-36 -left-1 sm:-left-1.5 w-1.5 h-12 bg-neutral-800 rounded-l-md"></div>
       <div className="absolute top-52 -left-1 sm:-left-1.5 w-1.5 h-12 bg-neutral-800 rounded-l-md"></div>
