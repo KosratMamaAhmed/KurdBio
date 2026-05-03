@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Image as ImageIcon } from 'lucide-react';
 import * as icons from 'lucide-react';
 
 const VerifiedBadge = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -8,221 +8,164 @@ const VerifiedBadge = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
+// 🌟 باکگراوندە سادە و ناوازەکان (ئێستا وەک باکگراوندی پەڕە کاردەکەن نەک مۆبایل) 🌟
 export const THEME_STYLES: Record<string, any> = {
-  mockup: { shell: 'border-slate-800 bg-black', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-[#020617] to-black', text: 'text-white', sub: 'text-slate-400', btn: 'bg-white/5 backdrop-blur-md border border-white/10', iconBg: 'bg-white/10' },
-  light: { shell: 'border-neutral-300 bg-white', inner: 'bg-gradient-to-br from-slate-100 via-white to-neutral-100', text: 'text-neutral-900', sub: 'text-neutral-500', btn: 'bg-white shadow-sm border border-neutral-200', iconBg: 'bg-slate-100' },
-  gold: { shell: 'border-amber-500/50 bg-[#0a0a0a]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#2a1e00] via-[#050505] to-black', text: 'text-amber-400', sub: 'text-amber-400/60', btn: 'bg-black/50 backdrop-blur-md border border-amber-500/30', iconBg: 'bg-amber-500/10' },
-  neon: { shell: 'border-cyan-500/40 bg-black', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#002a42] via-black to-[#0a001a]', text: 'text-cyan-300', sub: 'text-cyan-500/70', btn: 'bg-cyan-950/30 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]', iconBg: 'bg-cyan-500/20' },
-  emerald: { shell: 'border-emerald-700 bg-[#022c22]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#064e3b] via-[#022c22] to-black', text: 'text-emerald-300', sub: 'text-emerald-500/70', btn: 'bg-emerald-950/50 border border-emerald-700/50', iconBg: 'bg-emerald-500/20' },
-  vintage: { shell: 'border-orange-800 bg-[#2e1065]', inner: 'bg-gradient-to-br from-[#451a03] via-[#2e1065] to-[#170529]', text: 'text-amber-200', sub: 'text-amber-500/70', btn: 'bg-black/40 border border-orange-800/50', iconBg: 'bg-orange-500/20' },
-  crimson: { shell: 'border-red-900 bg-[#171717]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#450a0a] via-[#171717] to-black', text: 'text-red-300', sub: 'text-red-500/70', btn: 'bg-red-950/30 border border-red-900/50', iconBg: 'bg-red-800/30' },
-  navy: { shell: 'border-blue-800 bg-[#0f172a]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1e3a8a] via-[#0f172a] to-black', text: 'text-blue-200', sub: 'text-blue-400/70', btn: 'bg-blue-950/40 border border-blue-800/50', iconBg: 'bg-blue-500/20' },
-  royal: { shell: 'border-pink-500/40 bg-[#171717]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#3b0764] via-[#171717] to-black', text: 'text-pink-300', sub: 'text-pink-500/70', btn: 'bg-purple-950/30 border border-pink-500/30', iconBg: 'bg-pink-500/20' },
-  minimal: { shell: 'border-gray-300 bg-gray-100', inner: 'bg-gradient-to-b from-gray-200 via-gray-100 to-white', text: 'text-gray-900', sub: 'text-gray-500', btn: 'bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]', iconBg: 'bg-gray-100' },
-  cyberpunk: { shell: 'border-yellow-400 bg-neutral-900', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#4a004a] via-[#111111] to-black', text: 'text-yellow-400', sub: 'text-yellow-500/70', btn: 'bg-black border border-yellow-400 shadow-[4px_4px_0px_0px_rgba(236,72,153,0.8)]', iconBg: 'bg-yellow-500/20' },
-  glassmorphism: { shell: 'border-white/20 bg-slate-900', inner: 'bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-indigo-900 via-[#170529] to-black', text: 'text-white', sub: 'text-white/70', btn: 'bg-white/5 backdrop-blur-xl border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]', iconBg: 'bg-white/10' },
-  dracula: { shell: 'border-[#ff79c6] bg-[#282a36]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#44475a] via-[#282a36] to-black', text: 'text-[#ff79c6]', sub: 'text-[#bd93f9]', btn: 'bg-[#44475a]/50 border border-[#ff79c6]/50', iconBg: 'bg-[#bd93f9]/20' },
-  aurora: { shell: 'border-green-400/40 bg-[#0B101E]', inner: 'bg-gradient-to-b from-[#0B101E] via-[#051814] to-[#1A2F2B]', text: 'text-green-300', sub: 'text-green-500/70', btn: 'bg-[#121E1C] border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]', iconBg: 'bg-green-500/10' },
-  sunset: { shell: 'border-orange-400/40 bg-[#2D1B2E]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#6a1523] via-[#2D1B2E] to-[#120012]', text: 'text-orange-300', sub: 'text-orange-500/70', btn: 'bg-white/5 backdrop-blur-md border border-orange-500/30', iconBg: 'bg-orange-500/20' },
-  ocean: { shell: 'border-cyan-500/40 bg-[#0A192F]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#00344d] via-[#0A192F] to-[#020c1b]', text: 'text-[#64ffda]', sub: 'text-[#64ffda]/60', btn: 'bg-[#112240] border border-[#64ffda]/30', iconBg: 'bg-[#64ffda]/10' },
-  forest: { shell: 'border-[#A3B18A] bg-[#1b2b23]', inner: 'bg-gradient-to-b from-[#2a4436] via-[#1b2b23] to-[#0d1612]', text: 'text-[#DAD7CD]', sub: 'text-[#A3B18A]', btn: 'bg-white/5 border border-[#A3B18A]/50', iconBg: 'bg-[#A3B18A]/20' },
-  candy: { shell: 'border-pink-300 bg-[#fdf2f8]', inner: 'bg-gradient-to-br from-pink-100 via-sky-50 to-white', text: 'text-slate-800', sub: 'text-slate-500', btn: 'bg-white/60 backdrop-blur-sm shadow-sm border border-pink-200', iconBg: 'bg-pink-100' },
-  hacker: { shell: 'border-[#00ff00] bg-black', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#002200] via-black to-black', text: 'text-[#00ff00]', sub: 'text-[#00ff00]/60', btn: 'bg-black border border-[#00ff00]/50', iconBg: 'bg-[#00ff00]/10' },
-  luxury: { shell: 'border-[#B76E79] bg-[#1a1a1a]', inner: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#3a2024] via-[#1a1a1a] to-black', text: 'text-[#B76E79]', sub: 'text-[#B76E79]/70', btn: 'bg-[#2a2a2a] border border-[#B76E79]/50 shadow-[0_4px_15px_rgba(183,110,121,0.15)]', iconBg: 'bg-[#B76E79]/10' }
+  light: { bg: 'bg-[#f4f4f5]', text: 'text-neutral-900', sub: 'text-neutral-500', btnText: 'text-white' },
+  dark: { bg: 'bg-[#111111]', text: 'text-white', sub: 'text-neutral-400', btnText: 'text-white' },
+  soft_blue: { bg: 'bg-[#f0f9ff]', text: 'text-[#0369a1]', sub: 'text-[#38bdf8]', btnText: 'text-white' },
+  midnight: { bg: 'bg-[#0f172a]', text: 'text-white', sub: 'text-slate-400', btnText: 'text-white' },
+  desert: { bg: 'bg-[#fef3c7]', text: 'text-[#92400e]', sub: 'text-[#d97706]', btnText: 'text-white' },
+  forest: { bg: 'bg-[#064e3b]', text: 'text-[#ecfdf5]', sub: 'text-[#6ee7b7]', btnText: 'text-white' },
+  rose: { bg: 'bg-[#fff1f2]', text: 'text-[#be185d]', sub: 'text-[#f472b6]', btnText: 'text-white' },
+  lavender: { bg: 'bg-[#faf5ff]', text: 'text-[#6b21a8]', sub: 'text-[#c084fc]', btnText: 'text-white' },
+  neon_cyber: { bg: 'bg-[#000000]', text: 'text-[#22d3ee]', sub: 'text-[#ec4899]', btnText: 'text-white' },
+  glass: { bg: 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100', text: 'text-slate-800', sub: 'text-slate-500', btnText: 'text-white' }
 };
 
 export default function PhoneMockup({ mockup, mockupLinks, sponsoredLinks, isPublic = false, handleLinkClick }: any) {
-  const designId = mockup?.buttonDesign || 'mockup';
-  const t = THEME_STYLES[designId] || THEME_STYLES.mockup;
+  const designId = mockup?.buttonDesign || 'light';
+  const t = THEME_STYLES[designId] || THEME_STYLES.light;
 
   const nameStyle = mockup?.nameColor ? { color: mockup.nameColor } : undefined;
   const bioStyle = mockup?.bioColor ? { color: mockup.bioColor } : undefined;
-  const btnTextStyle = mockup?.btnTextColor ? { color: mockup.btnTextColor } : undefined;
-
-  const nameClass = mockup?.nameColor ? '' : t.text;
-  const bioClass = mockup?.bioColor ? '' : t.sub;
-  const btnTextClass = mockup?.btnTextColor ? '' : t.text;
-
-  // 🌟 گۆڕانکاری سەرەکی بۆ ڕێگریکردن لە دەرچوون لە شاشەی مۆبایل: 
-  // بەکارهێنانی w-full و max-w-[340px] بۆ دڵنیابوون لەوەی لەناو بچووکترین مۆبایلیش جێگەی دەبێتەوە.
-  const containerClass = isPublic 
-    ? `w-full max-w-[340px] sm:max-w-[400px] mx-auto aspect-[9/19] rounded-[2.5rem] sm:rounded-[3rem] p-1.5 sm:p-2.5 relative shrink-0 border-[5px] sm:border-[8px] shadow-[0_0_80px_rgba(251,191,36,0.15)] ${t.shell}`
-    : `w-full max-w-[280px] sm:max-w-[320px] mx-auto aspect-[9/19] rounded-[2rem] sm:rounded-[2.5rem] p-2 relative shrink-0 transition-all duration-500 transform-gpu hover:scale-[1.02] border-[4px] sm:border-[6px] shadow-2xl ${t.shell}`;
-
-  const innerRounded = isPublic ? "rounded-[2.2rem] sm:rounded-[2.6rem]" : "rounded-[1.6rem] sm:rounded-[2rem]";
   
+  // لێرەدا مۆکئەپ و هێڵەکانی مۆبایل لابران، ئێستا دەبێتە پەڕەیەکی ڕێکخراو
+  const containerClass = isPublic 
+    ? `w-full min-h-screen ${t.bg}`
+    : `w-full max-w-[340px] mx-auto h-[650px] rounded-[2rem] relative shrink-0 transition-all duration-500 shadow-xl overflow-hidden border border-neutral-200 ${t.bg}`;
+
   const safeMockupLinks = Array.isArray(mockupLinks) ? mockupLinks : [];
   const safeSponsoredLinks = Array.isArray(sponsoredLinks) ? sponsoredLinks : [];
 
-  const displayLinks = isPublic ? safeMockupLinks : safeMockupLinks.slice(0, 3);
+  const displayLinks = isPublic ? safeMockupLinks : safeMockupLinks.slice(0, 4);
   const displaySponsored = isPublic ? safeSponsoredLinks : safeSponsoredLinks.slice(0, 1);
 
   return (
     <div className={containerClass}>
-      <div className={`w-full h-full ${innerRounded} relative overflow-hidden flex flex-col ${t.inner}`}>
-        
-        {/* Notch - کامێرای مۆبایل */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 sm:w-24 h-5 sm:h-6 bg-black rounded-full z-30 flex items-center justify-center gap-2 shadow-sm border border-white/5">
-          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/20"></div>
-          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/10"></div>
-        </div>
+      
+      {/* 🌟 وێنەی کەڤەر (Background Image) 🌟 */}
+      <div className="w-full h-36 sm:h-48 relative bg-neutral-200 overflow-hidden">
+        {mockup?.bgImage ? (
+           <img src={mockup.bgImage} className="w-full h-full object-cover" alt="Cover" />
+        ) : (
+           <div className="w-full h-full bg-gradient-to-r from-orange-400 to-amber-500 opacity-80"></div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+      </div>
 
-        <div className={`flex-1 flex flex-col items-center pt-12 sm:pt-14 px-3 sm:px-4 pb-6 z-20 w-full overflow-y-auto scrollbar-hide ${isPublic ? 'pb-32' : ''}`}>
-          
-          <div className="relative mb-4 sm:mb-5 shrink-0 mt-2 sm:mt-0">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-[1.4rem] sm:rounded-[1.6rem] p-[2px] overflow-hidden group shadow-2xl">
-              <div className="absolute top-1/2 left-1/2 w-[250%] h-[250%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0_280deg,rgba(255,255,255,0.9)_360deg)] animate-[spin_3s_linear_infinite] z-0"></div>
-              <div className="relative z-10 w-full h-full rounded-[1.3rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center bg-neutral-900 border-[2px] border-white/20">
-                 {mockup?.avatar ? (
-                   <img src={mockup.avatar} className="w-full h-full object-cover" alt="Profile" />
-                 ) : (
-                   <span className="text-3xl sm:text-4xl font-black text-white">{(mockup?.name || 'کۆسرەت').charAt(0)}</span>
-                 )}
-              </div>
+      <div className="w-full max-w-2xl mx-auto px-4 pb-12">
+        
+        {/* وێنەی پرۆفایل کە دێتە سەر کەڤەرەکە */}
+        <div className="relative -mt-16 sm:-mt-20 flex justify-center mb-4 z-10">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1.5 bg-white/20 backdrop-blur-md shadow-xl">
+            <div className={`w-full h-full rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center border-4 ${designId === 'dark' || designId === 'midnight' || designId === 'neon_cyber' || designId === 'forest' ? 'border-black' : 'border-white'}`}>
+               {mockup?.avatar ? (
+                 <img src={mockup.avatar} className="w-full h-full object-cover" alt="Profile" />
+               ) : (
+                 <span className="text-4xl font-black text-neutral-400">{(mockup?.name || 'کۆسرەت').charAt(0)}</span>
+               )}
             </div>
             {mockup?.isPro && (
-              <div className="absolute -top-1.5 -left-1.5 z-30 pointer-events-none">
-                <VerifiedBadge className="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
+              <div className="absolute bottom-0 right-0 z-20">
+                <VerifiedBadge className="w-7 h-7 drop-shadow-md bg-white rounded-full p-0.5" />
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex items-center justify-center gap-1.5 w-full px-2 mb-1.5">
-             <h3 className={`text-xl sm:text-2xl tracking-wide text-center break-words font-black ${nameClass}`} style={nameStyle}>
-               {mockup?.name || 'کۆسرەت مامە'}
-             </h3>
-             {mockup?.isPro && <VerifiedBadge className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />}
-          </div>
-          
-          <p className={`text-[12px] sm:text-[13px] mb-6 sm:mb-8 font-bold text-center px-2 opacity-90 ${bioClass}`} style={bioStyle}>
-             {mockup?.bio || 'شارەزا لە تەکنەلۆژیا'}
-          </p>
+        <div className="text-center mb-8 px-2">
+           <h3 className={`text-2xl sm:text-3xl font-black mb-2 flex items-center justify-center gap-1.5 ${mockup?.nameColor ? '' : t.text}`} style={nameStyle}>
+             {mockup?.name || 'کۆسرەت مامە'}
+           </h3>
+           <p className={`text-sm sm:text-base font-bold opacity-90 leading-relaxed ${mockup?.bioColor ? '' : t.sub}`} style={bioStyle}>
+             {mockup?.bio || 'شارەزا لە تەکنەلۆژیا. بەستەرەکانم لە خوارەوە ببینە.'}
+           </p>
+        </div>
 
-          <div className="w-full space-y-3 sm:space-y-4 px-1 sm:px-2 flex-none">
-            {displayLinks.map((link: any, idx: number) => {
-               const IconName = link.iconName || link.icon || 'Globe';
-               const Icon = (icons as any)[IconName] || icons.Globe;
-               const customColor = link.color || '#1877F2';
+        <div className="w-full space-y-4">
+          {displayLinks.map((link: any, idx: number) => {
+             const IconName = link.iconName || link.icon || 'Globe';
+             const Icon = (icons as any)[IconName] || icons.Globe;
+             const customColor = link.color || '#333333';
 
-               const btnContent = (
-                  <div className={`relative w-full rounded-[16px] sm:rounded-[18px] p-[2px] overflow-hidden group transition-transform hover:scale-[1.03] active:scale-95 shadow-[0_5px_20px_rgba(0,0,0,0.2)]`}>
-                    <div className="absolute inset-0 bg-white/10 z-0"></div>
-                    <div className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_3s_linear_infinite] z-0" 
-                         style={{ background: `conic-gradient(from 0deg, transparent 0 280deg, ${customColor} 360deg)` }}>
+             const btnContent = (
+                // 🌟 دوگمەکان ڕەنگی تۆڕەکەیان وەرگرتووە 🌟
+                <div 
+                  className={`relative w-full rounded-2xl p-4 flex items-center justify-between transition-all hover:scale-[1.02] active:scale-95 shadow-md`}
+                  style={{ backgroundColor: customColor }}
+                >
+                  <div className="flex items-center gap-4 w-full pr-1">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white/20 backdrop-blur-sm`}>
+                      {link.imageUrl || link.icon?.startsWith('/') ? (
+                         <img src={link.imageUrl || link.icon} className="w-7 h-7 object-contain drop-shadow-sm" alt="Icon" />
+                      ) : (
+                         <Icon size={24} color="#ffffff" className="drop-shadow-sm" />
+                      )}
                     </div>
-                    <div className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_3s_linear_infinite] z-0 blur-[6px]" 
-                         style={{ background: `conic-gradient(from 0deg, transparent 0 280deg, ${customColor} 360deg)` }}>
-                    </div>
-                    <div className="absolute inset-[2px] rounded-[14px] sm:rounded-[16px] bg-black/40 backdrop-blur-md"></div>
+                    <span className={`font-black text-[15px] sm:text-[16px] truncate text-white drop-shadow-sm`} style={mockup?.btnTextColor ? { color: mockup.btnTextColor } : {}}>
+                       {link.name || link.title}
+                    </span>
+                  </div>
+                  <div className="pr-2 shrink-0 text-white/70"><ArrowUpRight size={24} strokeWidth={2.5} /></div>
+                </div>
+             );
 
-                    <div className={`relative z-10 w-full rounded-[14px] sm:rounded-[16px] flex items-center justify-between p-2.5 sm:p-3 ${t.btn}`} style={['light'].includes(designId) ? { backgroundColor: '#ffffff' } : {}}>
-                      <div className="flex items-center gap-2.5 sm:gap-3 w-full pr-1">
-                        <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 shadow-inner overflow-hidden ${t.iconBg}`}>
-                          {link.imageUrl || link.icon?.startsWith('/') ? (
-                             <img src={link.imageUrl || link.icon} className="w-full h-full object-contain" alt="Icon" />
-                          ) : (
-                             <Icon size={22} color={customColor} />
-                          )}
+             return isPublic ? (
+                <button key={idx} onClick={() => handleLinkClick(link.url, link.id)} className="w-full text-right block">{btnContent}</button>
+             ) : (
+                <div key={idx} className="w-full">{btnContent}</div>
+             );
+          })}
+        </div>
+
+        {displaySponsored.length > 0 && (
+          <div className="w-full mt-10 space-y-4">
+            <div className="flex items-center justify-center gap-3 w-full opacity-60 mb-6">
+              <div className={`h-[1px] flex-1 ${t.text} opacity-20`}></div>
+              <span className={`text-[10px] font-black tracking-widest uppercase ${t.text}`}>سپۆنسەر کراو</span>
+              <div className={`h-[1px] flex-1 ${t.text} opacity-20`}></div>
+            </div>
+
+            {displaySponsored.map((item: any, idx: number) => {
+               const IconName = item.iconName || item.icon || 'Star';
+               const Icon = (icons as any)[IconName] || icons.Star;
+
+               const spBtnContent = (
+                  <div className="relative w-full group transition-transform hover:scale-[1.02] active:scale-95 shadow-lg">
+                    <div className="absolute -top-2 -left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-md z-30">VIP</div>
+                    
+                    <div className="relative z-10 w-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-2xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-4 w-full pr-1">
+                        <div className="w-14 h-14 rounded-xl bg-white/30 backdrop-blur-sm p-1.5 flex items-center justify-center shrink-0 shadow-inner">
+                          {item.imageUrl || item.icon?.startsWith('/') ? <img src={item.imageUrl || item.icon} className="w-full h-full object-cover rounded-lg" /> : <Icon size={28} className="text-black" strokeWidth={2.5} />}
                         </div>
-                        <span className={`font-black text-[13px] sm:text-[15px] truncate ${btnTextClass}`} style={btnTextStyle}>
-                           {link.name || link.title}
-                        </span>
+                        <div className="flex-1 text-right min-w-0 pr-1">
+                          <h4 className="font-black text-[16px] text-black line-clamp-1">{item.name || item.title}</h4>
+                          <p className="text-[12px] font-bold text-black/70 truncate mt-0.5">{(item.url && item.url.includes('.apk')) ? 'داگرتنی بەرنامە' : 'سپۆنسەری تایبەت'}</p>
+                        </div>
+                        <ArrowUpRight size={26} className="text-black/50 ml-1 shrink-0" strokeWidth={3} />
                       </div>
-                      <div className="pr-2 opacity-80 shrink-0" style={{ color: designId === 'gold' ? '#fbbf24' : customColor }}><ArrowUpRight size={20} strokeWidth={2.5} /></div>
                     </div>
                   </div>
                );
 
                return isPublic ? (
-                  <button key={idx} onClick={() => handleLinkClick(link.url, link.id)} className="w-full text-right block">{btnContent}</button>
+                  <button key={`sp-${idx}`} onClick={() => handleLinkClick(item.url, item.id)} className="w-full text-right block">{spBtnContent}</button>
                ) : (
-                  <div key={idx} className="w-full">{btnContent}</div>
+                  <div key={`sp-${idx}`} className="w-full">{spBtnContent}</div>
                );
             })}
           </div>
-
-          {displaySponsored.length > 0 && (
-            <div className="w-full mt-8 space-y-4 sm:space-y-5 px-1 sm:px-2 flex-none relative z-10">
-              <div className="flex items-center justify-center gap-2 w-full opacity-90">
-                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-amber-500/50"></div>
-                <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-lg border bg-black/80 border-amber-500/30 text-amber-400 tracking-widest uppercase shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                  سپۆنسەر کراو
-                </span>
-                <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-amber-500/50"></div>
-              </div>
-
-              {displaySponsored.map((item: any, idx: number) => {
-                 const IconName = item.iconName || item.icon || 'Star';
-                 const Icon = (icons as any)[IconName] || icons.Star;
-
-                 const spBtnContent = (
-                    <div className="relative w-full group transition-transform hover:scale-[1.03] active:scale-95 shadow-[0_10px_30px_-10px_rgba(239,68,68,0.5)]">
-                      <div className="absolute -top-1.5 -left-2.5 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.8)] border border-yellow-300 z-30 rotate-[-12deg]">VIP</div>
-                      
-                      <div className="relative w-full rounded-[18px] sm:rounded-[20px] p-[2px] overflow-hidden">
-                        
-                        <div className="absolute inset-0 bg-white/10 z-0"></div>
-                        
-                        <div className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_2s_linear_infinite] z-0"
-                             style={{ background: `conic-gradient(from 0deg, transparent 0 250deg, #ef4444 300deg, #f97316 330deg, #fbbf24 360deg)` }}>
-                        </div>
-                        <div className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_2s_linear_infinite] z-0 blur-[8px]"
-                             style={{ background: `conic-gradient(from 0deg, transparent 0 250deg, #ef4444 300deg, #f97316 330deg, #fbbf24 360deg)` }}>
-                        </div>
-
-                        <div className="absolute inset-[2px] rounded-[16px] sm:rounded-[18px] bg-black"></div>
-
-                        <div className="relative z-10 w-full bg-gradient-to-br from-neutral-950 to-[#0a0a0a] rounded-[16px] sm:rounded-[18px] p-3 sm:p-4 flex items-center justify-between border border-white/5">
-                          <div className="flex items-center gap-2.5 sm:gap-3 w-full pr-1 mt-1">
-                            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white/5 p-1.5 flex items-center justify-center shrink-0 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/10 relative overflow-hidden">
-                              <div className="absolute top-0 -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50 group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
-                              {item.imageUrl || item.icon?.startsWith('/') ? <img src={item.imageUrl || item.icon} className="w-full h-full object-cover rounded-lg relative z-10" /> : <Icon size={26} className="text-amber-400 relative z-10" strokeWidth={2.5} />}
-                            </div>
-                            <div className="flex-1 text-right min-w-0 pr-1 relative z-10">
-                              <h4 className="font-black text-[14px] sm:text-[16px] drop-shadow-md text-white line-clamp-1">{item.name || item.title}</h4>
-                              <p className="text-[10px] sm:text-[11px] font-bold text-amber-400/90 truncate drop-shadow-sm mt-1">{(item.url && item.url.includes('.apk')) ? 'داگرتنی بەرنامە' : 'سپۆنسەری تایبەت'}</p>
-                            </div>
-                            <ArrowUpRight size={20} className="opacity-90 ml-1 shrink-0 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] relative z-10" strokeWidth={3} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                 );
-
-                 return isPublic ? (
-                    <button key={`sp-${idx}`} onClick={() => handleLinkClick(item.url, item.id)} className="w-full text-right block">{spBtnContent}</button>
-                 ) : (
-                    <div key={`sp-${idx}`} className="w-full">{spBtnContent}</div>
-                 );
-              })}
-            </div>
-          )}
-
-          {!isPublic && (
-             <div className="mt-auto pt-6 pb-2 w-full flex justify-center shrink-0 relative z-20">
-                <span className="text-amber-400 font-black text-[11px] sm:text-[12px] drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] text-center tracking-wide w-full px-2">بە ئاسانی دیزاینێکی ئاوا بۆخۆت دروست بکە</span>
-             </div>
-          )}
-        </div>
+        )}
 
         {isPublic && (
-          <div className="absolute bottom-0 left-0 w-full pt-20 pb-6 px-4 bg-gradient-to-t from-black via-black/90 to-transparent z-40 flex justify-center pointer-events-none">
-            <a href="https://biokurd.com" className="relative p-[2px] sm:p-[2.5px] rounded-full overflow-hidden group hover:scale-105 active:scale-95 transition-all duration-300 w-full max-w-[320px] shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)] pointer-events-auto">
-              <div className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0_160deg,#fbbf24_220deg,#f59e0b_280deg,#fffbeb_360deg)] animate-[spin_2s_linear_infinite] z-0"></div>
-              <div className="relative z-10 flex items-center justify-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-3.5 sm:py-4 bg-gradient-to-r from-neutral-950 via-neutral-900 to-neutral-950 backdrop-blur-xl rounded-full w-full h-full border border-white/10 overflow-hidden shadow-[inset_0_0_20px_rgba(251,191,36,0.05)]">
-                <div className="absolute top-0 -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent opacity-50 group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out"></div>
-                <icons.Sparkles size={18} className="text-amber-400 relative z-10 animate-pulse" />
-                <span className="text-amber-400 font-bold text-[15px] sm:text-[17px] whitespace-nowrap drop-shadow-[0_2px_10px_rgba(245,158,11,0.6)] relative z-10 tracking-wide mt-0.5" style={{ fontFamily: '"Amiri", serif' }}>لینکێکی ئاوا بۆخۆت دروست بکە</span>
-              </div>
+          <div className="mt-16 pb-8 flex justify-center opacity-80">
+            <a href="https://biokurd.com" className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${t.bg} ${t.text} border border-neutral-300 shadow-sm hover:shadow-md`}>
+              <icons.Link size={16} /> لینکێکی ئاوا بۆخۆت دروست بکە
             </a>
           </div>
         )}
       </div>
-
-      <div className="absolute top-20 sm:top-24 -left-1 sm:-left-1.5 w-1 sm:w-1.5 h-8 sm:h-10 bg-neutral-800 rounded-l-md"></div>
-      <div className="absolute top-36 sm:top-40 -left-1 sm:-left-1.5 w-1 sm:w-1.5 h-12 sm:h-14 bg-neutral-800 rounded-l-md"></div>
-      <div className="absolute top-52 sm:top-56 -left-1 sm:-left-1.5 w-1 sm:w-1.5 h-12 sm:h-14 bg-neutral-800 rounded-l-md"></div>
-      <div className="absolute top-36 sm:top-40 -right-1 sm:-right-1.5 w-1 sm:w-1.5 h-16 sm:h-20 bg-neutral-800 rounded-r-md"></div>
     </div>
   );
 }

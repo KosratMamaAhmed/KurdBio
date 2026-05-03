@@ -1,30 +1,68 @@
-import { useNavigate } from 'react-router-dom';
-import { Camera, Lock, Save, Star, User } from 'lucide-react';
+import { useState } from 'react';
+import { Camera, Save, User, FileText, Image as ImageIcon } from 'lucide-react';
 
-export default function ProfileSettings({ profile, setProfile, theme, isPro, saving, handleUpdateProfile, handleImageUpload, isUploadingAvatar, avatarInputRef }: any) {
-  const navigate = useNavigate();
+export default function ProfileSettings({ profile, setProfile, theme, saving, handleUpdateProfile, handleImageUpload, isUploadingAvatar, avatarInputRef }: any) {
+  
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader(); reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image(); img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // کەڤەر پێویستە پانییەکەی زیاتر بێت
+        const MAX_WIDTH = 800; const MAX_HEIGHT = 400;
+        let width = img.width; let height = img.height;
+        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+        canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
+        const base64String = canvas.toDataURL('image/jpeg', 0.8);
+        handleUpdateProfile({ bgImage: base64String });
+        setProfile({ ...profile, bgImage: base64String });
+      };
+    };
+  };
 
   return (
-    <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-neutral-100">
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-neutral-50">
-        <div className="flex items-center gap-3"><User className={theme?.text || 'text-orange-500'} size={28} /><h2 className="text-xl font-black">زانیارییە کەسییەکان</h2></div>
-        {!isPro && <button onClick={() => navigate('/payment')} className="px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-xs font-black rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition"><Star size={16} className="fill-black"/> نوێکردنەوە بۆ VIP</button>}
+    <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200">
+      <div className="flex items-center gap-3 pb-4 border-b border-neutral-100 mb-6">
+        <User className="text-orange-500" size={24} />
+        <h2 className="text-xl font-black text-neutral-900">زانیارییە کەسییەکان</h2>
       </div>
+
       <div className="space-y-6">
-        <div className="flex flex-col items-center sm:flex-row gap-8">
-          <div className="relative w-32 h-32 rounded-[2rem] bg-neutral-50 border-4 border-white shadow-xl flex-shrink-0 cursor-pointer overflow-hidden group transition-transform hover:scale-105" onClick={() => isPro ? avatarInputRef.current?.click() : navigate('/payment')}>
-            {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-5xl text-neutral-300 font-black">{profile?.displayName?.charAt(0) || <User size={48} />}</div>}
-            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold text-center backdrop-blur-sm">
-              {isPro ? <Camera size={32} /> : <><Lock size={24} className="mb-2 text-amber-400"/> پێویستی بە پرۆیە</>}
-            </div>
-            {isUploadingAvatar && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><div className={`w-8 h-8 border-4 border-t-transparent rounded-full animate-spin ${theme?.border || 'border-orange-200'}`}></div></div>}
-          </div>
-          <input type="file" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} accept="image/*" className="hidden" />
-          <div className="flex-1 w-full space-y-2"><label className="text-sm font-bold text-neutral-500 pl-2">ناوی تەواو</label><input type="text" value={profile?.displayName || ''} onChange={e => setProfile({...profile, displayName: e.target.value})} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl focus:border-neutral-400 outline-none transition font-bold text-sm" /></div>
+        {/* بەشی وێنەی کەڤەر و پرۆفایل */}
+        <div className="relative mb-12">
+           {/* کەڤەر */}
+           <div className="w-full h-32 sm:h-40 bg-neutral-100 rounded-2xl overflow-hidden relative group">
+             {profile?.bgImage ? <img src={profile.bgImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-neutral-400"><ImageIcon size={32}/></div>}
+             <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer font-bold text-sm">
+                <Camera size={20} className="ml-2"/> گۆڕینی کەڤەر
+                <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+             </label>
+           </div>
+           
+           {/* پرۆفایل */}
+           <div className="absolute -bottom-8 right-6 flex items-end gap-4">
+              <div className="relative group w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white bg-neutral-100 shadow-md overflow-hidden shrink-0">
+                {isUploadingAvatar ? <div className="w-full h-full flex items-center justify-center bg-neutral-200"><div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div> : profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-neutral-400"><Camera size={32}/></div>}
+                <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} />
+                  <Camera size={24} />
+                </label>
+              </div>
+           </div>
         </div>
-        <div className="space-y-2"><label className="text-sm font-bold text-neutral-500 pl-2">دەربارەی من (Bio)</label><textarea value={profile?.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl h-32 resize-none focus:border-neutral-400 outline-none transition font-medium leading-relaxed text-sm" /></div>
-        <div className="space-y-2"><label className="text-sm font-bold text-neutral-500 pl-2">بەستەری پرۆفایل</label><div className="flex items-center" dir="ltr"><span className="bg-neutral-100 border border-r-0 border-neutral-200 p-3.5 rounded-l-2xl text-neutral-500 font-bold text-sm">biokurd.com/</span><input type="text" value={profile?.slug || ''} onChange={e => setProfile({...profile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')})} className="flex-1 p-3.5 bg-neutral-50 border border-neutral-200 rounded-r-2xl focus:border-neutral-400 outline-none transition font-bold text-sm" /></div></div>
-        <button onClick={() => handleUpdateProfile()} disabled={saving} className={`w-full py-4 ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} text-white rounded-2xl font-black flex items-center justify-center gap-3 transition active:scale-95 shadow-xl disabled:opacity-70 mt-4 text-sm`}>{saving ? 'پاشەکەوت دەکرێت...' : 'پاشەکەوتکردنی زانیارییەکان'}{!saving && <Save size={20} />}</button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+          <div>
+            <label className="text-sm font-bold text-neutral-600 block mb-2">ناوی تەواو</label>
+            <input type="text" value={profile?.displayName || ''} onChange={e => setProfile({...profile, displayName: e.target.value})} onBlur={() => handleUpdateProfile({ displayName: profile.displayName })} className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-neutral-600 block mb-2 flex items-center gap-2"><FileText size={16}/> کورتەیەک دەربارەی خۆت</label>
+            <textarea value={profile?.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} onBlur={() => handleUpdateProfile({ bio: profile.bio })} className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold h-14 resize-none overflow-hidden" placeholder="کورتەیەک بنووسە..." />
+          </div>
+        </div>
       </div>
     </div>
   );
