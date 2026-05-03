@@ -28,8 +28,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const [settings, setSettings] = useState<any>({ 
     pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
     siteTheme: 'orange', 
-    // 🌟 تێبینی: ڕەنگەکان بە بەتاڵی جێهێڵراون بۆ ئەوەی ڕووکارە نوێیەکان کار بکەن
-    mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', buttonDesign: 'mockup', nameColor: '', bioColor: '', btnTextColor: '' }, 
+    mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', bgImage: '', buttonDesign: 'gold', nameColor: '', bioColor: '', btnTextColor: '' }, 
     globalButtons: [], ads: [], socialPlatforms: []
   });
   
@@ -107,18 +106,19 @@ export default function Admin({ user, onLogout, theme }: Props) {
     setEditingUser(null); fetchData();
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons' | 'mockup', index?: number) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons' | 'mockup' | 'mockupBg', index?: number) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new window.Image(); img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
+        const MAX_WIDTH = listType === 'mockupBg' ? 1200 : 800; 
+        const MAX_HEIGHT = listType === 'mockupBg' ? 1200 : 800;
         let width = img.width; let height = img.height;
         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
         canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
-        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        const base64 = canvas.toDataURL('image/jpeg', 0.85);
         
         if (listType === 'ads' && index !== undefined) {
           setSettings((prev: any) => ({ ...prev, ads: prev.ads.map((ad: any, i: number) => i === index ? { ...ad, imageUrl: base64 } : ad) }));
@@ -126,6 +126,8 @@ export default function Admin({ user, onLogout, theme }: Props) {
           setSettings((prev: any) => ({ ...prev, globalButtons: prev.globalButtons.map((btn: any, i: number) => i === index ? { ...btn, imageUrl: base64 } : btn) }));
         } else if (listType === 'mockup') {
           setSettings((prev: any) => ({ ...prev, mockup: { ...prev.mockup, avatar: base64 } }));
+        } else if (listType === 'mockupBg') {
+          setSettings((prev: any) => ({ ...prev, mockup: { ...prev.mockup, bgImage: base64 } }));
         }
       };
     };
@@ -226,34 +228,47 @@ export default function Admin({ user, onLogout, theme }: Props) {
                      </div>
                    </div>
 
+                   {/* 🌟 کەمکردنەوەی ڕووکارەکان بۆ ٥ دانە شازەکە 🌟 */}
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">جۆری دیزاین</label>
-                     <select value={settings.mockup?.buttonDesign || 'mockup'} onChange={e => {
+                     <select value={settings.mockup?.buttonDesign || 'gold'} onChange={e => {
                          setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, buttonDesign: e.target.value, nameColor: '', bioColor: '', btnTextColor: ''}}));
                      }} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition cursor-pointer">
-                        <option value="mockup">تاریکی شاهانە (Executive)</option>
-                        <option value="light">سپی پلاتینی (Pearl)</option>
-                        <option value="gold">ئاڵتوونی و ڕەش (Luxury)</option>
-                        <option value="neon">شوشەیی نیۆن (Cyber)</option>
-                        <option value="emerald">زەمردی متمانە (Emerald)</option>
-                        <option value="cyberpunk">سایبەرپەنک</option>
-                        <option value="glassmorphism">شوشەیی ڕەنگاوڕەنگ</option>
-                        <option value="dracula">دراکولا</option>
-                        <option value="hacker">هاکەر (ماتریکس)</option>
-                        <option value="luxury">ڕۆزگۆڵدی ڤی ئای پی</option>
+                        <option value="gold">ئاڵتوونی شاهانە (Royal Gold)</option>
+                        <option value="aurora">شەبەنگی باکوور (Aurora)</option>
+                        <option value="cyberpunk">سایبەرپەنک (Cyberpunk)</option>
+                        <option value="glass">شوشەیی بلور (Glassmorphism)</option>
+                        <option value="light">سپی پلاتینی (Pearl Light)</option>
                      </select>
                    </div>
 
-                   <div className="pt-2">
-                     <label className="text-xs font-bold text-neutral-500 mb-2 block pl-2">وێنەی پرۆفایلی مۆکئەپ</label>
-                     <input type="file" id="mockupImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockup')} className="hidden" />
-                     <div className="flex items-center gap-4">
-                       <div className="w-16 h-16 rounded-[14px] bg-white border border-neutral-200 p-1 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                         {settings.mockup?.avatar ? <img src={settings.mockup.avatar} className="w-full h-full object-cover rounded-[10px]" /> : <ImageIcon className="text-neutral-300"/>}
+                   {/* 🌟 زیادکردنی بەشی وێنەی کەڤەر و وێنەی پرۆفایل 🌟 */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                     {/* وێنەی پرۆفایل */}
+                     <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
+                       <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی پرۆفایل</label>
+                       <input type="file" id="mockupImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockup')} className="hidden" />
+                       <div className="flex items-center gap-3">
+                         <div className="w-12 h-12 rounded-[12px] bg-neutral-100 border border-neutral-200 p-1 flex items-center justify-center overflow-hidden shrink-0">
+                           {settings.mockup?.avatar ? <img src={settings.mockup.avatar} className="w-full h-full object-cover rounded-[8px]" /> : <ImageIcon className="text-neutral-300"/>}
+                         </div>
+                         <button onClick={() => document.getElementById('mockupImage')?.click()} className="flex-1 py-3 bg-neutral-800 hover:bg-black text-white font-bold rounded-xl transition flex items-center justify-center gap-2 text-xs"><Camera size={14}/> دانان</button>
                        </div>
-                       <button onClick={() => document.getElementById('mockupImage')?.click()} className="px-5 py-3.5 bg-neutral-800 hover:bg-black text-white font-bold rounded-xl transition shadow-md flex items-center gap-2 text-sm"><Camera size={16}/> گۆڕینی وێنە</button>
+                     </div>
+                     
+                     {/* وێنەی کەڤەر (Background) */}
+                     <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
+                       <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی کەڤەر (باکگراوند)</label>
+                       <input type="file" id="mockupBgImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockupBg')} className="hidden" />
+                       <div className="flex items-center gap-3">
+                         <div className="w-20 h-12 rounded-[12px] bg-neutral-100 border border-neutral-200 flex items-center justify-center overflow-hidden shrink-0">
+                           {settings.mockup?.bgImage ? <img src={settings.mockup.bgImage} className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-300"/>}
+                         </div>
+                         <button onClick={() => document.getElementById('mockupBgImage')?.click()} className="flex-1 py-3 bg-neutral-800 hover:bg-black text-white font-bold rounded-xl transition flex items-center justify-center gap-2 text-xs"><Camera size={14}/> دانان</button>
+                       </div>
                      </div>
                    </div>
+
                 </div>
 
                 <div className="shrink-0 w-full sm:w-auto flex justify-center lg:justify-end relative z-10 pointer-events-none scale-90 sm:scale-100 origin-center lg:origin-left">

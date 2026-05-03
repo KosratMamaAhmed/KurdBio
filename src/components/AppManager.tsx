@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Download, X, Smartphone, Share, MoreVertical, Compass, AlertCircle, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion'; // 🌟 پارێزراو
+import { Download, X, Smartphone, Share, Compass, AlertCircle, Plus } from 'lucide-react';
 
 export default function AppManager() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -9,13 +9,18 @@ export default function AppManager() {
 
   useEffect(() => {
     try {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+      let isStandalone = false;
+      try {
+        isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+      } catch (e) {
+        // گەر براوزەر پشتگیری matchMedia نەکات
+      }
       
       let isDismissed = 'false';
       try {
         isDismissed = localStorage.getItem('hideBiokurdInstall') || 'false';
       } catch (err) {
-        console.warn("Safari blocked localStorage");
+        console.warn("localStorage blocked");
       }
       
       if (isStandalone || isDismissed === 'true') return;
@@ -27,7 +32,6 @@ export default function AppManager() {
 
       if (isInApp) {
         setDeviceType('in-app');
-        // لەناو ئەپەکان هەرگیز PWA یان داواکاری مەدە چونکە تەنها کێشە دروست دەکات
         return; 
       } else if (isIOS) {
         setDeviceType('ios');
@@ -55,7 +59,7 @@ export default function AppManager() {
         clearTimeout(timer);
       };
     } catch (mainError) {
-      console.error("AppManager Guard:", mainError);
+      console.error("AppManager Error:", mainError);
     }
   }, []);
 
@@ -66,9 +70,7 @@ export default function AppManager() {
       await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       setShowInstall(false);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   };
 
   const handleDismiss = () => {

@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion'; // 🌟 لێرەدا گۆڕدرا بۆ framer-motion بۆ سەلامەتی
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, Copy, Move, Menu, LayoutTemplate
-} from 'lucide-react';
+  Trash2, X, AlertCircle, Copy, Move, Menu, Layout 
+} from 'lucide-react'; // 🌟 LayoutTemplate گۆڕدرا بۆ Layout بۆ ڕێگریکردن لە کراش
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
 import ThemeSettings from '../components/ThemeSettings';
 import Card from '../components/Card';
-import AppManager from '../components/AppManager'; // 🌟 لێرەدا کۆمپۆنێنتی PWA نوێیەکە بانگ کراوە
+import AppManager from '../components/AppManager';
 
 interface Props {
   user: any;
@@ -210,10 +210,8 @@ export default function Dashboard({ user, onLogout }: Props) {
   if (loading) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    // 🌟 چارەسەری ئایفۆن Notch لێرەدا دانراوە بە pt-[env(safe-area-inset-top)] 🌟
     <div className="min-h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]" dir="rtl">
       
-      {/* 🌟 PWA Manager لێرە دانراوە بۆ دامەزراندنی ئەپ 🌟 */}
       <AppManager />
 
       <AnimatePresence>
@@ -238,7 +236,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             {[
               { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
               { id: 'profile', icon: User, label: 'پرۆفایل' },
-              { id: 'theme', icon: LayoutTemplate, label: 'ڕووکار' }
+              { id: 'theme', icon: Layout, label: 'ڕووکار' } // 🌟 گۆڕدرا بۆ Layout
             ].map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
