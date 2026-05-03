@@ -7,13 +7,13 @@ interface CardProps {
   onClose: () => void;
 }
 
-// 🌟 ٥ دیزاینە پریمیمەکە بە شێوازی ٢ بەشی (Two-Part Split) 🌟
+// 🌟 ٥ دیزاینە پریمیمەکە بە ڕەنگی زۆر گونجاو و بێ سێبەری بێزارکەر 🌟
 const CARD_DESIGNS = [
-  { id: 0, name: 'تاریکی شاهانە (Executive)', bg1: '#020617', bg2: '#0f172a', accent: '#fbbf24', textName: '#fcd34d', textBio: '#94a3b8', qrFg: '#020617', customTxtCol: '#fbbf24' },
-  { id: 1, name: 'سپی پلاتینی (Platinum)', bg1: '#f8fafc', bg2: '#ffffff', accent: '#3b82f6', textName: '#0f172a', textBio: '#475569', qrFg: '#000000', customTxtCol: '#3b82f6' },
-  { id: 2, name: 'شوشەیی زەریایی (Ocean)', bg1: '#082f49', bg2: '#0c4a6e', accent: '#38bdf8', textName: '#bae6fd', textBio: '#7dd3fc', qrFg: '#082f49', customTxtCol: '#38bdf8' },
-  { id: 3, name: 'یاقووتی تاریک (Crimson)', bg1: '#2a0606', bg2: '#450a0a', accent: '#ef4444', textName: '#fca5a5', textBio: '#f87171', qrFg: '#2a0606', customTxtCol: '#ef4444' },
-  { id: 4, name: 'زەمردی پریمیم (Emerald)', bg1: '#022c22', bg2: '#064e3b', accent: '#10b981', textName: '#a7f3d0', textBio: '#6ee7b7', qrFg: '#022c22', customTxtCol: '#10b981' }
+  { id: 0, name: 'تاریکی شاهانە (Executive)', bg1: '#050505', bg2: '#0f172a', accent: '#fbbf24', textName: '#fbbf24', textBio: '#fcd34d', qrFg: '#050505', customTxtCol: '#ffffff', scanCol: '#94a3b8' },
+  { id: 1, name: 'سپی پلاتینی (Platinum)', bg1: '#f1f5f9', bg2: '#ffffff', accent: '#3b82f6', textName: '#0f172a', textBio: '#475569', qrFg: '#000000', customTxtCol: '#3b82f6', scanCol: '#64748b' },
+  { id: 2, name: 'شوشەیی زەریایی (Ocean)', bg1: '#082f49', bg2: '#0c4a6e', accent: '#38bdf8', textName: '#bae6fd', textBio: '#7dd3fc', qrFg: '#082f49', customTxtCol: '#38bdf8', scanCol: '#7dd3fc' },
+  { id: 3, name: 'یاقووتی تاریک (Crimson)', bg1: '#2a0606', bg2: '#450a0a', accent: '#ef4444', textName: '#fca5a5', textBio: '#f87171', qrFg: '#2a0606', customTxtCol: '#ef4444', scanCol: '#fca5a5' },
+  { id: 4, name: 'زەمردی پریمیم (Emerald)', bg1: '#022c22', bg2: '#064e3b', accent: '#10b981', textName: '#a7f3d0', textBio: '#6ee7b7', qrFg: '#022c22', customTxtCol: '#10b981', scanCol: '#6ee7b7' }
 ];
 
 const FONTS = [
@@ -89,23 +89,24 @@ export default function Card({ profile, onClose }: CardProps) {
       const design = CARD_DESIGNS[activeDesign];
       const fontPrimary = `"${debouncedSettings.font}", "Vazirmatn", sans-serif`;
       const isEnglish = /^[A-Za-z]/.test(debouncedSettings.text);
+      const isLightMode = activeDesign === 1;
 
       // بڕینەوەی کارتەکە بۆ ئەوەی گۆشەکانی خڕ بێت
       roundRect(ctx, 0, 0, 1050, 600, 40);
       ctx.clip();
 
-      // 🌟 ١. دروستکردنی باکگراوندی ٢ بەشی (Two-Part Design) زۆر پڕۆفیشناڵ 🌟
+      // 🌟 ١. دروستکردنی باکگراوندی ٢ بەشی بە شێوەیەکی زۆر پڕۆفیشناڵ 🌟
       // لای چەپ (بەشی QR)
       ctx.fillStyle = design.bg1;
       ctx.fillRect(0, 0, 1050, 600);
 
-      // لای ڕاست (بەشی پرۆفایل) بە شێوەیەکی ئەندازەیی خوار
+      // لای ڕاست (بەشی پرۆفایل) هێڵەکە کەمێک برا بۆ لای ڕاست بۆ ئەوەی نەچێتە سەر QR
       ctx.fillStyle = design.bg2;
       ctx.beginPath();
-      ctx.moveTo(450, 0);
+      ctx.moveTo(480, 0);
       ctx.lineTo(1050, 0);
       ctx.lineTo(1050, 600);
-      ctx.lineTo(350, 600);
+      ctx.lineTo(380, 600);
       ctx.closePath();
       ctx.fill();
 
@@ -113,14 +114,14 @@ export default function Card({ profile, onClose }: CardProps) {
       ctx.strokeStyle = design.accent;
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(450, -10);
-      ctx.lineTo(350, 610);
+      ctx.moveTo(480, -10);
+      ctx.lineTo(380, 610);
       ctx.stroke();
 
-      // وۆتەرمارکی پاشبنەما زۆر کاڵ
+      // وۆتەرمارکی پاشبنەما بە بێ سێبەری بێزارکەر
       ctx.save();
       ctx.translate(525, 300); ctx.rotate(-Math.PI / 8);
-      ctx.fillStyle = activeDesign === 1 ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)'; 
+      ctx.fillStyle = isLightMode ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)'; 
       ctx.font = `900 200px ${fontPrimary}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(profile.slug.toUpperCase(), 0, 0);
       ctx.restore();
@@ -132,27 +133,28 @@ export default function Card({ profile, onClose }: CardProps) {
       // 🌟 ٢. بەشی QR Code (لای چەپ) 🌟
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`https://biokurd.com/${profile.slug}`)}&margin=1&color=${design.qrFg.replace('#','')}&bgcolor=ffffff`;
       
-      // ڕێکخستنی شوێنی QR Code
-      const xQ = 90; const yQ = 140; const wQ = 280; const hQ = 280;
+      // QR Code کەمێک برا بۆ لای چەپ و بچووک کرایەوە
+      const xQ = 60; const yQ = 140; const wQ = 270; const hQ = 270;
 
-      // سێبەری خەیاڵی بۆ QR
-      ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 15; ctx.fillStyle = '#FFFFFF';
-      roundRect(ctx, xQ - 15, yQ - 15, wQ + 30, hQ + 30, 30); ctx.fill(); 
-      
-      // 🛑 لابردنی سێبەر بۆ ئەوەی نەچێتە سەر نووسینەکان 🛑
-      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      // پاشبنەمای سپی بۆ QR بەبێ تێکچوونی ڕەنگ
+      ctx.fillStyle = '#FFFFFF';
+      roundRect(ctx, xQ - 15, yQ - 15, wQ + 30, hQ + 30, 25); ctx.fill(); 
 
       try {
         const qrRes = await fetch(qrUrl); const qrBlob = await qrRes.blob();
         const qrObjUrl = URL.createObjectURL(qrBlob); const qrImg = await loadImage(qrObjUrl);
-        ctx.save(); roundRect(ctx, xQ, yQ, wQ, hQ, 20); ctx.clip(); ctx.drawImage(qrImg, xQ, yQ, wQ, hQ); ctx.restore();
+        ctx.save(); roundRect(ctx, xQ, yQ, wQ, hQ, 15); ctx.clip(); ctx.drawImage(qrImg, xQ, yQ, wQ, hQ); ctx.restore();
       } catch (e) { console.error("Failed to load QR code"); }
 
+      // 🌟 ڕێکخستنی نووسینی "SCAN TO CONNECT" بە ڕەنگی گونجاو 🌟
+      ctx.fillStyle = design.scanCol;
+      ctx.font = `bold 18px "Tajawal", sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText("SCAN TO CONNECT", xQ + (wQ / 2), yQ + hQ + 35);
 
       // 🌟 ٣. بەشی پرۆفایل و دەقەکان (لای ڕاست) 🌟
-      const textCenterX = 750; const avatarY = 180; const avatarRadius = 80;
+      const textCenterX = 740; const avatarY = 170; const avatarRadius = 80;
 
-      // بازنەی دەوری پرۆفایل بە ڕەنگی Accent
+      // چوارچێوەی دەوری پرۆفایل بە ڕەنگی دیزاینەکە
       ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 8, 0, Math.PI * 2); ctx.fillStyle = design.accent; ctx.fill();
       // بازنەی ناوەوە
       ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 3, 0, Math.PI * 2); ctx.fillStyle = design.bg2; ctx.fill();
@@ -162,23 +164,23 @@ export default function Card({ profile, onClose }: CardProps) {
           const avatarImg = await loadImage(profile.avatarUrl);
           ctx.save(); ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
           ctx.drawImage(avatarImg, textCenterX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2); ctx.restore();
-        } catch (e) { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, activeDesign === 1); }
-      } else { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, activeDesign === 1); }
+        } catch (e) { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, isLightMode); }
+      } else { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, isLightMode); }
 
-      // 🛑 سەلامەتی: دڵنیابوونەوە لە نەمانی هیچ سێبەرێک پێش نووسین 🛑
+      // 🛑 لابردنی هەموو جۆرە سێبەرێک لەسەر دەقەکان بۆ ئەوەی ڕوون بن 🛑
       ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
 
-      // ناو (بچووکتر کرا بۆ 48px و سنووردار کرا بە maxWidth = 450)
-      const nameY = 320; ctx.textBaseline = 'top'; ctx.textAlign = 'center';
+      // ناو (بچووکتر کرا بۆ 55px و سنووردار کرا بە 400px بۆ ئەوەی دەرنەچێت)
+      const nameY = 300; ctx.textBaseline = 'top'; ctx.textAlign = 'center';
       ctx.fillStyle = debouncedSettings.nameCol;
-      ctx.font = `900 48px ${fontPrimary}`; 
-      ctx.fillText(profile.displayName || 'کۆسرەت', textCenterX, nameY, 450);
+      ctx.font = `900 55px ${fontPrimary}`; 
+      ctx.fillText(profile.displayName || 'ناوی تۆ', textCenterX, nameY, 400);
 
-      // بایۆ (بچووکتر کرا بۆ 26px و سنووردار کرا بە maxWidth = 400)
+      // بایۆ (بچووکتر کرا بۆ 26px و سنووردار کرا)
       ctx.fillStyle = debouncedSettings.bioCol; 
       ctx.font = `500 26px ${fontPrimary}`;
       const bioText = profile.bio || 'باشترین بەستەرەکانم لێرە ببینە';
-      wrapText(ctx, bioText, textCenterX, 400, 36, 400);
+      wrapText(ctx, bioText, textCenterX, 380, 36, 400);
 
       // 🌟 ٤. دەقی خوارەوە (سکانم بکە...) 🌟
       const customRenderText = debouncedSettings.text.trim();
@@ -193,8 +195,8 @@ export default function Card({ profile, onClose }: CardProps) {
             ctx.direction = 'rtl'; ctx.textAlign = 'center'; 
           }
           
-          // بەکارهێنانی پۆزشن و قەبارەی داواکراو بێ سێبەر
-          ctx.fillText(customRenderText, debouncedSettings.x, debouncedSettings.y, 400);
+          // بەکارهێنانی پۆزشن و قەبارەی داواکراو
+          ctx.fillText(customRenderText, debouncedSettings.x, debouncedSettings.y, 450);
       }
 
       // لۆگۆی سایت لە خوارەوە لای ڕاست
