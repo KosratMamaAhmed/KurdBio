@@ -61,8 +61,9 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   ];
 
   return (
-    // 🌟 لێرەدا پادینگی دەرەوەم زۆر کەم کردەوە بۆ ئەوەی مۆکئەپەکە فول سکرین بێت 🌟
-    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-800 via-[#0a0a0a] to-black p-0 sm:p-4 overflow-hidden relative touch-manipulation" dir="rtl">
+    // 🌟 باکگراوندی دەرەوە ڕێکخرا بۆ ئەوەی مۆبایلەکە لەسەری جوان دەربکەوێت 🌟
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-[#0a0a0a] to-black p-3 sm:p-6 overflow-hidden relative touch-manipulation" dir="rtl">
+       <div className="absolute inset-0 z-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
        
        <div className="relative z-10 w-full flex justify-center animate-[fadeIn_0.5s_ease-out]">
          <PhoneMockup 
