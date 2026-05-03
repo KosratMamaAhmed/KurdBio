@@ -14,10 +14,6 @@ const DEFAULT_SOCIALS = [
   { id: 'linkedin', name: 'لینکدین', iconName: 'Linkedin', imageUrl: '/social/linkedin.png', baseUrl: 'https://www.linkedin.com/in/', color: '#0A66C2' },
   { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
   { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
-  { id: 'playstore', name: 'پلەی ستۆر', iconName: 'Play', imageUrl: '/social/playstore.png', baseUrl: 'https://play.google.com/store/apps/details?id=', color: '#00D859' },
-  { id: 'appstore', name: 'ئەپ ستۆر', iconName: 'Apple', imageUrl: '/social/appstore.png', baseUrl: 'https://apps.apple.com/app/', color: '#0070F5' },
-  { id: 'discord', name: 'دیسکۆرد', iconName: 'Gamepad', imageUrl: '/social/discord.png', baseUrl: 'https://discord.gg/', color: '#5865F2' },
-  { id: 'github', name: 'گیتھەب', iconName: 'Github', imageUrl: '/social/github.png', baseUrl: 'https://github.com/', color: '#181717' },
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' }
@@ -41,9 +37,15 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) {
+        onLogout();
+        return;
+    }
+
     try {
       const [uRes, sRes] = await Promise.all([
-        fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${user.token}` } }),
+        fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/public/settings')
       ]);
       const uData = await uRes.json();
@@ -58,11 +60,12 @@ export default function Admin({ user, onLogout, theme }: Props) {
   useEffect(() => { fetchData(); }, []);
 
   const saveSettings = async () => {
+    const token = localStorage.getItem('biokurd_token') || user?.token;
     setSaving(true);
     try {
       const res = await fetch('/api/admin/settings', { 
         method: 'PUT', 
-        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, 
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, 
         body: JSON.stringify(settings) 
       });
       if(res.ok) {
@@ -78,31 +81,36 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
   const handleToggleUser = async (userId: string, currentStatus: boolean) => {
     if (!confirm(currentStatus ? 'دڵنیایت لە ڕاگرتنی ئەم هەژمارە؟' : 'دڵنیایت لە چالاککردنەوەی ئەم هەژمارە؟')) return;
-    await fetch('/api/admin/toggle-user', { method: 'POST', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, isActive: !currentStatus }) });
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    await fetch('/api/admin/toggle-user', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, isActive: !currentStatus }) });
     fetchData();
   };
 
   const handleTogglePro = async (userId: string, currentStatus: boolean) => {
     if (!confirm(currentStatus ? 'دڵنیایت لە لابردنی VIP لەم هەژمارە؟' : 'دڵنیایت لە پێدانی VIP بەم هەژمارە؟')) return;
-    await fetch('/api/admin/toggle-pro', { method: 'POST', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, isPro: !currentStatus }) });
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    await fetch('/api/admin/toggle-pro', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, isPro: !currentStatus }) });
     fetchData();
   };
 
   const forcePasswordChange = async (targetId: number) => {
     const newPass = prompt("پاسوۆردێکی نوێ بنووسە بۆ ئەم بەکارهێنەرە:");
     if (!newPass) return;
-    await fetch('/api/admin/force-password', { method: 'POST', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, newPassword: newPass }) });
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    await fetch('/api/admin/force-password', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, newPassword: newPass }) });
     alert("پاسوۆردەکە بە سەرکەوتوویی گۆڕدرا!");
   };
 
   const deleteUser = async (userId: number) => {
     if (!confirm('دڵنیایت لە سڕینەوەی ئەم بەکارهێنەرە بە یەکجاری؟ ئەم کارە هەڵناوەشێتەوە!')) return;
-    await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${user.token}` } });
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
     fetchData();
   };
 
   const saveUserEdit = async () => {
-    await fetch('/api/admin/edit-user', { method: 'PUT', headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(editingUser) });
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    await fetch('/api/admin/edit-user', { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(editingUser) });
     setEditingUser(null); fetchData();
   };
 

@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Download, Loader2, Palette, Type, Move, Droplet, LayoutTemplate, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Download, Palette, Type, Move, Droplet, Layout, Star } from 'lucide-react';
 
 interface CardProps {
   profile: any;
   onClose: () => void;
 }
 
-// 🌟 ١٠ دیزاینە پریمیم و خەیاڵییەکەی کارتی بازرگانی 🌟
+// 🌟 تەنها ٥ دیزاینە پریمیمە خەیاڵییەکە وەک مۆکئەپەکە 🌟
 const CARD_DESIGNS = [
-  { id: 0, name: 'تاریکی شاهانە (Executive)', bg: ['#0f172a', '#020617'], shape: '#fbbf24', shapeShadow: 'rgba(251, 191, 36, 0.5)', text: '#fcd34d', subText: '#94a3b8', qrFg: '0f172a', calligCol: '#ffffff' },
-  { id: 1, name: 'سپی پلاتینی (Platinum)', bg: ['#ffffff', '#f8fafc'], shape: '#0f172a', shapeShadow: 'rgba(15, 23, 42, 0.4)', text: '#0f172a', subText: '#475569', qrFg: '000000', calligCol: '#334155' },
-  { id: 2, name: 'ئاڵتوونی و ڕەش (Luxury VIP)', bg: ['#111111', '#000000'], shape: '#d97706', shapeShadow: 'rgba(217, 119, 6, 0.6)', text: '#fbbf24', subText: '#a1a1aa', qrFg: '000000', calligCol: '#fef3c7' },
-  { id: 3, name: 'شوشەیی نیۆن (Cyber Neon)', bg: ['#082f49', '#020617'], shape: '#0ea5e9', shapeShadow: 'rgba(14, 165, 233, 0.7)', text: '#38bdf8', subText: '#7dd3fc', qrFg: '082f49', calligCol: '#e0f2fe' },
-  { id: 4, name: 'زەمردی متمانە (Emerald)', bg: ['#064e3b', '#022c22'], shape: '#10b981', shapeShadow: 'rgba(16, 185, 129, 0.6)', text: '#34d399', subText: '#6ee7b7', qrFg: '064e3b', calligCol: '#ecfdf5' },
-  { id: 5, name: 'سایبەرپەنک (Cyberpunk)', bg: ['#000000', '#111827'], shape: '#ec4899', shapeShadow: 'rgba(236, 72, 153, 0.7)', text: '#f472b6', subText: '#fbcfe8', qrFg: '000000', calligCol: '#fdf2f8' },
-  { id: 6, name: 'خوێناوی تاریک (Crimson)', bg: ['#450a0a', '#171717'], shape: '#ef4444', shapeShadow: 'rgba(239, 68, 68, 0.6)', text: '#f87171', subText: '#fca5a5', qrFg: '450a0a', calligCol: '#fef2f2' },
-  { id: 7, name: 'مۆر و ڕۆزگۆڵد (Royal Purple)', bg: ['#3b0764', '#171717'], shape: '#f472b6', shapeShadow: 'rgba(244, 114, 182, 0.6)', text: '#fbcfe8', subText: '#f472b6', qrFg: '3b0764', calligCol: '#fdf2f8' },
-  { id: 8, name: 'دارستانی تاریک (Deep Forest)', bg: ['#022c22', '#064e3b'], shape: '#059669', shapeShadow: 'rgba(5, 150, 105, 0.5)', text: '#6ee7b7', subText: '#a7f3d0', qrFg: '022c22', calligCol: '#ecfdf5' },
-  { id: 9, name: 'شەبەنگی شەو (Night Aurora)', bg: ['#1e1b4b', '#312e81'], shape: '#8b5cf6', shapeShadow: 'rgba(139, 92, 246, 0.6)', text: '#a5b4fc', subText: '#c7d2fe', qrFg: '1e1b4b', calligCol: '#e0e7ff' }
+  { id: 0, name: 'ئاڵتوونی شاهانە', bg: ['#0f172a', '#020617'], shape: '#fbbf24', shapeShadow: 'rgba(251, 191, 36, 0.5)', text: '#fbbf24', subText: '#fcd34d', qrFg: '000000', calligCol: '#ffffff', scanCol: '#94a3b8' },
+  { id: 1, name: 'شەبەنگی باکوور', bg: ['#042f2e', '#020617'], shape: '#10b981', shapeShadow: 'rgba(16, 185, 129, 0.6)', text: '#34d399', subText: '#6ee7b7', qrFg: '042f2e', calligCol: '#ffffff', scanCol: '#a7f3d0' },
+  { id: 2, name: 'سایبەرپەنک', bg: ['#2e1065', '#000000'], shape: '#ec4899', shapeShadow: 'rgba(236, 72, 153, 0.7)', text: '#f472b6', subText: '#fbcfe8', qrFg: '2e1065', calligCol: '#22d3ee', scanCol: '#f9a8d4' },
+  { id: 3, name: 'شوشەیی بلور', bg: ['#1e1b4b', '#0f172a'], shape: '#6366f1', shapeShadow: 'rgba(99, 102, 241, 0.6)', text: '#818cf8', subText: '#c7d2fe', qrFg: '1e1b4b', calligCol: '#ffffff', scanCol: '#a5b4fc' },
+  { id: 4, name: 'سپی پلاتینی', bg: ['#f8fafc', '#e2e8f0'], shape: '#0f172a', shapeShadow: 'rgba(15, 23, 42, 0.3)', text: '#0f172a', subText: '#334155', qrFg: '000000', calligCol: '#1e293b', scanCol: '#475569' }
 ];
 
 const FONTS = [
@@ -43,11 +38,10 @@ export default function Card({ profile, onClose }: CardProps) {
   
   const [selectedFont, setSelectedFont] = useState('Noto Sans Arabic');
   const [customText, setCustomText] = useState('سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم');
-  const [fontSize, setFontSize] = useState(28); 
-  const [posX, setPosX] = useState(211); 
-  const [posY, setPosY] = useState(569); 
+  const [fontSize, setFontSize] = useState(24); 
+  const [posX, setPosX] = useState(750); 
+  const [posY, setPosY] = useState(530); 
 
-  // 🌟 ڕەنگەکان بەپێی دیزاینەکە خۆکارانە دەگۆڕێن 🌟
   const [nameColor, setNameColor] = useState(CARD_DESIGNS[0].text);
   const [bioColor, setBioColor] = useState(CARD_DESIGNS[0].subText);
   const [customTextColor, setCustomTextColor] = useState(CARD_DESIGNS[0].calligCol); 
@@ -56,7 +50,6 @@ export default function Card({ profile, onClose }: CardProps) {
 
   const changeTheme = (idx: number) => {
     setActiveDesign(idx);
-    // گۆڕینی ڕەنگەکان ڕاستەوخۆ بەپێی ئەو ڕووکارەی هەڵیبژاردووە
     setNameColor(CARD_DESIGNS[idx].text);
     setBioColor(CARD_DESIGNS[idx].subText);
     setCustomTextColor(CARD_DESIGNS[idx].calligCol);
@@ -95,19 +88,21 @@ export default function Card({ profile, onClose }: CardProps) {
 
       const design = CARD_DESIGNS[activeDesign];
       const fontPrimary = `"${debouncedSettings.font}", "Vazirmatn", sans-serif`;
-      
       const isEnglish = /^[A-Za-z]/.test(debouncedSettings.text);
+      const isLightMode = activeDesign === 4; // دیزاینی ٤ سپییە
 
+      // بڕینەوەی کارتەکە
       roundRect(ctx, 0, 0, 1050, 600, 40);
       ctx.clip();
 
+      // باکگراوند
       const bgGradient = ctx.createLinearGradient(0, 0, 1050, 600);
       bgGradient.addColorStop(0, design.bg[0]); 
       bgGradient.addColorStop(1, design.bg[1]); 
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, 1050, 600);
 
-      // بریقەی سەر شاشەی کارتەکە
+      // بریقەی سەر شاشەی کارتەکە (Glow)
       const glow1 = ctx.createRadialGradient(850, 100, 50, 850, 100, 400);
       glow1.addColorStop(0, design.shapeShadow); glow1.addColorStop(1, 'transparent');
       ctx.fillStyle = glow1; ctx.fillRect(0, 0, 1050, 600);
@@ -116,14 +111,16 @@ export default function Card({ profile, onClose }: CardProps) {
       glow2.addColorStop(0, design.shapeShadow); glow2.addColorStop(1, 'transparent');
       ctx.fillStyle = glow2; ctx.fillRect(0, 0, 1050, 600);
 
+      // نووسینی ناوەکەی لە باکگراونددا (Watermark)
       ctx.save();
       ctx.translate(525, 300); ctx.rotate(-Math.PI / 8);
-      ctx.fillStyle = (activeDesign === 1) ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)'; 
+      ctx.fillStyle = isLightMode ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)'; 
       ctx.font = `900 250px ${fontPrimary}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(profile.slug.toUpperCase(), 0, 0);
       ctx.restore();
 
-      ctx.fillStyle = (activeDesign === 1) ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.04)';
+      // شێوە ئەندازەییەکانی کارتەکە
+      ctx.fillStyle = isLightMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.04)';
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1050, 0); ctx.lineTo(1050, 250); ctx.lineTo(0, 450); ctx.closePath(); ctx.fill();
 
       ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 40; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 10;
@@ -135,6 +132,7 @@ export default function Card({ profile, onClose }: CardProps) {
         const img = new window.Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = reject; img.src = src;
       });
 
+      // 🌟 بەشی QR Code 🌟
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`https://biokurd.com/${profile.slug}`)}&margin=1&color=${design.qrFg}&bgcolor=ffffff`;
       const xQ = 80; const yQ = 80; const wQ = 320; const hQ = 320;
 
@@ -147,37 +145,46 @@ export default function Card({ profile, onClose }: CardProps) {
         ctx.save(); roundRect(ctx, xQ, yQ, wQ, hQ, 20); ctx.clip(); ctx.drawImage(qrImg, xQ, yQ, wQ, hQ); ctx.restore();
       } catch (e) { console.error("Failed to load QR code"); }
 
-      ctx.fillStyle = debouncedSettings.nameCol;
-      ctx.font = `bold 22px "Tajawal", sans-serif`; ctx.textAlign = 'center';
-      ctx.fillText("SCAN TO CONNECT", xQ + (wQ / 2), yQ + hQ + 45);
+      // 🌟 ڕێکخستنی نووسینی "SCAN TO CONNECT" بۆ ئەوەی لەگەڵ باکگراوند بگونجێت 🌟
+      ctx.fillStyle = design.scanCol;
+      ctx.font = `bold 20px "Tajawal", sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText("SCAN TO CONNECT", xQ + (wQ / 2), yQ + hQ + 35);
 
+      // 🌟 بەشی پرۆفایل و دەقەکان 🌟
       const textCenterX = 750; const avatarY = 160; const avatarRadius = 85;
 
+      // ١. هێڵی دەرەوەی پرۆفایلەکە کە جیای دەکاتەوە
       ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 35;
-      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 8, 0, Math.PI * 2); ctx.fillStyle = design.shape; ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 12, 0, Math.PI * 2); ctx.fillStyle = design.shape; ctx.fill(); ctx.shadowColor = 'transparent';
 
-      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 3, 0, Math.PI * 2);
-      ctx.fillStyle = (activeDesign === 1) ? '#ffffff' : '#000000'; ctx.fill();
+      // ٢. هێڵی ناوەوە (باکگراوند) کە تۆخە بۆ دەرخستنی وێنەکە
+      ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius + 4, 0, Math.PI * 2);
+      ctx.fillStyle = isLightMode ? '#ffffff' : '#050505'; ctx.fill();
 
+      // ٣. خودی وێنەکە
       if (profile.avatarUrl) {
         try {
           const avatarImg = await loadImage(profile.avatarUrl);
           ctx.save(); ctx.beginPath(); ctx.arc(textCenterX, avatarY, avatarRadius, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
           ctx.drawImage(avatarImg, textCenterX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2); ctx.restore();
-        } catch (e) { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, design.text); }
-      } else { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, design.text); }
+        } catch (e) { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, design.text, isLightMode); }
+      } else { drawAvatarFallback(ctx, textCenterX, avatarY, avatarRadius, profile.displayName, fontPrimary, design.text, isLightMode); }
 
+      // ناو (بەرگرتن لە چوونە دەرەوەی لە هێڵ بە بەکارهێنانی maxWidth = 450)
       const nameY = 290; ctx.textBaseline = 'top'; ctx.textAlign = 'center';
       ctx.fillStyle = debouncedSettings.nameCol;
       ctx.shadowColor = design.shapeShadow; ctx.shadowBlur = 20; ctx.shadowOffsetY = 3;
-      ctx.font = `900 65px ${fontPrimary}`; ctx.fillText(profile.displayName || 'کۆسرەت', textCenterX, nameY);
+      ctx.font = `900 65px ${fontPrimary}`; 
+      ctx.fillText(profile.displayName || 'کۆسرەت', textCenterX, nameY, 450);
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
+      // بایۆ (بەرگرتن لە چوونە دەرەوەی لە هێڵ بە بەکارهێنانی maxWidth = 420)
       ctx.fillStyle = debouncedSettings.bioCol; 
       ctx.font = `500 30px ${fontPrimary}`;
       const bioText = profile.bio || 'باشترین بەستەرەکانم لێرە ببینە';
-      wrapText(ctx, bioText, textCenterX, 390, 45, 500);
+      wrapText(ctx, bioText, textCenterX, 390, 45, 420);
 
+      // دەقی کالیگرافی خوارەوە (یان هەر دەقێکی تر کە خۆی دەینووسێت)
       const customRenderText = debouncedSettings.text.trim();
       if (customRenderText !== '') {
           ctx.fillStyle = debouncedSettings.customCol;
@@ -185,28 +192,27 @@ export default function Card({ profile, onClose }: CardProps) {
           ctx.textBaseline = 'middle'; 
           
           if (isEnglish) {
-            ctx.direction = 'ltr';
-            ctx.textAlign = 'left';
+            ctx.direction = 'ltr'; ctx.textAlign = 'left';
           } else {
-            ctx.direction = 'rtl';
-            ctx.textAlign = 'center'; 
+            ctx.direction = 'rtl'; ctx.textAlign = 'center'; 
           }
           
-          ctx.fillText(customRenderText, debouncedSettings.x, debouncedSettings.y);
+          // لێرەشدا ڕێگری دەکەین لە دەرچوون لە کارتەکە بە 450px
+          ctx.fillText(customRenderText, debouncedSettings.x, debouncedSettings.y, 450);
       }
 
-      ctx.fillStyle = design.shape; ctx.font = `900 26px sans-serif`;
+      ctx.fillStyle = design.shape; ctx.font = `900 24px sans-serif`;
       ctx.direction = 'ltr'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-      ctx.fillText("BioKurd.com", 1010, 570);
+      ctx.fillText("BioKurd.com", 1010, 575);
 
       setCardImage(canvas.toDataURL('image/png', 1.0));
       
-    } catch (err) { console.error("هەڵە لە دروستکردنی کارت:", err); } 
+    } catch (err) { console.error("Error generating card:", err); } 
     finally { setGenerating(false); }
   };
 
-  const drawAvatarFallback = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, name: string, font: string, textColor: string) => {
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = (activeDesign === 1) ? '#f3f4f6' : '#1e293b'; ctx.fill();
+  const drawAvatarFallback = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, name: string, font: string, textColor: string, isLight: boolean) => {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = isLight ? '#f3f4f6' : '#1e293b'; ctx.fill();
     ctx.fillStyle = CARD_DESIGNS[activeDesign].shape; ctx.font = `bold 80px ${font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(name?.charAt(0).toUpperCase() || 'U', x, y + 5);
   };
@@ -228,16 +234,14 @@ export default function Card({ profile, onClose }: CardProps) {
   return (
     <div className="fixed inset-0 bg-[#0a0a0a] z-50 flex flex-col lg:flex-row overflow-hidden font-sans" dir="rtl">
       
-      {/* 🌟 بەشی بینینی کارتەکە بە شێوەیەکی زۆر پڕۆفیشناڵ 🌟 */}
+      {/* 🌟 بەشی بینینی کارتەکە 🌟 */}
       <div className="w-full lg:w-[65%] h-[45vh] lg:h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-[#050505] relative flex flex-col items-center justify-center p-4 sm:p-8">
-        
-        {/* بریقەی پاشبنەماکە */}
         <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-4 z-20">
            <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl shadow-2xl flex items-center justify-center">
-             <LayoutTemplate size={28} className="text-amber-400"/>
+             <Layout size={28} className="text-amber-400"/>
            </div>
            <div>
              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">ستۆدیۆی کارتی تایبەت</h2>
@@ -277,7 +281,7 @@ export default function Card({ profile, onClose }: CardProps) {
         </div>
       </div>
 
-      {/* 🌟 بەشی ڕێکخستنەکان (ئەوپەڕی پێشکەوتوو و شوشەیی) 🌟 */}
+      {/* 🌟 بەشی ڕێکخستنەکان 🌟 */}
       <div className="w-full lg:w-[35%] h-[55vh] lg:h-full bg-neutral-900 border-l border-white/5 flex flex-col relative z-30 shadow-2xl">
          
          <div className="flex p-2 bg-black/40 backdrop-blur-xl border border-white/5 m-5 rounded-2xl shrink-0">
@@ -362,13 +366,14 @@ export default function Card({ profile, onClose }: CardProps) {
                        </div>
 
                        <div>
+                         {/* 🌟 لیمیتەکانم گونجاندووە بۆ ئەوەی هەرگیز نەچێتە دەرەوەی هێڵ 🌟 */}
                          <div className="flex justify-between text-xs font-bold text-white/60 mb-3"><span>لەلای ڕاست و چەپ (X)</span> <span className="text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded">{posX}</span></div>
-                         <input type="range" min="50" max="1000" value={posX} onChange={(e) => setPosX(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
+                         <input type="range" min="50" max="950" value={posX} onChange={(e) => setPosX(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                        </div>
                        
                        <div>
                          <div className="flex justify-between text-xs font-bold text-white/60 mb-3"><span>لەلای سەرەوە و خوارەوە (Y)</span> <span className="text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded">{posY}</span></div>
-                         <input type="range" min="30" max="580" value={posY} onChange={(e) => setPosY(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
+                         <input type="range" min="50" max="550" value={posY} onChange={(e) => setPosY(Number(e.target.value))} className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" />
                        </div>
                     </div>
                  </motion.div>

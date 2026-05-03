@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion'; // 🌟 لێرەدا گۆڕدرا بۆ framer-motion بۆ سەلامەتی
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
   Trash2, X, AlertCircle, Copy, Move, Menu, Layout 
-} from 'lucide-react'; // 🌟 LayoutTemplate گۆڕدرا بۆ Layout بۆ ڕێگریکردن لە کراش
+} from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
 import ThemeSettings from '../components/ThemeSettings';
@@ -15,14 +15,34 @@ interface Props {
   onLogout: () => void;
 }
 
+// 🌟 زیادکراو: هەمان لیستی تۆڕەکان بۆ ئەوەی بەکارهێنەر هەڵیانبژێرێت
+const DEFAULT_SOCIALS = [
+  { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
+  { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
+  { id: 'x', name: 'ئێکس (توییتەر)', iconName: 'Twitter', imageUrl: '/social/x.png', baseUrl: 'https://x.com/', color: '#000000' },
+  { id: 'youtube', name: 'یوتیوب', iconName: 'Youtube', imageUrl: '/social/youtube.png', baseUrl: 'https://www.youtube.com/@', color: '#FF0000' },
+  { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' },
+  { id: 'snapchat', name: 'سناپچات', iconName: 'Ghost', imageUrl: '/social/snapchat.png', baseUrl: 'https://www.snapchat.com/add/', color: '#FFFC00' },
+  { id: 'linkedin', name: 'لینکدین', iconName: 'Linkedin', imageUrl: '/social/linkedin.png', baseUrl: 'https://www.linkedin.com/in/', color: '#0A66C2' },
+  { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
+  { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
+  { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
+  { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
+  { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
+  { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
+];
+
 export default function Dashboard({ user, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: '', imageUrl: '' });
+  
+  // 🌟 گۆڕانکاری بۆ هەڵبژاردنی پلاتفۆرم
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
   const [editLink, setEditLink] = useState<any>(null);
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,14 +53,21 @@ export default function Dashboard({ user, onLogout }: Props) {
   const iconInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProfile = async () => {
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) {
+        onLogout(); // گەر تۆکن نەبوو، دەری بکە
+        return;
+    }
+
     try {
       const res = await fetch('/api/profile', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
       } else {
+        if (res.status === 401) onLogout(); // ئەگەر تۆکن ئیکسپایەر ببوو
         showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
       }
     } catch (err) {
@@ -58,13 +85,15 @@ export default function Dashboard({ user, onLogout }: Props) {
   };
 
   const handleUpdateProfile = async (updates: any) => {
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) return;
     setSaving(true);
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updates)
       });
@@ -127,13 +156,15 @@ export default function Dashboard({ user, onLogout }: Props) {
   };
 
   const saveLinksOrder = async (newLinks: any[]) => {
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) return;
     setProfile({ ...profile, links: newLinks });
     try {
       await fetch('/api/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ links: newLinks })
       });
@@ -144,19 +175,21 @@ export default function Dashboard({ user, onLogout }: Props) {
 
   const handleAddLink = async () => {
     if (!newLink.title || !newLink.url) return showNotif('ناو و لینک پێویستە', 'error');
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) return;
     setSaving(true);
     try {
       const res = await fetch('/api/links', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(newLink)
       });
       if (res.ok) {
         showNotif('بەستەری نوێ زیادکرا');
-        setNewLink({ title: '', url: '', icon: 'Globe', platformId: '', imageUrl: '' });
+        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
         setShowAddForm(false);
         fetchProfile();
       } else throw new Error();
@@ -169,13 +202,15 @@ export default function Dashboard({ user, onLogout }: Props) {
 
   const handleEditLink = async () => {
     if (!editLink.title || !editLink.url) return showNotif('ناو و لینک پێویستە', 'error');
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/links/${editLink.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(editLink)
       });
@@ -193,10 +228,12 @@ export default function Dashboard({ user, onLogout }: Props) {
 
   const handleDeleteLink = async (id: number) => {
     if(!confirm('دڵنیایت لە سڕینەوەی ئەم بەستەرە؟')) return;
+    const token = localStorage.getItem('biokurd_token') || user?.token;
+    if (!token) return;
     try {
       const res = await fetch(`/api/links/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         showNotif('بەستەر سڕایەوە');
@@ -205,6 +242,34 @@ export default function Dashboard({ user, onLogout }: Props) {
     } catch (err) {
       showNotif('کێشە لە سڕینەوە', 'error');
     }
+  };
+
+  // 🌟 ئۆتۆماتیکی پڕکردنەوەی زانیارییەکان کاتێک پلاتفۆرمێک هەڵدەبژێرێت
+  const handlePlatformChange = (isEdit: boolean, platformId: string) => {
+      const selected = DEFAULT_SOCIALS.find(s => s.id === platformId);
+      if (!selected) return;
+
+      if (isEdit && editLink) {
+          setEditLink({
+              ...editLink,
+              platformId,
+              title: selected.name,
+              icon: selected.iconName,
+              imageUrl: selected.imageUrl,
+              color: selected.color,
+              url: selected.baseUrl !== '' ? selected.baseUrl : editLink.url
+          });
+      } else {
+          setNewLink({
+              ...newLink,
+              platformId,
+              title: selected.name,
+              icon: selected.iconName,
+              imageUrl: selected.imageUrl,
+              color: selected.color,
+              url: selected.baseUrl
+          });
+      }
   };
 
   if (loading) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
@@ -236,7 +301,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             {[
               { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
               { id: 'profile', icon: User, label: 'پرۆفایل' },
-              { id: 'theme', icon: Layout, label: 'ڕووکار' } // 🌟 گۆڕدرا بۆ Layout
+              { id: 'theme', icon: Layout, label: 'ڕووکار' } 
             ].map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
@@ -304,6 +369,21 @@ export default function Dashboard({ user, onLogout }: Props) {
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-8 overflow-hidden">
                         <div className="bg-neutral-50 p-5 sm:p-6 rounded-[1.5rem] border border-neutral-100 space-y-4 shadow-inner">
                           <h3 className="font-black text-neutral-800 border-b border-neutral-200 pb-3 mb-4">{editLink ? 'دەستکاریکردنی بەستەر' : 'بەستەری نوێ'}</h3>
+                          
+                          {/* 🌟 هەڵبژاردنی پلاتفۆرم لێرە دانراوە */}
+                          <div className="mb-4">
+                            <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
+                            <select 
+                                value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} 
+                                onChange={(e) => handlePlatformChange(!!editLink, e.target.value)}
+                                className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer"
+                            >
+                                {DEFAULT_SOCIALS.map(social => (
+                                    <option key={social.id} value={social.id}>{social.name}</option>
+                                ))}
+                            </select>
+                          </div>
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
@@ -311,23 +391,33 @@ export default function Dashboard({ user, onLogout }: Props) {
                             </div>
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">لینک (URL)</label>
-                              <input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" dir="ltr" />
+                              <input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left" dir="ltr" />
                             </div>
                           </div>
                           
-                          <div>
-                            <label className="text-xs font-bold text-neutral-500 block mb-2">ئایکۆن یان لۆگۆ</label>
-                            <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 bg-white border border-neutral-200 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-sm shrink-0">
-                                {isUploadingIcon ? <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : (editLink?.imageUrl || newLink.imageUrl) ? <img src={editLink ? editLink.imageUrl : newLink.imageUrl} className="w-10 h-10 object-contain" /> : <ImageIcon size={24} className="text-neutral-400" />}
-                                <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                                  <input type="file" accept="image/*" className="hidden" ref={iconInputRef} onChange={(e) => handleImageUpload(e, 'icon')} />
-                                  <ImageIcon size={18} className="text-white"/>
-                                </label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-bold text-neutral-500 block mb-2">ئایکۆن یان لۆگۆ</label>
+                              <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 bg-white border border-neutral-200 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-sm shrink-0" style={{ backgroundColor: (editLink ? editLink.color : newLink.color) + '15' }}>
+                                  {isUploadingIcon ? <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : (editLink?.imageUrl || newLink.imageUrl) ? <img src={editLink ? editLink.imageUrl : newLink.imageUrl} className="w-10 h-10 object-contain" /> : <ImageIcon size={24} className="text-neutral-400" />}
+                                  <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                                    <input type="file" accept="image/*" className="hidden" ref={iconInputRef} onChange={(e) => handleImageUpload(e, 'icon')} />
+                                    <ImageIcon size={18} className="text-white"/>
+                                  </label>
+                                </div>
+                                <button onClick={() => iconInputRef.current?.click()} className="px-4 py-2.5 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold text-xs hover:bg-neutral-50 hover:text-orange-500 transition-colors shadow-sm">
+                                  وێنەیەک هەڵبژێرە
+                                </button>
                               </div>
-                              <button onClick={() => iconInputRef.current?.click()} className="px-4 py-2.5 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold text-xs hover:bg-neutral-50 hover:text-orange-500 transition-colors shadow-sm">
-                                وێنەیەک هەڵبژێرە (ئارەزوومەندانە)
-                              </button>
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs font-bold text-neutral-500 block mb-2">ڕەنگی دوگمە</label>
+                                <div className="flex items-center gap-3 p-2 bg-white border border-neutral-200 rounded-xl">
+                                  <input type="color" value={editLink ? editLink.color || '#333333' : newLink.color} onChange={e => editLink ? setEditLink({...editLink, color: e.target.value}) : setNewLink({...newLink, color: e.target.value})} className="w-12 h-12 rounded-lg cursor-pointer border-0 p-0" />
+                                  <span className="text-xs font-mono font-bold text-neutral-400" dir="ltr">{editLink ? editLink.color || '#333333' : newLink.color}</span>
+                                </div>
                             </div>
                           </div>
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Camera, User, FileText, Image as ImageIcon, Move } from 'lucide-react';
 
-// 🌟 کۆمپۆنێنتی زیرەک بۆ ڕاکێشانی وێنە (Drag & Drop Position) 🌟
 function DraggableImage({ src, pos, onPosChange, className, alt }: any) {
   const [dragging, setDragging] = useState(false);
   const [start, setStart] = useState({ x: 0, y: 0 });
@@ -17,7 +16,6 @@ function DraggableImage({ src, pos, onPosChange, className, alt }: any) {
     const dx = clientX - start.x;
     const dy = clientY - start.y;
     
-    // خێرایی ڕاکێشانەکە (0.2 گونجاوترینە بۆ ئەوەی زۆر خێرا نەبێت)
     let newX = currentPos.x - (dx * 0.2); 
     let newY = currentPos.y - (dy * 0.2);
     
@@ -31,7 +29,7 @@ function DraggableImage({ src, pos, onPosChange, className, alt }: any) {
   const handleEnd = () => {
     if (dragging) {
       setDragging(false);
-      onPosChange(currentPos); // پاشەکەوتکردن دوای بەرەڵاکردنی پەنجە
+      onPosChange(currentPos); 
     }
   };
 
@@ -45,7 +43,7 @@ function DraggableImage({ src, pos, onPosChange, className, alt }: any) {
       onTouchStart={(e) => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchMove={(e) => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleEnd}
-      style={{ touchAction: 'none' }} // ڕێگری لە سکڕۆڵ لەکاتی ڕاکێشانی وێنە
+      style={{ touchAction: 'none' }}
     >
        <img 
          src={src} 
@@ -64,7 +62,6 @@ function DraggableImage({ src, pos, onPosChange, className, alt }: any) {
 
 export default function ProfileSettings({ profile, setProfile, theme, saving, handleUpdateProfile }: any) {
   
-  // گۆڕینی کەڤەر و هێشتنەوەی کوالێتی بەرز
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
@@ -72,20 +69,19 @@ export default function ProfileSettings({ profile, setProfile, theme, saving, ha
       const img = new window.Image(); img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200; const MAX_HEIGHT = 1200; // قەبارە گەورەتر بۆ ئەوەی بە جوانی ڕابکێشرێت
+        const MAX_WIDTH = 1200; const MAX_HEIGHT = 1200; 
         let width = img.width; let height = img.height;
         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
         canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
         const base64String = canvas.toDataURL('image/jpeg', 0.85);
         
-        const defaultPos = { x: 50, y: 50 }; // ناوەڕاست
+        const defaultPos = { x: 50, y: 50 };
         handleUpdateProfile({ bgImage: base64String, bgPos: defaultPos });
         setProfile({ ...profile, bgImage: base64String, bgPos: defaultPos });
       };
     };
   };
 
-  // گۆڕینی پرۆفایل و هێشتنەوەی کوالێتی بەرز
   const handleAvatarUploadLocal = (e: React.ChangeEvent<HTMLInputElement>) => {
      const file = e.target.files?.[0]; if (!file) return;
      const reader = new FileReader(); reader.readAsDataURL(file);
@@ -116,7 +112,6 @@ export default function ProfileSettings({ profile, setProfile, theme, saving, ha
       <div className="space-y-6">
         <div className="relative mb-16 sm:mb-20">
            
-           {/* وێنەی کەڤەر بە سیستەمی ڕاکێشانەوە */}
            <div className="w-full h-40 sm:h-56 bg-neutral-100 rounded-3xl overflow-hidden relative shadow-inner">
              {profile?.bgImage ? (
                 <DraggableImage 
@@ -136,7 +131,6 @@ export default function ProfileSettings({ profile, setProfile, theme, saving, ha
                 </div>
              )}
              
-             {/* دوگمەی گۆڕینی کەڤەر */}
              <div className="absolute top-4 right-4 z-20" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
                <label className="bg-black/60 backdrop-blur-md px-4 py-2 sm:py-2.5 rounded-xl text-white cursor-pointer font-bold text-xs sm:text-sm flex items-center gap-2 hover:bg-black transition-colors shadow-lg border border-white/20">
                   <Camera size={18}/> گۆڕینی کەڤەر
@@ -145,7 +139,6 @@ export default function ProfileSettings({ profile, setProfile, theme, saving, ha
              </div>
            </div>
            
-           {/* وێنەی پرۆفایل بە سیستەمی ڕاکێشانەوە */}
            <div className="absolute -bottom-12 sm:-bottom-14 right-6 sm:right-8 flex items-end gap-4 z-30" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
               <div className="relative group w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[6px] border-white bg-neutral-100 shadow-xl overflow-hidden shrink-0">
                 {profile?.avatarUrl ? (
@@ -163,7 +156,6 @@ export default function ProfileSettings({ profile, setProfile, theme, saving, ha
                   <div className="w-full h-full flex items-center justify-center text-neutral-400"><User size={40}/></div>
                 )}
                 
-                {/* دوگمەی گۆڕینی پرۆفایل لەناو خودی پرۆفایلەکە */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                   <label className="text-white cursor-pointer pointer-events-auto p-3 bg-white/20 rounded-full backdrop-blur-md hover:bg-white/40 transition">
                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUploadLocal} />
