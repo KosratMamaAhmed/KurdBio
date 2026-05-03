@@ -1,98 +1,369 @@
 import { useState, useEffect, useRef } from 'react';
-import Card from '../components/Card';
-import LinksManager from '../components/LinksManager';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
+  Trash2, X, Copy, Move, Menu, LayoutTemplate
+} from 'lucide-react';
+import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
 import ThemeSettings from '../components/ThemeSettings';
-import SecuritySettings from '../components/SecuritySettings';
-import DashboardHeader from '../components/DashboardHeader'; 
-import WelcomeBanner from '../components/WelcomeBanner'; 
+import Card from '../components/Card';
+import AppManager from '../components/AppManager'; // 🌟 لێرەدا کۆمپۆنێنتی PWA نوێیەکە بانگ کراوە
 
-interface Props { user: any; onLogout: () => void; theme: any; settings: any; }
+interface Props {
+  user: any;
+  onLogout: () => void;
+}
 
-export default function Dashboard({ user, onLogout, theme, settings }: Props) {
+export default function Dashboard({ user, onLogout }: Props) {
+  const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [showQrModal, setShowQrModal] = useState(false);
+  const [showCard, setShowCard] = useState(false);
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: '', imageUrl: '' });
+  const [editLink, setEditLink] = useState<any>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetch('/api/profile', { headers: { 'Authorization': `Bearer ${user.token}` } })
-    .then(res => res.json())
-    .then(data => { 
-      const loadedProfile = {
-        ...data,
-        theme: data.theme || 'mockup',
-        // 🌟 چارەسەری کێشەکە: نابێت لێرە بە زۆر ڕەنگ دابنێین با ڕووکارەکان دیزاینی خۆیان پیشان بدەن
-        nameColor: data.nameColor || '',
-        bioColor: data.bioColor || '',
-        btnTextColor: data.btnTextColor || ''
-      };
-      setProfile(loadedProfile); 
-      setLoading(false); 
-    })
-    .catch(() => setLoading(false));
-  }, [user.token]);
-
-  const copyProfileLink = () => {
-    if(!profile?.slug) return;
-    navigator.clipboard.writeText(`https://biokurd.com/${profile.slug}`);
-    alert('لینکەکەت بە سەرکەوتوویی کۆپی کرا!');
-  };
-
-  const handleUpdateProfile = async (updates: any = {}) => {
-    setSaving(true);
-    const dataToSend = { ...profile, ...updates };
-    
+  const fetchProfile = async () => {
     try {
-      await fetch('/api/profile', { 
-        method: 'PUT', 
-        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(dataToSend) 
+      const res = await fetch('/api/profile', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}` }
       });
-    } catch (error) {
-      console.error(error);
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      } else {
+        showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
+      }
+    } catch (err) {
+      showNotif('کێشەی هێڵ هەیە', 'error');
+    } finally {
+      setLoading(false);
     }
-    setSaving(false);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar') => {
-    const file = e.target.files?.[0]; if (!file) return;
+  useEffect(() => { fetchProfile(); }, []);
+
+  const showNotif = (msg: string, type = 'success') => {
+    setNotification({ show: true, message: msg, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  const handleUpdateProfile = async (updates: any) => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+        },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'هەڵە');
+      showNotif('زانیارییەکان نوێکرانەوە');
+      fetchProfile();
+    } catch (err: any) {
+      showNotif(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showNotif('قەبارەی وێنە دەبێت لە 2MB کەمتر بێت', 'error');
+      return;
+    }
+
     if (type === 'avatar') setIsUploadingAvatar(true);
-    const reader = new FileReader(); reader.readAsDataURL(file);
+    else setIsUploadingIcon(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
     reader.onload = (event) => {
-      const img = new window.Image(); img.src = event.target?.result as string;
-      img.onload = async () => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
-        let width = img.width; let height = img.height;
-        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-        canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
-        const base64String = canvas.toDataURL('image/jpeg', 0.8);
-        if (type === 'avatar') { await handleUpdateProfile({ avatarUrl: base64String }); setProfile({ ...profile, avatarUrl: base64String }); setIsUploadingAvatar(false); } 
+        const MAX_WIDTH = type === 'avatar' ? 400 : 150;
+        const MAX_HEIGHT = type === 'avatar' ? 400 : 150;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const base64String = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.8);
+        
+        if (type === 'avatar') {
+          handleUpdateProfile({ avatarUrl: base64String, avatarPos: { x: 50, y: 50 } });
+          setIsUploadingAvatar(false);
+        } else {
+          if (editLink) setEditLink({ ...editLink, imageUrl: base64String });
+          else setNewLink({ ...newLink, imageUrl: base64String });
+          setIsUploadingIcon(false);
+        }
       };
     };
   };
 
-  if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center"><div className={`w-10 h-10 border-[5px] ${theme?.border || 'border-orange-200'} border-t-transparent rounded-full animate-spin`}></div></div>;
+  const saveLinksOrder = async (newLinks: any[]) => {
+    setProfile({ ...profile, links: newLinks });
+    try {
+      await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+        },
+        body: JSON.stringify({ links: newLinks })
+      });
+    } catch (err) {
+      showNotif('کێشە لە پاشەکەوتکردنی ڕیزبەندی', 'error');
+    }
+  };
 
-  const isPro = profile?.isPro || user?.isAdmin;
+  const handleAddLink = async () => {
+    if (!newLink.title || !newLink.url) return showNotif('ناو و لینک پێویستە', 'error');
+    setSaving(true);
+    try {
+      const res = await fetch('/api/links', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+        },
+        body: JSON.stringify(newLink)
+      });
+      if (res.ok) {
+        showNotif('بەستەری نوێ زیادکرا');
+        setNewLink({ title: '', url: '', icon: 'Globe', platformId: '', imageUrl: '' });
+        setShowAddForm(false);
+        fetchProfile();
+      } else throw new Error();
+    } catch (err) {
+      showNotif('کێشە لە زیادکردن', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditLink = async () => {
+    if (!editLink.title || !editLink.url) return showNotif('ناو و لینک پێویستە', 'error');
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/links/${editLink.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}`
+        },
+        body: JSON.stringify(editLink)
+      });
+      if (res.ok) {
+        showNotif('بەستەرەکە نوێکرایەوە');
+        setEditLink(null);
+        fetchProfile();
+      } else throw new Error();
+    } catch (err) {
+      showNotif('کێشە لە نوێکردنەوە', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteLink = async (id: number) => {
+    if(!confirm('دڵنیایت لە سڕینەوەی ئەم بەستەرە؟')) return;
+    try {
+      const res = await fetch(`/api/links/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('biokurd_token')}` }
+      });
+      if (res.ok) {
+        showNotif('بەستەر سڕایەوە');
+        fetchProfile();
+      } else throw new Error();
+    } catch (err) {
+      showNotif('کێشە لە سڕینەوە', 'error');
+    }
+  };
+
+  if (loading) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 pb-20 font-sans" dir="rtl">
-      {showQrModal && profile?.slug && <Card profile={profile} onClose={() => setShowQrModal(false)} />}
+    // 🌟 چارەسەری ئایفۆن Notch لێرەدا دانراوە بە pt-[env(safe-area-inset-top)] 🌟
+    <div className="min-h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]" dir="rtl">
+      
+      {/* 🌟 PWA Manager لێرە دانراوە بۆ دامەزراندنی ئەپ 🌟 */}
+      <AppManager />
 
-      <DashboardHeader profile={profile} theme={theme} onLogout={onLogout} />
-      <WelcomeBanner profile={profile} theme={theme} isPro={isPro} copyProfileLink={copyProfileLink} setShowQrModal={setShowQrModal} />
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`fixed top-[calc(env(safe-area-inset-top)+1.5rem)] left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
+            {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle size={20}/>} {notification.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-8">
-        <ProfileSettings profile={profile} setProfile={setProfile} theme={theme} isPro={isPro} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
-        <ThemeSettings profile={profile} setProfile={setProfile} theme={theme} settings={settings} isPro={isPro} handleUpdateProfile={handleUpdateProfile} />
-        <LinksManager user={user} profile={profile} setProfile={setProfile} settings={settings} theme={theme} />
-        <SecuritySettings profile={profile} setProfile={setProfile} userToken={user.token} />
+      <div className={`fixed inset-y-0 right-0 w-[280px] bg-white border-l border-neutral-200 z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 lg:static lg:block shadow-2xl lg:shadow-none`}>
+        <div className="p-6 flex flex-col h-full mt-[env(safe-area-inset-top)]">
+          <div className="flex items-center justify-between mb-10">
+             <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-orange-500 rounded-[14px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-orange-500/30">B</div>
+                <h1 className="text-2xl font-black tracking-tight text-neutral-800">BioKurd</h1>
+             </div>
+             <button className="lg:hidden p-2 bg-neutral-100 rounded-full text-neutral-500 hover:text-neutral-900" onClick={() => setMobileMenuOpen(false)}><X size={20} /></button>
+          </div>
+
+          <div className="flex-1 space-y-2">
+            {[
+              { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
+              { id: 'profile', icon: User, label: 'پرۆفایل' },
+              { id: 'theme', icon: LayoutTemplate, label: 'ڕووکار' }
+            ].map(tab => (
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
+                <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-auto space-y-2 mb-[env(safe-area-inset-bottom)]">
+            <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-neutral-900 text-white hover:bg-black rounded-2xl font-black shadow-lg transition-transform active:scale-95">
+              <Eye size={22} /> بینینی کارت
+            </button>
+            <button onClick={() => { localStorage.removeItem('biokurd_token'); onLogout(); }} className="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-colors">
+              <LogOut size={22} /> چوونەدەرەوە
+            </button>
+          </div>
+        </div>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>
+      )}
+
+      <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between z-20 shrink-0 sticky top-0 mt-[env(safe-area-inset-top)]">
+          <div className="flex items-center gap-4">
+             <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
+             <div>
+                <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : activeTab === 'profile' ? 'پرۆفایل' : 'ڕووکار'}</h2>
+                <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
+             </div>
+          </div>
+          <div className="flex gap-2 sm:gap-3">
+             <button onClick={() => { navigator.clipboard.writeText(`https://biokurd.com/${profile?.slug}`); showNotif('لینکەکە کۆپی کرا'); }} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-neutral-200 rounded-xl font-black text-neutral-700 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-xs sm:text-sm">
+               <Copy size={18} className="text-neutral-400" /> <span className="hidden sm:block">کۆپی لینک</span>
+             </button>
+             <button onClick={() => setShowCard(true)} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black shadow-[0_4px_15px_rgba(249,115,22,0.3)] transition-all active:scale-95 text-xs sm:text-sm">
+               <Share2 size={18} /> <span className="hidden sm:block">بڵاوکردنەوە</span>
+             </button>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
+            
+            {activeTab === 'profile' && (
+              <ProfileSettings profile={profile} setProfile={setProfile} theme={null} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
+            )}
+
+            {activeTab === 'theme' && (
+              <ThemeSettings profile={profile} setProfile={setProfile} handleUpdateProfile={handleUpdateProfile} />
+            )}
+
+            {activeTab === 'links' && (
+              <>
+                <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200 mb-6 sm:mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-black text-neutral-900 flex items-center gap-3"><LinkIcon className="text-orange-500" size={24}/> بەستەرەکانت</h2>
+                    <button onClick={() => { setShowAddForm(!showAddForm); setEditLink(null); }} className={`p-3 rounded-full transition-transform active:scale-95 shadow-md ${showAddForm ? 'bg-red-50 text-red-500 hover:bg-red-100 rotate-45' : 'bg-orange-500 text-white hover:bg-orange-600 hover:-translate-y-0.5'}`}>
+                      <Plus size={24} strokeWidth={3}/>
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {(showAddForm || editLink) && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-8 overflow-hidden">
+                        <div className="bg-neutral-50 p-5 sm:p-6 rounded-[1.5rem] border border-neutral-100 space-y-4 shadow-inner">
+                          <h3 className="font-black text-neutral-800 border-b border-neutral-200 pb-3 mb-4">{editLink ? 'دەستکاریکردنی بەستەر' : 'بەستەری نوێ'}</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
+                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-neutral-500 block mb-2">لینک (URL)</label>
+                              <input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" dir="ltr" />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-neutral-500 block mb-2">ئایکۆن یان لۆگۆ</label>
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 bg-white border border-neutral-200 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-sm shrink-0">
+                                {isUploadingIcon ? <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : (editLink?.imageUrl || newLink.imageUrl) ? <img src={editLink ? editLink.imageUrl : newLink.imageUrl} className="w-10 h-10 object-contain" /> : <ImageIcon size={24} className="text-neutral-400" />}
+                                <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                                  <input type="file" accept="image/*" className="hidden" ref={iconInputRef} onChange={(e) => handleImageUpload(e, 'icon')} />
+                                  <ImageIcon size={18} className="text-white"/>
+                                </label>
+                              </div>
+                              <button onClick={() => iconInputRef.current?.click()} className="px-4 py-2.5 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold text-xs hover:bg-neutral-50 hover:text-orange-500 transition-colors shadow-sm">
+                                وێنەیەک هەڵبژێرە (ئارەزوومەندانە)
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 mt-2">
+                            <button onClick={() => { setShowAddForm(false); setEditLink(null); }} className="px-5 py-3 text-neutral-500 font-bold hover:bg-neutral-200 rounded-xl text-sm transition-colors">
+                              پاشگەزبوونەوە
+                            </button>
+                            <button disabled={saving} onClick={editLink ? handleEditLink : handleAddLink} className="px-8 py-3 bg-neutral-900 hover:bg-black text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-70">
+                              {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18} /> پاشەکەوتکردن</>}
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="space-y-4">
+                    {!profile?.links?.length ? (
+                      <div className="text-center py-12 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><LinkIcon size={32} className="text-neutral-300" /></div>
+                        <p className="text-neutral-500 font-bold text-sm">هیچ بەستەرێکت نییە. یەکەم بەستەرت زیاد بکە!</p>
+                      </div>
+                    ) : (
+                      <DraggableLinkList links={profile.links} setLinks={saveLinksOrder} onEdit={(l: any) => { setEditLink(l); setShowAddForm(true); }} onDelete={handleDeleteLink} />
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {showCard && profile && <Card profile={profile} onClose={() => setShowCard(false)} />}
     </div>
   );
 }

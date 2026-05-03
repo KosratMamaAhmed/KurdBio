@@ -2,40 +2,24 @@ import { Palette, Droplet, Sparkles } from 'lucide-react';
 import PhoneMockup from './PhoneMockup';
 
 export const MOCKUP_DESIGNS = [
-  { id: 'mockup', name: 'تاریکی شاهانە' },
-  { id: 'light', name: 'سپی پلاتینی' },
-  { id: 'gold', name: 'ئاڵتوونی و ڕەش' },
-  { id: 'neon', name: 'شوشەیی نیۆن' },
-  { id: 'emerald', name: 'زەمردی متمانە' },
-  { id: 'vintage', name: 'قاوەیی کلاسیک' },
-  { id: 'crimson', name: 'خوێناوی تاریک' },
-  { id: 'navy', name: 'سرمەیی مۆدێرن' },
-  { id: 'royal', name: 'مۆر و ڕۆزگۆڵد' },
-  { id: 'minimal', name: 'مینیماڵی خاوێن' },
-  { id: 'cyberpunk', name: 'سایبەرپەنک' },
-  { id: 'glassmorphism', name: 'شوشەیی ڕەنگاوڕەنگ' },
-  { id: 'dracula', name: 'دراکولا' },
+  { id: 'gold', name: 'ئاڵتوونی شاهانە' },
   { id: 'aurora', name: 'شەبەنگی باکوور' },
-  { id: 'sunset', name: 'خۆرئاوابوون' },
-  { id: 'ocean', name: 'زەریای قوڵ' },
-  { id: 'forest', name: 'دارستانی تاریک' },
-  { id: 'candy', name: 'پەمەیی شیرین' },
-  { id: 'hacker', name: 'هاکەر (ماتریکس)' },
-  { id: 'luxury', name: 'ڕۆزگۆڵدی ڤی ئای پی' }
+  { id: 'cyberpunk', name: 'سایبەرپەنک' },
+  { id: 'glass', name: 'شوشەیی بلور' },
+  { id: 'light', name: 'سپی پلاتینی' }
 ];
 
 const PRESET_COLORS = [
   { id: 'gold', name: 'ئاڵتوونی', colors: { nameColor: '#fbbf24', bioColor: '#fcd34d', btnTextColor: '#ffffff' } },
   { id: 'ocean', name: 'زەریایی', colors: { nameColor: '#64ffda', bioColor: '#8892b0', btnTextColor: '#ffffff' } },
   { id: 'emerald', name: 'زەمردی', colors: { nameColor: '#10b981', bioColor: '#a7f3d0', btnTextColor: '#ffffff' } },
-  { id: 'cyber', name: 'سایبەر', colors: { nameColor: '#000000', bioColor: '#1f2937', btnTextColor: '#06b6d4' } },
+  { id: 'cyber', name: 'سایبەر', colors: { nameColor: '#ec4899', bioColor: '#fbcfe8', btnTextColor: '#ffffff' } },
   { id: 'royal', name: 'شاهانە', colors: { nameColor: '#d8b4fe', bioColor: '#e9d5ff', btnTextColor: '#ffffff' } },
   { id: 'reset', name: 'سڕینەوەی ڕەنگ', colors: { nameColor: '', bioColor: '', btnTextColor: '' } }
 ];
 
 export default function ThemeSettings({ profile, setProfile, handleUpdateProfile }: any) {
   
-  // 🌟 فەنکشنەکان بۆ گۆڕینی ڕەنگ ڕاستەوخۆ و پاشەکەوتکردنی کاتێک پەنجەی لادەبات 🌟
   const handleColorChange = (key: string, value: string) => {
     setProfile((prev: any) => ({ ...prev, [key]: value }));
   };
@@ -54,25 +38,25 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
           <h2 className="text-2xl font-black text-neutral-900">ڕووکار و دیزاینی مۆکئەپ</h2>
         </div>
 
-        <p className="text-neutral-500 font-bold text-sm mb-4">ئەو دیزاینە هەڵبژێرە کە دەتەوێت سەردانیکەران لە پەڕەکەتدا بیبینن.</p>
+        <p className="text-neutral-500 font-bold text-sm mb-4">دیزاینێکی پریمیم هەڵبژێرە کە گونجاو بێت لەگەڵ براندەکەت.</p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[350px] overflow-y-auto pr-2 pb-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {MOCKUP_DESIGNS.map((m: any) => (
             <button
               key={m.id}
               onClick={() => {
                 const updatedData = { 
                   theme: m.id,
-                  nameColor: '', // کاتێک ڕووکار دەگۆڕدرێت ڕەنگەکان پاک دەبنەوە
+                  nameColor: '', 
                   bioColor: '',
                   btnTextColor: ''
                 };
                 setProfile({...profile, ...updatedData});
                 handleUpdateProfile(updatedData);
               }}
-              className={`p-3 rounded-2xl border-2 text-center transition-all ${profile?.theme === m.id || (!profile?.theme && m.id === 'mockup') ? 'border-orange-500 bg-white shadow-md scale-105 z-10' : 'border-neutral-200 bg-white/50 hover:bg-white hover:border-orange-200'}`}
+              className={`p-4 rounded-2xl border-2 text-center transition-all ${profile?.theme === m.id || (!profile?.theme && m.id === 'gold') ? 'border-orange-500 bg-white shadow-md scale-105 z-10' : 'border-neutral-200 bg-white/50 hover:bg-white hover:border-orange-200'}`}
             >
-              <h3 className={`font-black text-[12px] sm:text-sm mb-1 ${profile?.theme === m.id || (!profile?.theme && m.id === 'mockup') ? 'text-orange-600' : 'text-neutral-700'}`}>{m.name}</h3>
+              <h3 className={`font-black text-sm mb-1 ${profile?.theme === m.id || (!profile?.theme && m.id === 'gold') ? 'text-orange-600' : 'text-neutral-700'}`}>{m.name}</h3>
             </button>
           ))}
         </div>
@@ -82,8 +66,8 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
             <Droplet size={18} className="text-orange-500" /> ڕێکخستنی ڕەنگی دەقەکان بە ئارەزووی خۆت
           </h3>
 
-          <div className="mb-5 bg-white p-3 rounded-2xl border border-neutral-200 shadow-sm">
-             <span className="text-xs font-bold text-neutral-500 mb-2 flex items-center gap-1"><Sparkles size={14} className="text-amber-500"/> تێکەڵەی ڕەنگە ناوازەکان (خێرا)</span>
+          <div className="mb-5 bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm">
+             <span className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1"><Sparkles size={14} className="text-amber-500"/> تێکەڵەی ڕەنگە ناوازەکان (خێرا)</span>
              <div className="flex flex-wrap gap-2">
                {PRESET_COLORS.map(p => (
                  <button 
@@ -92,7 +76,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
                      setProfile({...profile, ...p.colors});
                      handleUpdateProfile(p.colors);
                    }}
-                   className={`px-3 py-1.5 rounded-lg text-[11px] font-black border transition-transform hover:scale-105 active:scale-95 ${p.id === 'reset' ? 'bg-red-50 text-red-500 border-red-200 shadow-sm' : ''}`}
+                   className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black border transition-transform hover:scale-105 active:scale-95 ${p.id === 'reset' ? 'bg-red-50 text-red-500 border-red-200 shadow-sm' : ''}`}
                    style={p.id !== 'reset' ? { backgroundColor: p.colors.nameColor + '15', borderColor: p.colors.nameColor, color: p.colors.nameColor === '#000000' || p.colors.nameColor === '#0f172a' ? '#333' : p.colors.nameColor } : {}}
                  >
                    {p.name}
@@ -104,7 +88,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm flex flex-col gap-2">
               <span className="text-xs font-bold text-neutral-500">ڕەنگی ناو</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input type="color" value={profile?.nameColor || '#ffffff'} 
                   onChange={e => handleColorChange('nameColor', e.target.value)} 
                   onBlur={e => handleColorBlur('nameColor', e.target.value)} 
@@ -116,7 +100,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
 
             <div className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm flex flex-col gap-2">
               <span className="text-xs font-bold text-neutral-500">ڕەنگی بایۆ</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input type="color" value={profile?.bioColor || '#cccccc'} 
                   onChange={e => handleColorChange('bioColor', e.target.value)} 
                   onBlur={e => handleColorBlur('bioColor', e.target.value)} 
@@ -128,7 +112,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
 
             <div className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm flex flex-col gap-2">
               <span className="text-xs font-bold text-neutral-500">ڕەنگی ناو دوگمەکان</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input type="color" value={profile?.btnTextColor || '#ffffff'} 
                   onChange={e => handleColorChange('btnTextColor', e.target.value)} 
                   onBlur={e => handleColorBlur('btnTextColor', e.target.value)} 
@@ -147,7 +131,10 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
              name: profile?.displayName || 'ناوی تۆ', 
              bio: profile?.bio || 'بایۆگرافی خۆت لێرە بنووسە', 
              avatar: profile?.avatarUrl, 
-             buttonDesign: profile?.theme || 'mockup',
+             avatarPos: profile?.avatarPos,
+             bgImage: profile?.bgImage,
+             bgPos: profile?.bgPos,
+             buttonDesign: profile?.theme || 'gold',
              nameColor: profile?.nameColor, 
              bioColor: profile?.bioColor,
              btnTextColor: profile?.btnTextColor,
@@ -157,5 +144,5 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
          />
       </div>
     </div>
-  )
+  );
 }

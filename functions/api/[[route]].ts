@@ -13,11 +13,9 @@ export async function onRequest(context: any) {
 
   const json = (data: any, status = 200, cacheType = "none") => {
     let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
-    
     if (cacheType === "public") {
         cacheHeader = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
     }
-    
     return new Response(JSON.stringify(data), { 
       status, 
       headers: { 
@@ -37,9 +35,7 @@ export async function onRequest(context: any) {
     socialPlatforms: [
       { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
       { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
-      { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' },
-      { id: 'snapchat', name: 'سناپچات', iconName: 'Ghost', imageUrl: '/social/snapchat.png', baseUrl: 'https://www.snapchat.com/add/', color: '#FFFC00' },
-      { id: 'youtube', name: 'یوتیوب', iconName: 'Youtube', imageUrl: '/social/youtube.png', baseUrl: 'https://www.youtube.com/@', color: '#FF0000' }
+      { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' }
     ]
   };
 
@@ -59,20 +55,13 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    if (method === "POST" && path.startsWith("/api/public/visit/")) {
-       return json({success: true}); 
-    }
+    if (method === "POST" && path.startsWith("/api/public/visit/")) return json({success: true}); 
+    if (method === "POST" && path.startsWith("/api/public/click/")) return json({success: true}); 
 
-    if (method === "POST" && path.startsWith("/api/public/click/")) {
-       return json({success: true}); 
-    }
-
-    // 🌟 چارەسەری Login (چوونەژوورەوەی ئەدمین بە دروستی) 🌟
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
        const { identifier, password } = await request.json();
        if (!identifier || !password) return json({ error: "زانیارییەکان ناتەواون" }, 400);
 
-       // 🌟 ١. یەکەم شت پشکنین دەکەین بزانین ئەدمینە پێش ئەوەی بچینە ناو داتابەیس[cite: 10] 🌟
        const adminUsername = env.ADMIN_USERNAME || "admin";
        if (identifier === adminUsername || identifier.toLowerCase() === adminUsername.toLowerCase()) {
            if (password === (env.ADMIN_PASSWORD || "admin123")) {
@@ -82,9 +71,7 @@ export async function onRequest(context: any) {
            return json({ error: "تێپەڕەوشەی بەڕێوەبەر هەڵەیە" }, 401);
        }
 
-       // ٢. ئەگەر ئەدمین نەبوو، ئەوکات بەدوای بەکارهێنەردا دەگەڕێین
        const normalizedId = identifier.toLowerCase().trim();
-
        let userStr = await env.KV.get(`user:${normalizedId}`); 
        if (!userStr && normalizedId.includes('@')) {
           const idFromEmail = await env.KV.get(`email:${normalizedId}`);
@@ -95,14 +82,9 @@ export async function onRequest(context: any) {
           if (idFromPhone) userStr = await env.KV.get(`user_id:${idFromPhone}`);
        }
 
-       if (!userStr) {
-           return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
-       }
-
+       if (!userStr) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
        let user = JSON.parse(userStr);
-       
-       if (user.isActive === false) return json({ error: "هەژمارەکەت ڕاگیراوە لەلایەن بەڕێوەبەرەوە" }, 403);
-
+       if (user.isActive === false) return json({ error: "هەژمارەکەت ڕاگیراوە" }, 403);
        const isValid = await bcrypt.compare(password, user.password);
        if (!isValid) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
 
@@ -113,7 +95,6 @@ export async function onRequest(context: any) {
 
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
         const { name, username, email, phone, password, dob } = await request.json();
-        
         if (!name || !username || !email || !phone || !password || !dob) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
         if (password.length < 8) return json({ error: "پاسوۆرد دەبێت لانی کەم ٨ پیت یان ژمارە بێت" }, 400);
 
@@ -122,9 +103,7 @@ export async function onRequest(context: any) {
         const normalizedPhone = phone.trim().replace(/\s+/g, '');
 
         const [existingUser, existingEmail, existingPhone] = await Promise.all([
-          env.KV.get(`user:${normalizedUsername}`),
-          env.KV.get(`email:${normalizedEmail}`),
-          env.KV.get(`phone:${normalizedPhone}`)
+          env.KV.get(`user:${normalizedUsername}`), env.KV.get(`email:${normalizedEmail}`), env.KV.get(`phone:${normalizedPhone}`)
         ]);
 
         if (existingUser) return json({ error: "ئەم یوزەرنەیمە پێشتر بەکارهاتووە" }, 409);
@@ -133,13 +112,12 @@ export async function onRequest(context: any) {
 
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
-        const slug = normalizedUsername;
 
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
-          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: slug,
-          theme: 'mockup', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', bgImage: '',
-          isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
+          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
+          theme: 'light', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
+          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
         };
 
         await Promise.all([
@@ -147,7 +125,7 @@ export async function onRequest(context: any) {
           env.KV.put(`user:${normalizedUsername}`, JSON.stringify(newUser)),
           env.KV.put(`email:${normalizedEmail}`, userId),
           env.KV.put(`phone:${normalizedPhone}`, userId),
-          env.KV.put(`slug:${slug}`, userId)
+          env.KV.put(`slug:${normalizedUsername}`, userId)
         ]);
 
         const allUsersStr = await env.KV.get("all_users_list");
@@ -197,7 +175,8 @@ export async function onRequest(context: any) {
 
        const res = json({ 
          id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, isPro: user.isPro,
+         avatarUrl: user.avatarUrl, avatarPos: user.avatarPos, links: user.links || [], 
+         theme: user.theme, bgImage: user.bgImage, bgPos: user.bgPos, isPro: user.isPro, 
          nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor
        }, 200, "public");
 
@@ -239,7 +218,6 @@ export async function onRequest(context: any) {
        if (newSlug !== oldSlug) {
            const checkTakenSlug = await env.KV.get(`slug:${newSlug}`);
            if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400);
-           
            await env.KV.delete(`slug:${oldSlug}`);
            await env.KV.put(`slug:${newSlug}`, userId.toString());
        }
@@ -252,7 +230,9 @@ export async function onRequest(context: any) {
            slug: newSlug, 
            theme: updates.theme !== undefined ? updates.theme : user.theme, 
            bgImage: updates.bgImage !== undefined ? updates.bgImage : user.bgImage, 
+           bgPos: updates.bgPos !== undefined ? updates.bgPos : user.bgPos, 
            avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl,
+           avatarPos: updates.avatarPos !== undefined ? updates.avatarPos : user.avatarPos, 
            nameColor: updates.nameColor !== undefined ? updates.nameColor : user.nameColor,
            bioColor: updates.bioColor !== undefined ? updates.bioColor : user.bioColor,
            btnTextColor: updates.btnTextColor !== undefined ? updates.btnTextColor : user.btnTextColor
@@ -271,53 +251,6 @@ export async function onRequest(context: any) {
         await env.KV.put(`user:${user.username}`, JSON.stringify(user));
         await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
         return json({success: true, linkId: user.links[user.links.length-1].id});
-    }
-
-    if (method === "POST" && path === "/api/upload-apk") {
-        if (userId !== "admin" && payload.role !== "admin") {
-            const checkUser = await env.KV.get(`user_id:${userId}`);
-            if (!checkUser || !JSON.parse(checkUser).isPro) return json({ error: "تەنها بۆ هەژماری VIP ڕێگەپێدراوە" }, 403);
-        }
-        const formData = await request.formData();
-        const apkFile = formData.get('apkFile'); const logoBase64 = formData.get('logoBase64');
-        const appName = formData.get('appName'); let apkSlug = formData.get('apkSlug');
-
-        if (!apkFile || !appName || !apkSlug) return json({error: "زانیارییەکان ناتەواون"}, 400);
-        apkSlug = apkSlug.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        if (apkFile.size > 25 * 1024 * 1024) return json({error: "قەبارەی بەرنامە نابێت لە ٢٥ مێگابایت زیاتر بێت"}, 400);
-
-        const arrayBuffer = await apkFile.arrayBuffer();
-        await env.KV.put(`apk_file:${apkSlug}`, arrayBuffer);
-
-        const userStr = await env.KV.get(`user_id:${userId}`); const user = JSON.parse(userStr);
-        if(!user.links) user.links = [];
-        user.links.push({ id: Date.now(), title: escapeHTML(appName), url: `/${apkSlug}.apk`, icon: 'Smartphone', color: '#10B981', platformId: 'apk', imageUrl: logoBase64 || '' });
-        await env.KV.put(`user:${user.username}`, JSON.stringify(user)); await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
-
-        return json({success: true});
-    }
-
-    if (method === "POST" && path === "/api/admin/upload-global-apk") {
-        if (userId !== "admin" && payload.role !== "admin") {
-            const checkUser = await env.KV.get(`user_id:${userId}`);
-            if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
-        }
-        const formData = await request.formData();
-        const apkFile = formData.get('apkFile'); const logoBase64 = formData.get('logoBase64');
-        const appName = formData.get('appName'); let apkSlug = formData.get('apkSlug');
-
-        if (!apkFile || !appName || !apkSlug) return json({error: "زانیارییەکان ناتەواون"}, 400);
-        apkSlug = apkSlug.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        if (apkFile.size > 25 * 1024 * 1024) return json({error: "قەبارە نابێت لە ٢٥ مێگابایت زیاتر بێت"}, 400);
-
-        const arrayBuffer = await apkFile.arrayBuffer();
-        await env.KV.put(`apk_file:${apkSlug}`, arrayBuffer);
-
-        const settingsStr = await env.KV.get("site_settings"); const siteSettings = settingsStr ? JSON.parse(settingsStr) : {};
-        if (!siteSettings.globalButtons) siteSettings.globalButtons = [];
-        siteSettings.globalButtons.push({ id: Date.now(), title: escapeHTML(appName), url: `/${apkSlug}.apk`, icon: 'Smartphone', imageUrl: logoBase64 || '' });
-        await env.KV.put("site_settings", JSON.stringify(siteSettings));
-        return json({success: true, globalButtons: siteSettings.globalButtons});
     }
 
     if (method === "PUT" && path.match(/^\/api\/links\/\d+$/)) {
@@ -344,6 +277,9 @@ export async function onRequest(context: any) {
         return json({success: true});
     }
 
+    // =======================================================
+    // بەشی ئەدمین (دەسەڵاتی ئەدمین)
+    // =======================================================
     if (userId !== "admin" && payload.role !== "admin") {
          const checkUser = await env.KV.get(`user_id:${userId}`);
          if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
@@ -428,6 +364,8 @@ export async function onRequest(context: any) {
         }
         return json({ success: true });
     }
+
+    return json({ error: "Route not found" }, 404);
 
   } catch (err: any) {
     return json({ error: "هەڵەی سێرڤەر: " + err.message }, 500);

@@ -9,15 +9,13 @@ export default function AppManager() {
 
   useEffect(() => {
     try {
-      // پشکنین ئایا لەسەر شاشەیە یان نا
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
       
-      // بەکارهێنانی try/catch لێرەدا کێشەی شاشە سپییەکەی سەفاری چارەسەر دەکات
       let isDismissed = 'false';
       try {
         isDismissed = localStorage.getItem('hideBiokurdInstall') || 'false';
       } catch (err) {
-        console.warn("Safari Private Mode blocked localStorage");
+        console.warn("Safari blocked localStorage");
       }
       
       if (isStandalone || isDismissed === 'true') return;
@@ -29,7 +27,8 @@ export default function AppManager() {
 
       if (isInApp) {
         setDeviceType('in-app');
-        setShowInstall(true);
+        // لەناو ئەپەکان هەرگیز PWA یان داواکاری مەدە چونکە تەنها کێشە دروست دەکات
+        return; 
       } else if (isIOS) {
         setDeviceType('ios');
         setShowInstall(true);
@@ -48,7 +47,7 @@ export default function AppManager() {
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
       const timer = setTimeout(() => {
-        if ((isIOS || isInApp) && !isStandalone && isDismissed !== 'true') setShowInstall(true);
+        if (isIOS && !isStandalone && isDismissed !== 'true') setShowInstall(true);
       }, 3000);
 
       return () => {
@@ -56,7 +55,6 @@ export default function AppManager() {
         clearTimeout(timer);
       };
     } catch (mainError) {
-      // ڕێگری کردن لە کراشکردنی تەواوەتی سایتەکە
       console.error("AppManager Guard:", mainError);
     }
   }, []);
@@ -78,40 +76,10 @@ export default function AppManager() {
     try {
       localStorage.setItem('hideBiokurdInstall', 'true');
       setTimeout(() => localStorage.removeItem('hideBiokurdInstall'), 7 * 24 * 60 * 60 * 1000);
-    } catch (err) {
-      console.warn("Could not save to localStorage");
-    }
+    } catch (err) {}
   };
 
   const renderContent = () => {
-    if (deviceType === 'in-app') {
-      return (
-        <>
-          <div className="flex items-center gap-4 pr-1">
-            <div className="bg-red-100 text-red-600 p-3.5 rounded-2xl shrink-0 shadow-inner">
-              <AlertCircle size={28} strokeWidth={2.5} />
-            </div>
-            <div className="pl-6">
-              <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">کێشەی وێبگەڕ!</h4>
-              <p className="text-sm font-bold text-neutral-500 leading-relaxed">
-                تۆ لەناو ئەپڵیکەیشنێکی تری (وەک فەیسبووک/ئینستاگرام). ناتوانیت لێرەدا شت دابەزێنیت.
-              </p>
-            </div>
-          </div>
-          <div className="bg-neutral-100 rounded-xl p-4 mt-2 border border-neutral-200">
-            <p className="text-sm font-bold text-neutral-700 flex items-center gap-2">
-              <span className="bg-white p-1 rounded-md shadow-sm border border-neutral-200"><MoreVertical size={16}/></span>
-              ١. کلیک لە سێ خاڵەکەی سەرەوە بکە.
-            </p>
-            <p className="text-sm font-bold text-neutral-700 flex items-center gap-2 mt-3">
-              <span className="bg-white p-1 rounded-md shadow-sm border border-neutral-200"><Compass size={16}/></span>
-              ٢. پاشان هەڵبژێرە (Open in Browser) یان سەفاری.
-            </p>
-          </div>
-        </>
-      );
-    }
-
     if (deviceType === 'ios') {
       return (
         <>
@@ -120,16 +88,14 @@ export default function AppManager() {
               <Smartphone size={28} strokeWidth={2.5} />
             </div>
             <div className="pl-6">
-              <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">ئەپی BioKurd بۆ ئایفۆن</h4>
-              <p className="text-sm font-bold text-neutral-500 leading-relaxed">
-                ئەپڵ ڕێگەی دابەزاندنی ڕاستەوخۆ نادات. تکایە ئەم هەنگاوانە جێبەجێ بکە:
-              </p>
+              <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">ئەپی BioKurd</h4>
+              <p className="text-sm font-bold text-neutral-500 leading-relaxed">بۆ دابەزاندن تکایە ئەم هەنگاوانە جێبەجێ بکە:</p>
             </div>
           </div>
           <div className="bg-neutral-100 rounded-xl p-4 mt-2 border border-neutral-200">
             <p className="text-sm font-bold text-neutral-700 flex items-center gap-2">
               <span className="bg-white text-blue-500 p-1 rounded-md shadow-sm border border-neutral-200"><Share size={16}/></span>
-              ١. کلیک لەم ئایکۆنەی خوارەوەت بکە (Share).
+              ١. کلیک لە (Share) بکە لە خوارەوەی شاشەکە.
             </p>
             <p className="text-sm font-bold text-neutral-700 flex items-center gap-2 mt-3">
               <span className="bg-white p-1 rounded-md shadow-sm border border-neutral-200"><Plus size={16}/></span>
@@ -143,17 +109,15 @@ export default function AppManager() {
     return (
       <>
         <div className="flex items-center gap-4 pr-1">
-          <div className="bg-gradient-to-br from-amber-100 to-yellow-200 text-amber-600 p-3.5 rounded-2xl shrink-0 shadow-inner">
+          <div className="bg-gradient-to-br from-orange-100 to-amber-200 text-orange-600 p-3.5 rounded-2xl shrink-0 shadow-inner">
             <Smartphone size={28} strokeWidth={2.5} />
           </div>
           <div className="pl-6">
             <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">ئەپی BioKurd</h4>
-            <p className="text-sm font-bold text-neutral-500 leading-relaxed">
-              بۆ بەکارهێنانی خێراتر و ئاسانتر، ڕاستەوخۆ ئەپەکە دابەزێنە سەر شاشەی مۆبایلەکەت.
-            </p>
+            <p className="text-sm font-bold text-neutral-500 leading-relaxed">ڕاستەوخۆ ئەپەکە دابەزێنە سەر مۆبایلەکەت.</p>
           </div>
         </div>
-        <button onClick={handleInstallClick} className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-black rounded-xl font-black flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-[0_4px_15px_rgba(251,191,36,0.3)] text-base mt-2">
+        <button onClick={handleInstallClick} className="w-full py-3.5 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-black flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-[0_4px_15px_rgba(249,115,22,0.3)] text-base mt-2 border border-orange-400">
           <Download size={20} strokeWidth={3} /> دابەزاندن (Install)
         </button>
       </>
@@ -163,7 +127,7 @@ export default function AppManager() {
   return (
     <AnimatePresence>
       {showInstall && (
-        <motion.div initial={{ y: 100, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 120, opacity: 0, scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 25 }} className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-[400px] bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-[3px] border-amber-400/80 p-5 z-[100] flex flex-col gap-3" dir="rtl">
+        <motion.div initial={{ y: 100, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 120, opacity: 0, scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 25 }} className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-[380px] bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-2 border-neutral-200 p-5 z-[100] flex flex-col gap-3" dir="rtl">
           <button onClick={handleDismiss} className="absolute top-4 left-4 p-2 bg-neutral-100/80 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 rounded-full transition-all shadow-sm" title="داخستن"><X size={16} strokeWidth={3} /></button>
           {renderContent()}
         </motion.div>
