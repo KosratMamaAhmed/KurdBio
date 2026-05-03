@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import PhoneMockup from '../components/PhoneMockup';
 
-// 🌟 ئەمە تیشک و باکگراوندی دەرەوەی مۆبایلەکە دەگۆڕێت بەپێی ئەو ڕووکارەی هەڵبژێردراوە 🌟
 const OUTER_GLOW: Record<string, string> = {
   mockup: 'from-blue-600/10 via-transparent to-slate-900/30',
   light: 'from-slate-400/20 via-transparent to-gray-200/20',
@@ -67,8 +66,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     if(url.endsWith('.apk')) { window.location.href = url; } else { window.open(url, '_blank', 'noopener,noreferrer'); }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#050505] flex items-center justify-center"><div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (error || !profile) return <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-6 text-center"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-white mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-white/50 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-white text-black rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
+  if (loading) return <div className="min-h-[100dvh] bg-[#050505] flex items-center justify-center"><div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (error || !profile) return <div className="min-h-[100dvh] bg-[#050505] flex flex-col items-center justify-center p-6 text-center"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-white mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-white/50 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-white text-black rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
 
   const activeAds = settings?.ads?.filter((ad: any) => ad.isActive !== false) || [];
   const globalBtns = settings?.globalButtons || [];
@@ -78,16 +77,15 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const backgroundGlow = OUTER_GLOW[themeId] || OUTER_GLOW.mockup;
 
   return (
-    // 🌟 باکگراوندی دەرەوە ئێستا ڕاستەوخۆ دەگۆڕێت بەپێی ڕووکاری مۆکئەپەکە 🌟
-    <div className={`min-h-[100dvh] w-full flex items-center justify-center bg-[#050505] p-0 sm:p-4 overflow-hidden relative touch-manipulation`} dir="rtl">
+    // 🌟 لێرەدا overflow-y-auto و justify-start بەکارهێنرا بۆ ئەوەی ڕێک خۆی بگونجێنێت بەبێ بڕان 🌟
+    <div className={`min-h-[100dvh] w-full flex flex-col items-center justify-start bg-[#050505] p-3 sm:p-6 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-32`} dir="rtl">
        
-       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGlow} opacity-60 z-0`}></div>
-       <div className="absolute inset-0 z-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGlow} opacity-60 z-0 pointer-events-none fixed`}></div>
+       <div className="absolute inset-0 z-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay pointer-events-none fixed"></div>
        
-       {/* تیشکی گەورە لە پشت مۆبایلەکەوە */}
-       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[60%] bg-gradient-to-r ${backgroundGlow} rounded-[100%] blur-[100px] opacity-40 pointer-events-none z-0`}></div>
+       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[60%] bg-gradient-to-r ${backgroundGlow} rounded-[100%] blur-[100px] opacity-40 pointer-events-none z-0 fixed`}></div>
 
-       <div className="relative z-10 w-full flex justify-center animate-[fadeIn_0.5s_ease-out]">
+       <div className="relative z-10 w-full flex justify-center animate-[fadeIn_0.5s_ease-out] mt-2 sm:mt-6">
          <PhoneMockup 
            mockup={{ 
              name: profile.displayName, 
