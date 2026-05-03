@@ -4,6 +4,7 @@ import PhoneMockup from '../components/PhoneMockup';
 
 interface Props { user: any; onLogout: () => void; theme: any; }
 
+// 🌟 هەموو تۆڕە کۆمەڵایەتییەکان لەناو ئەدمینیش گەڕێندرانەوە 🌟
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -14,9 +15,14 @@ const DEFAULT_SOCIALS = [
   { id: 'linkedin', name: 'لینکدین', iconName: 'Linkedin', imageUrl: '/social/linkedin.png', baseUrl: 'https://www.linkedin.com/in/', color: '#0A66C2' },
   { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
   { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
+  { id: 'playstore', name: 'پلەی ستۆر', iconName: 'Play', imageUrl: '/social/playstore.png', baseUrl: 'https://play.google.com/store/apps/details?id=', color: '#00D859' },
+  { id: 'appstore', name: 'ئەپ ستۆر', iconName: 'Apple', imageUrl: '/social/appstore.png', baseUrl: 'https://apps.apple.com/app/', color: '#0070F5' },
+  { id: 'discord', name: 'دیسکۆرد', iconName: 'Gamepad', imageUrl: '/social/discord.png', baseUrl: 'https://discord.gg/', color: '#5865F2' },
+  { id: 'github', name: 'گیتھەب', iconName: 'Github', imageUrl: '/social/github.png', baseUrl: 'https://github.com/', color: '#181717' },
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
-  { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' }
+  { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
+  { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
 ];
 
 export default function Admin({ user, onLogout, theme }: Props) {
@@ -236,7 +242,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                      </div>
                    </div>
 
-                   {/* 🌟 کەمکردنەوەی ڕووکارەکان بۆ ٥ دانە شازەکە 🌟 */}
                    <div>
                      <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">جۆری دیزاین</label>
                      <select value={settings.mockup?.buttonDesign || 'gold'} onChange={e => {
@@ -250,9 +255,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                      </select>
                    </div>
 
-                   {/* 🌟 زیادکردنی بەشی وێنەی کەڤەر و وێنەی پرۆفایل 🌟 */}
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                     {/* وێنەی پرۆفایل */}
                      <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
                        <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی پرۆفایل</label>
                        <input type="file" id="mockupImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockup')} className="hidden" />
@@ -264,7 +267,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                        </div>
                      </div>
                      
-                     {/* وێنەی کەڤەر (Background) */}
                      <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
                        <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی کەڤەر (باکگراوند)</label>
                        <input type="file" id="mockupBgImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockupBg')} className="hidden" />

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Move, Menu, Layout 
+  Trash2, X, AlertCircle, Copy, Menu, Layout 
 } from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
@@ -15,7 +15,7 @@ interface Props {
   onLogout: () => void;
 }
 
-// 🌟 زیادکراو: هەمان لیستی تۆڕەکان بۆ ئەوەی بەکارهێنەر هەڵیانبژێرێت
+// 🌟 هەموو تۆڕە کۆمەڵایەتییەکان بەتەواوی گەڕێندرانەوە 🌟
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -26,6 +26,10 @@ const DEFAULT_SOCIALS = [
   { id: 'linkedin', name: 'لینکدین', iconName: 'Linkedin', imageUrl: '/social/linkedin.png', baseUrl: 'https://www.linkedin.com/in/', color: '#0A66C2' },
   { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
   { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
+  { id: 'playstore', name: 'پلەی ستۆر', iconName: 'Play', imageUrl: '/social/playstore.png', baseUrl: 'https://play.google.com/store/apps/details?id=', color: '#00D859' },
+  { id: 'appstore', name: 'ئەپ ستۆر', iconName: 'Apple', imageUrl: '/social/appstore.png', baseUrl: 'https://apps.apple.com/app/', color: '#0070F5' },
+  { id: 'discord', name: 'دیسکۆرد', iconName: 'Gamepad', imageUrl: '/social/discord.png', baseUrl: 'https://discord.gg/', color: '#5865F2' },
+  { id: 'github', name: 'گیتھەب', iconName: 'Github', imageUrl: '/social/github.png', baseUrl: 'https://github.com/', color: '#181717' },
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
@@ -39,7 +43,6 @@ export default function Dashboard({ user, onLogout }: Props) {
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  // 🌟 گۆڕانکاری بۆ هەڵبژاردنی پلاتفۆرم
   const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
   const [editLink, setEditLink] = useState<any>(null);
   
@@ -55,7 +58,7 @@ export default function Dashboard({ user, onLogout }: Props) {
   const fetchProfile = async () => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) {
-        onLogout(); // گەر تۆکن نەبوو، دەری بکە
+        onLogout();
         return;
     }
 
@@ -67,7 +70,7 @@ export default function Dashboard({ user, onLogout }: Props) {
         const data = await res.json();
         setProfile(data);
       } else {
-        if (res.status === 401) onLogout(); // ئەگەر تۆکن ئیکسپایەر ببوو
+        if (res.status === 401) onLogout();
         showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
       }
     } catch (err) {
@@ -244,7 +247,6 @@ export default function Dashboard({ user, onLogout }: Props) {
     }
   };
 
-  // 🌟 ئۆتۆماتیکی پڕکردنەوەی زانیارییەکان کاتێک پلاتفۆرمێک هەڵدەبژێرێت
   const handlePlatformChange = (isEdit: boolean, platformId: string) => {
       const selected = DEFAULT_SOCIALS.find(s => s.id === platformId);
       if (!selected) return;
@@ -370,7 +372,6 @@ export default function Dashboard({ user, onLogout }: Props) {
                         <div className="bg-neutral-50 p-5 sm:p-6 rounded-[1.5rem] border border-neutral-100 space-y-4 shadow-inner">
                           <h3 className="font-black text-neutral-800 border-b border-neutral-200 pb-3 mb-4">{editLink ? 'دەستکاریکردنی بەستەر' : 'بەستەری نوێ'}</h3>
                           
-                          {/* 🌟 هەڵبژاردنی پلاتفۆرم لێرە دانراوە */}
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
                             <select 
