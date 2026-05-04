@@ -8,12 +8,11 @@ export default function AppManager() {
   const [deviceType, setDeviceType] = useState<'android' | 'ios' | 'in-app' | 'desktop'>('desktop');
 
   useEffect(() => {
-    // 🌟 سڕینەوەی کاش و کوکیز هەر ٣٠ خولەک جارێک بەبێ دەرچوون (Logout) 🌟
     const clearCacheRoutine = () => {
       const lastCleared = localStorage.getItem('biokurd_last_clear');
       const now = Date.now();
       
-      if (!lastCleared || now - parseInt(lastCleared) > 1800000) { // 1800000 = 30 min
+      if (!lastCleared || now - parseInt(lastCleared) > 1800000) { 
         const token = localStorage.getItem('biokurd_token');
         const hideInstall = localStorage.getItem('hideBiokurdInstall');
         
@@ -27,8 +26,6 @@ export default function AppManager() {
         if (token) localStorage.setItem('biokurd_token', token);
         if (hideInstall) localStorage.setItem('hideBiokurdInstall', hideInstall);
         localStorage.setItem('biokurd_last_clear', now.toString());
-        
-        console.log('Caches and Cookies automatically cleared!');
       }
     };
 
@@ -157,7 +154,7 @@ export default function AppManager() {
             </div>
             <div className="pl-6">
               <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">ئەپی BioKurd</h4>
-              <p className="text-sm font-bold text-neutral-500 leading-relaxed">بۆ دابەزاندن تکایە ئەم هەنگاوانە جێبەجێ بکە:</p>
+              <p className="text-sm font-bold text-neutral-500 leading-relaxed">ڕاستەوخۆ ئەپەکە زیاد بکە بۆ سەر شاشەی مۆبایلەکەت.</p>
             </div>
           </div>
           <div className="bg-neutral-100 rounded-xl p-4 mt-2 border border-neutral-200">
@@ -174,6 +171,7 @@ export default function AppManager() {
       );
     }
 
+    // 🌟 ئەپدەیتی ئەندرۆید و دیسکتۆپ 🌟
     return (
       <>
         <div className="flex items-center gap-4 pr-1">
@@ -182,11 +180,11 @@ export default function AppManager() {
           </div>
           <div className="pl-6">
             <h4 className="font-black text-neutral-900 text-lg mb-1 tracking-tight">ئەپی BioKurd</h4>
-            <p className="text-sm font-bold text-neutral-500 leading-relaxed">ڕاستەوخۆ ئەپەکە دابەزێنە سەر مۆبایلەکەت.</p>
+            <p className="text-sm font-bold text-neutral-500 leading-relaxed">ڕاستەوخۆ ئەپەکە زیاد بکە بۆ سەر شاشەی مۆبایلەکەت (بەبێ فایلی APK).</p>
           </div>
         </div>
         <button onClick={handleInstallClick} className="w-full py-3.5 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-xl font-black flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-[0_4px_15px_rgba(249,115,22,0.3)] text-base mt-2 border border-orange-400">
-          <Download size={20} strokeWidth={3} /> دابەزاندن (Install)
+          <Plus size={20} strokeWidth={3} /> زیادکردن بۆ سەر شاشە (Install)
         </button>
       </>
     );

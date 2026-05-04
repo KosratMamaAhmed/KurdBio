@@ -61,7 +61,6 @@ export default function Dashboard({ user, onLogout }: Props) {
         return;
     }
 
-    // 🌟 سیستەمی کەمکردنەوەی KV Read: بەکارهێنانی Cache ی لۆکاڵی بۆ داشبۆرد 🌟
     const cachedProfile = localStorage.getItem('dashboard_profile_cache');
     if (cachedProfile) {
         setProfile(JSON.parse(cachedProfile));
@@ -75,7 +74,6 @@ export default function Dashboard({ user, onLogout }: Props) {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        // سەیڤکردن لە لۆکاڵ ستۆریج بۆ ڕیفڕێشی داهاتوو
         localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
       } else {
         if (res.status === 401) onLogout();
@@ -100,7 +98,6 @@ export default function Dashboard({ user, onLogout }: Props) {
     if (!token) return;
     setSaving(true);
     
-    // ئەپدەیتکردنی لۆکاڵ ستۆریج ڕاستەوخۆ
     const updatedProfile = { ...profile, ...updates };
     setProfile(updatedProfile);
     localStorage.setItem('dashboard_profile_cache', JSON.stringify(updatedProfile));
@@ -118,7 +115,7 @@ export default function Dashboard({ user, onLogout }: Props) {
       showNotif('زانیارییەکان نوێکرانەوە');
     } catch (err: any) {
       showNotif(err.message, 'error');
-      fetchProfile(); // ئەگەر هەڵە هەبوو باکئەپەکە دەهێنێتەوە
+      fetchProfile();
     } finally {
       setSaving(false);
     }
@@ -366,24 +363,32 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {/* 🌟 بەشی ئامارەکان 🌟 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                  <TrendingUp size={24} />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-neutral-900">{profile?.visits || 0}</h4>
-                  <p className="text-xs font-bold text-neutral-500">سەردانی پرۆفایل</p>
-                </div>
+            {/* 🌟 بەشی ئامارەکان لەگەڵ تێبینی ٢٤ کاتژمێری 🌟 */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3 px-1">
+                 <h3 className="text-lg font-black text-neutral-800">ئامارەکان</h3>
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] sm:text-xs font-bold border border-blue-100">
+                   <AlertCircle size={14} /> ئەم ئامارانە ٢٤ کاتژمێر جارێک نوێ دەکرێنەوە
+                 </div>
               </div>
-              <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                  <MousePointerClick size={24} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                    <TrendingUp size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-2xl font-black text-neutral-900">{profile?.visits || 0}</h4>
+                    <p className="text-xs font-bold text-neutral-500">سەردانی پرۆفایل</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-2xl font-black text-neutral-900">{profile?.clicks || 0}</h4>
-                  <p className="text-xs font-bold text-neutral-500">کلیک و داگرتن</p>
+                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                    <MousePointerClick size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-2xl font-black text-neutral-900">{profile?.clicks || 0}</h4>
+                    <p className="text-xs font-bold text-neutral-500">کلیک و داگرتن</p>
+                  </div>
                 </div>
               </div>
             </div>
