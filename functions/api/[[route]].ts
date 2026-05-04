@@ -12,7 +12,6 @@ export async function onRequest(context: any) {
   const method = request.method;
 
   const json = (data: any, status = 200, cacheType = "none") => {
-    // 🌟 سیستەمی ئۆپتیمایزکردنی KV Reads: کاشکردن بۆ ٥ خولەک لەسەر سێرڤەر 🌟
     let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
     if (cacheType === "public") {
         cacheHeader = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
@@ -44,7 +43,6 @@ export async function onRequest(context: any) {
     const cache = caches.default;
     const cacheKey = new Request(url.toString(), request);
 
-    // 🌟 گەڕاندنەوەی زانیاری ڕاستەوخۆ لە کاشەوە بێ ئەوەی KV Read بکات 🌟
     if (method === "GET") {
       let cachedResponse = await cache.match(cacheKey);
       if (cachedResponse) return cachedResponse; 
@@ -57,8 +55,31 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    if (method === "POST" && path.startsWith("/api/public/visit/")) return json({success: true}); 
-    if (method === "POST" && path.startsWith("/api/public/click/")) return json({success: true}); 
+    if (method === "POST" && path.startsWith("/api/public/visit/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       let targetUserId = await env.KV.get(`slug:${slug}`);
+       if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
+       
+       if (targetUserId) {
+           const statKey = `stats_visit:${targetUserId}`;
+           let count = parseInt(await env.KV.get(statKey) || "0");
+           await env.KV.put(statKey, (count + 1).toString());
+       }
+       return json({success: true}); 
+    }
+    
+    if (method === "POST" && path.startsWith("/api/public/click/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       let targetUserId = await env.KV.get(`slug:${slug}`);
+       if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
+       
+       if (targetUserId) {
+           const statKey = `stats_click:${targetUserId}`;
+           let count = parseInt(await env.KV.get(statKey) || "0");
+           await env.KV.put(statKey, (count + 1).toString());
+       }
+       return json({success: true}); 
+    }
 
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
        const { identifier, password } = await request.json();
@@ -166,7 +187,6 @@ export async function onRequest(context: any) {
        return json({ success: true });
     }
 
-    // 🌟 ئەپدەیتی گەورە بۆ کەمکردنەوەی KV Reads لەکاتی سەردانی پەڕەی گشتی 🌟
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        let targetUserId = await env.KV.get(`slug:${slug}`);
@@ -183,7 +203,6 @@ export async function onRequest(context: any) {
          nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor
        }, 200, "public");
 
-       // سەیڤکردن لە کاش بۆ ئەوەی جاری داهاتوو KV نەخوێنێتەوە
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
     }
@@ -199,10 +218,15 @@ export async function onRequest(context: any) {
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);
-       return json(userStr ? JSON.parse(userStr) : { error: "بەکارهێنەر نەدۆزرایەوە" });
+       if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
+       
+       const user = JSON.parse(userStr);
+       user.visits = parseInt(await env.KV.get(`stats_visit:${userId}`) || "0");
+       user.clicks = parseInt(await env.KV.get(`stats_click:${userId}`) || "0");
+       
+       return json(user);
     }
 
-    // 🌟 ئەپدەیتی پرۆفایل تەنها کاتێک ڕوودەدات کە پەنجە بە سەیڤ نرا 🌟
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);
@@ -282,14 +306,12 @@ export async function onRequest(context: any) {
         return json({success: true});
     }
 
-    // =======================================================
-    // بەشی ئەدمین (دەسەڵاتی ئەدمین)
-    // =======================================================
     if (userId !== "admin" && payload.role !== "admin") {
          const checkUser = await env.KV.get(`user_id:${userId}`);
          if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
     }
 
+    // 🌟 ئەپدەیتی ئامارەکانی هەموو بەکارهێنەران بۆ داشبۆردی ئەدمین 🌟
     if (method === "GET" && path === "/api/admin/users") {
         const allUsersStr = await env.KV.get("all_users_list");
         if (!allUsersStr) return json([]);
@@ -297,7 +319,13 @@ export async function onRequest(context: any) {
         const usersList = [];
         for (const id of allUserIds) {
             const uStr = await env.KV.get(`user_id:${id}`);
-            if (uStr) { const u = JSON.parse(uStr); delete u.password; usersList.push(u); }
+            if (uStr) { 
+                const u = JSON.parse(uStr); 
+                delete u.password; 
+                u.visits = parseInt(await env.KV.get(`stats_visit:${id}`) || "0");
+                u.clicks = parseInt(await env.KV.get(`stats_click:${id}`) || "0");
+                usersList.push(u); 
+            }
         }
         return json(usersList.reverse());
     }

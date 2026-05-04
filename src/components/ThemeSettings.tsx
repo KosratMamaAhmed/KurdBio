@@ -1,12 +1,13 @@
 import { Palette, Droplet, Sparkles } from 'lucide-react';
 import PhoneMockup from './PhoneMockup';
 
+// 🌟 هەمان ئەو ٥ دیزاینە پریمیمە کە لە کارتەکەشدا بەکارهاتوون 🌟
 export const MOCKUP_DESIGNS = [
-  { id: 'gold', name: 'ئاڵتوونی شاهانە' },
-  { id: 'aurora', name: 'شەبەنگی باکوور' },
-  { id: 'cyberpunk', name: 'سایبەرپەنک' },
-  { id: 'glass', name: 'شوشەیی بلور' },
-  { id: 'light', name: 'سپی پلاتینی' }
+  { id: 'gold', name: 'ئاڵتوونی شاهانە (Executive)' },
+  { id: 'light', name: 'سپی پلاتینی (Platinum)' },
+  { id: 'glass', name: 'شوشەیی زەریایی (Ocean)' },
+  { id: 'cyberpunk', name: 'یاقووتی تاریک (Crimson)' },
+  { id: 'aurora', name: 'زەمردی پریمیم (Emerald)' }
 ];
 
 const PRESET_COLORS = [
@@ -38,7 +39,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
           <h2 className="text-2xl font-black text-neutral-900">ڕووکار و دیزاینی مۆکئەپ</h2>
         </div>
 
-        <p className="text-neutral-500 font-bold text-sm mb-4">دیزاینێکی پریمیم هەڵبژێرە کە گونجاو بێت لەگەڵ براندەکەت.</p>
+        <p className="text-neutral-500 font-bold text-sm mb-4">دیزاینێکی پریمیم هەڵبژێرە کە گونجاو بێت لەگەڵ براندەکەت و کارتی بازرگانییەکەت.</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {MOCKUP_DESIGNS.map((m: any) => (
@@ -56,7 +57,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
               }}
               className={`p-4 rounded-2xl border-2 text-center transition-all ${profile?.theme === m.id || (!profile?.theme && m.id === 'gold') ? 'border-orange-500 bg-white shadow-md scale-105 z-10' : 'border-neutral-200 bg-white/50 hover:bg-white hover:border-orange-200'}`}
             >
-              <h3 className={`font-black text-sm mb-1 ${profile?.theme === m.id || (!profile?.theme && m.id === 'gold') ? 'text-orange-600' : 'text-neutral-700'}`}>{m.name}</h3>
+              <h3 className={`font-black text-[13px] sm:text-sm mb-1 ${profile?.theme === m.id || (!profile?.theme && m.id === 'gold') ? 'text-orange-600' : 'text-neutral-700'}`}>{m.name}</h3>
             </button>
           ))}
         </div>
@@ -94,7 +95,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
                   onBlur={e => handleColorBlur('nameColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
-                <span className="text-xs font-mono uppercase text-neutral-400">{profile?.nameColor || 'بنەڕەتی'}</span>
+                <span className="text-xs font-mono uppercase text-neutral-400" dir="ltr">{profile?.nameColor || 'دیفۆڵت'}</span>
               </div>
             </div>
 
@@ -106,7 +107,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
                   onBlur={e => handleColorBlur('bioColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
-                <span className="text-xs font-mono uppercase text-neutral-400">{profile?.bioColor || 'بنەڕەتی'}</span>
+                <span className="text-xs font-mono uppercase text-neutral-400" dir="ltr">{profile?.bioColor || 'دیفۆڵت'}</span>
               </div>
             </div>
 
@@ -118,7 +119,7 @@ export default function ThemeSettings({ profile, setProfile, handleUpdateProfile
                   onBlur={e => handleColorBlur('btnTextColor', e.target.value)} 
                   className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0" 
                 />
-                <span className="text-xs font-mono uppercase text-neutral-400">{profile?.btnTextColor || 'بنەڕەتی'}</span>
+                <span className="text-xs font-mono uppercase text-neutral-400" dir="ltr">{profile?.btnTextColor || 'دیفۆڵت'}</span>
               </div>
             </div>
           </div>

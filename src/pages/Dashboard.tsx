@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, Layout 
+  Trash2, X, AlertCircle, Copy, Menu, Layout, TrendingUp, MousePointerClick 
 } from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
@@ -15,7 +15,6 @@ interface Props {
   onLogout: () => void;
 }
 
-// 🌟 هەموو تۆڕە کۆمەڵایەتییەکان بەتەواوی گەڕێندرانەوە 🌟
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -62,6 +61,13 @@ export default function Dashboard({ user, onLogout }: Props) {
         return;
     }
 
+    // 🌟 سیستەمی کەمکردنەوەی KV Read: بەکارهێنانی Cache ی لۆکاڵی بۆ داشبۆرد 🌟
+    const cachedProfile = localStorage.getItem('dashboard_profile_cache');
+    if (cachedProfile) {
+        setProfile(JSON.parse(cachedProfile));
+        setLoading(false);
+    }
+
     try {
       const res = await fetch('/api/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -69,12 +75,14 @@ export default function Dashboard({ user, onLogout }: Props) {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
+        // سەیڤکردن لە لۆکاڵ ستۆریج بۆ ڕیفڕێشی داهاتوو
+        localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
       } else {
         if (res.status === 401) onLogout();
-        showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
+        if (!cachedProfile) showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
       }
     } catch (err) {
-      showNotif('کێشەی هێڵ هەیە', 'error');
+      if (!cachedProfile) showNotif('کێشەی هێڵ هەیە', 'error');
     } finally {
       setLoading(false);
     }
@@ -91,6 +99,12 @@ export default function Dashboard({ user, onLogout }: Props) {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) return;
     setSaving(true);
+    
+    // ئەپدەیتکردنی لۆکاڵ ستۆریج ڕاستەوخۆ
+    const updatedProfile = { ...profile, ...updates };
+    setProfile(updatedProfile);
+    localStorage.setItem('dashboard_profile_cache', JSON.stringify(updatedProfile));
+
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
@@ -102,9 +116,9 @@ export default function Dashboard({ user, onLogout }: Props) {
       });
       if (!res.ok) throw new Error((await res.json()).error || 'هەڵە');
       showNotif('زانیارییەکان نوێکرانەوە');
-      fetchProfile();
     } catch (err: any) {
       showNotif(err.message, 'error');
+      fetchProfile(); // ئەگەر هەڵە هەبوو باکئەپەکە دەهێنێتەوە
     } finally {
       setSaving(false);
     }
@@ -161,7 +175,11 @@ export default function Dashboard({ user, onLogout }: Props) {
   const saveLinksOrder = async (newLinks: any[]) => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) return;
-    setProfile({ ...profile, links: newLinks });
+    
+    const updatedProfile = { ...profile, links: newLinks };
+    setProfile(updatedProfile);
+    localStorage.setItem('dashboard_profile_cache', JSON.stringify(updatedProfile));
+
     try {
       await fetch('/api/profile', {
         method: 'PUT',
@@ -315,7 +333,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-neutral-900 text-white hover:bg-black rounded-2xl font-black shadow-lg transition-transform active:scale-95">
               <Eye size={22} /> بینینی کارت
             </button>
-            <button onClick={() => { localStorage.removeItem('biokurd_token'); onLogout(); }} className="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-colors">
+            <button onClick={() => { localStorage.removeItem('biokurd_token'); localStorage.removeItem('dashboard_profile_cache'); onLogout(); }} className="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-colors">
               <LogOut size={22} /> چوونەدەرەوە
             </button>
           </div>
@@ -348,6 +366,28 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
+            {/* 🌟 بەشی ئامارەکان 🌟 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-neutral-900">{profile?.visits || 0}</h4>
+                  <p className="text-xs font-bold text-neutral-500">سەردانی پرۆفایل</p>
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                  <MousePointerClick size={24} />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-neutral-900">{profile?.clicks || 0}</h4>
+                  <p className="text-xs font-bold text-neutral-500">کلیک و داگرتن</p>
+                </div>
+              </div>
+            </div>
+
             {activeTab === 'profile' && (
               <ProfileSettings profile={profile} setProfile={setProfile} theme={null} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
             )}

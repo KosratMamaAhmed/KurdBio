@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, LogOut, Trash2, Edit, Settings, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Smartphone, Camera, Lock, Share2, Globe, Eye, EyeOff, Image as ImageIcon, Palette, Search } from 'lucide-react';
+import { Users, LogOut, Trash2, Edit, Settings, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Smartphone, Camera, Lock, Share2, Globe, Eye, EyeOff, Image as ImageIcon, Palette, Search, BarChart3, TrendingUp, MousePointerClick } from 'lucide-react';
 import PhoneMockup from '../components/PhoneMockup';
 
 interface Props { user: any; onLogout: () => void; theme: any; }
 
-// 🌟 هەموو تۆڕە کۆمەڵایەتییەکان لەناو ئەدمینیش گەڕێندرانەوە 🌟
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -34,7 +33,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
     globalButtons: [], ads: [], socialPlatforms: []
   });
   
-  const [activeTab, setActiveTab] = useState('theme'); 
+  const [activeTab, setActiveTab] = useState('stats'); // 🌟 تابەکە کرا بە ئامارەکان لەسەرەتا
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -150,7 +149,16 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
+  // 🌟 کۆی گشتی ئامارەکان 🌟
+  const totalPlatformVisits = safeUsers.reduce((acc, curr) => acc + (curr.visits || 0), 0);
+  const totalPlatformClicks = safeUsers.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
+  const totalProUsers = safeUsers.filter(u => u.isPro).length;
+  
+  // ڕیزبەندی ١٠ باشترین بەکارهێنەران لەسەر بنەمای سەردان
+  const topUsers = [...safeUsers].sort((a, b) => (b.visits || 0) - (a.visits || 0)).slice(0, 10);
+
   const TABS = [
+    { id: 'stats', label: 'ئامارەکان', icon: <BarChart3 size={18}/> }, // 🌟 تابی نوێ
     { id: 'theme', label: 'ڕووکار و مۆکئەپ', icon: <Palette size={18}/> },
     { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> },
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
@@ -184,6 +192,65 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
           
+          {/* 🌟 TAB: Statistics (بەشی ئامارەکان) 🌟 */}
+          {activeTab === 'stats' && (
+            <div className="space-y-8">
+              <h2 className="text-2xl font-black text-neutral-900 mb-6 flex items-center gap-3"><BarChart3 className="text-orange-500"/> ئاماری گشتی پلاتفۆرم</h2>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-[2rem] border border-orange-100 shadow-sm flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white text-orange-500 flex items-center justify-center shrink-0 shadow-sm"><TrendingUp size={28} /></div>
+                  <div><h4 className="text-3xl font-black text-orange-600">{totalPlatformVisits}</h4><p className="text-sm font-bold text-orange-800/60 mt-1">کۆی سەردانی پرۆفایلەکان</p></div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-[2rem] border border-blue-100 shadow-sm flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white text-blue-500 flex items-center justify-center shrink-0 shadow-sm"><MousePointerClick size={28} /></div>
+                  <div><h4 className="text-3xl font-black text-blue-600">{totalPlatformClicks}</h4><p className="text-sm font-bold text-blue-800/60 mt-1">کۆی کلیک و داگرتنەکان</p></div>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white text-emerald-500 flex items-center justify-center shrink-0 shadow-sm"><Users size={28} /></div>
+                  <div><h4 className="text-3xl font-black text-emerald-600">{safeUsers.length}</h4><p className="text-sm font-bold text-emerald-800/60 mt-1">کۆی بەکارهێنەران ({totalProUsers} VIP)</p></div>
+                </div>
+              </div>
+
+              <div className="mt-10">
+                <h3 className="text-xl font-black text-neutral-800 mb-4 flex items-center gap-2"><Star className="text-amber-500" size={20}/> باشترین ١٠ بەکارهێنەر</h3>
+                <div className="bg-neutral-50 rounded-3xl border border-neutral-200 overflow-hidden">
+                   <div className="overflow-x-auto">
+                     <table className="w-full text-sm text-right">
+                       <thead className="bg-white border-b border-neutral-200 text-neutral-500">
+                         <tr>
+                           <th className="px-6 py-4 font-black">ناو / یوزەرنەیم</th>
+                           <th className="px-6 py-4 font-black">ئامار (سەردان و کلیک)</th>
+                         </tr>
+                       </thead>
+                       <tbody className="divide-y divide-neutral-100">
+                         {topUsers.map((u, i) => (
+                           <tr key={u.id} className="hover:bg-white transition-colors">
+                             <td className="px-6 py-4">
+                               <div className="flex items-center gap-3">
+                                 <span className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center font-black text-neutral-500 shrink-0">{i + 1}</span>
+                                 <div>
+                                    <div className="font-black text-neutral-800 flex items-center gap-1.5">{u.displayName} {u.isPro && <Star size={12} className="text-amber-500 fill-amber-500"/>}</div>
+                                    <div className="text-xs text-neutral-500" dir="ltr">@{u.username}</div>
+                                 </div>
+                               </div>
+                             </td>
+                             <td className="px-6 py-4">
+                               <div className="flex gap-3">
+                                 <span className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-100 px-2.5 py-1 rounded-lg"><Eye size={16}/> {u.visits || 0}</span>
+                                 <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-lg"><MousePointerClick size={16}/> {u.clicks || 0}</span>
+                               </div>
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB: Theme & Mockup */}
           {activeTab === 'theme' && (
             <div className="space-y-8">
@@ -413,7 +480,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* TAB: Users */}
+          {/* 🌟 TAB: Users (ئامارەکان بۆ خشتەی بەکارهێنەرانیش زیادکرا) 🌟 */}
           {activeTab === 'users' && (
              <div className="space-y-6">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -432,7 +499,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                     <tr>
                       <th className="px-6 py-4 rounded-r-xl">بەکارهێنەر</th>
                       <th className="px-6 py-4">پەیوەندی</th>
-                      <th className="px-6 py-4">جۆری هەژمار</th>
+                      <th className="px-6 py-4 text-center">ئامارەکان</th> {/* 🌟 زیادکراو */}
                       <th className="px-6 py-4 text-center rounded-l-xl">دەسەڵاتەکان</th>
                     </tr>
                   </thead>
@@ -448,15 +515,22 @@ export default function Admin({ user, onLogout, theme }: Props) {
                         <td className="px-6 py-4 text-neutral-500 font-bold text-xs leading-relaxed" dir="ltr">
                           {u.email}<br/>{u.phone}
                         </td>
-                        <td className="px-6 py-4 flex flex-col gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-black w-fit ${u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{u.isActive ? 'چالاک' : 'ڕاگیراو'}</span>
-                          <button onClick={() => handleTogglePro(u.id, u.isPro)} className={`px-3 py-1 rounded-full text-xs font-black w-fit transition shadow-sm ${u.isPro ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{u.isPro ? 'VIP Pro' : 'Free User'}</button>
+                        <td className="px-6 py-4">
+                           {/* 🌟 پیشاندانی ئامار لەناو خشتەی بەکارهێنەران 🌟 */}
+                           <div className="flex flex-col items-center gap-2">
+                             <span className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-100 px-2.5 py-1 rounded-lg w-full justify-center"><Eye size={16}/> {u.visits || 0}</span>
+                             <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-lg w-full justify-center"><MousePointerClick size={16}/> {u.clicks || 0}</span>
+                           </div>
                         </td>
-                        <td className="px-6 py-4 flex flex-wrap items-center justify-center gap-2">
-                          <button onClick={() => forcePasswordChange(u.id)} className="p-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100" title="گۆڕینی پاسوۆرد"><Key size={18} /></button>
-                          <button onClick={() => setEditingUser(u)} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100" title="دەستکاریکردن"><Edit size={18} /></button>
-                          <button onClick={() => handleToggleUser(u.id, u.isActive)} className={`p-2 rounded-xl ${u.isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="چالاککردن / ڕاگرتن">{u.isActive ? <UserX size={18} /> : <UserCheck size={18} />}</button>
-                          {u.id !== 0 && <button onClick={() => deleteUser(u.id)} className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100" title="سڕینەوە"><Trash2 size={18} /></button>}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            <span className={`px-2 py-1 rounded-lg text-xs font-black ${u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{u.isActive ? 'چالاک' : 'ڕاگیراو'}</span>
+                            <button onClick={() => handleTogglePro(u.id, u.isPro)} className={`px-2 py-1 rounded-lg text-xs font-black transition shadow-sm ${u.isPro ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{u.isPro ? 'VIP' : 'Free'}</button>
+                            <button onClick={() => forcePasswordChange(u.id)} className="p-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100" title="گۆڕینی پاسوۆرد"><Key size={16} /></button>
+                            <button onClick={() => setEditingUser(u)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="دەستکاریکردن"><Edit size={16} /></button>
+                            <button onClick={() => handleToggleUser(u.id, u.isActive)} className={`p-1.5 rounded-lg ${u.isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="چالاککردن / ڕاگرتن">{u.isActive ? <UserX size={16} /> : <UserCheck size={16} />}</button>
+                            {u.id !== 0 && <button onClick={() => deleteUser(u.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="سڕینەوە"><Trash2 size={16} /></button>}
+                          </div>
                         </td>
                       </tr>
                     ))}
