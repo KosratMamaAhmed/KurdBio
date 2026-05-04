@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion'; // 🌟 پارێزراو
-import { Download, X, Smartphone, Share, Compass, AlertCircle, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, X, Smartphone, Share, AlertCircle, Plus, Copy, Globe } from 'lucide-react';
 
 export default function AppManager() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -8,20 +8,39 @@ export default function AppManager() {
   const [deviceType, setDeviceType] = useState<'android' | 'ios' | 'in-app' | 'desktop'>('desktop');
 
   useEffect(() => {
+    // 🌟 سڕینەوەی کاش و کوکیز هەر ٣٠ خولەک جارێک بەبێ دەرچوون (Logout) 🌟
+    const clearCacheRoutine = () => {
+      const lastCleared = localStorage.getItem('biokurd_last_clear');
+      const now = Date.now();
+      
+      if (!lastCleared || now - parseInt(lastCleared) > 1800000) { // 1800000 = 30 min
+        const token = localStorage.getItem('biokurd_token');
+        const hideInstall = localStorage.getItem('hideBiokurdInstall');
+        
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
+        if (token) localStorage.setItem('biokurd_token', token);
+        if (hideInstall) localStorage.setItem('hideBiokurdInstall', hideInstall);
+        localStorage.setItem('biokurd_last_clear', now.toString());
+        
+        console.log('Caches and Cookies automatically cleared!');
+      }
+    };
+
+    clearCacheRoutine();
+    const interval = setInterval(clearCacheRoutine, 60000); 
+
     try {
       let isStandalone = false;
-      try {
-        isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-      } catch (e) {
-        // گەر براوزەر پشتگیری matchMedia نەکات
-      }
+      try { isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone; } catch (e) {}
       
       let isDismissed = 'false';
-      try {
-        isDismissed = localStorage.getItem('hideBiokurdInstall') || 'false';
-      } catch (err) {
-        console.warn("localStorage blocked");
-      }
+      try { isDismissed = localStorage.getItem('hideBiokurdInstall') || 'false'; } catch (err) {}
       
       if (isStandalone || isDismissed === 'true') return;
 
@@ -32,7 +51,7 @@ export default function AppManager() {
 
       if (isInApp) {
         setDeviceType('in-app');
-        return; 
+        setShowInstall(true); 
       } else if (isIOS) {
         setDeviceType('ios');
         setShowInstall(true);
@@ -51,12 +70,13 @@ export default function AppManager() {
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
       const timer = setTimeout(() => {
-        if (isIOS && !isStandalone && isDismissed !== 'true') setShowInstall(true);
+        if (isIOS && !isStandalone && isDismissed !== 'true' && !isInApp) setShowInstall(true);
       }, 3000);
 
       return () => {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         clearTimeout(timer);
+        clearInterval(interval);
       };
     } catch (mainError) {
       console.error("AppManager Error:", mainError);
@@ -82,6 +102,52 @@ export default function AppManager() {
   };
 
   const renderContent = () => {
+    if (deviceType === 'in-app') {
+      return (
+        <div className="flex flex-col gap-3 pb-1">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="bg-rose-100 text-rose-600 p-3.5 rounded-2xl shrink-0 shadow-inner">
+              <AlertCircle size={28} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h4 className="font-black text-neutral-900 text-lg tracking-tight leading-tight">لە وێبگەڕی دەرەکیدایت!</h4>
+              <p className="text-xs font-bold text-neutral-500 mt-0.5">تکایە سەیری ئەم فێرکارییە بکە</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 justify-center my-3">
+             <img src="/1.png" alt="هەنگاوی یەکەم" className="w-1/2 rounded-2xl border-2 border-neutral-100 shadow-sm object-cover" />
+             <img src="/2.png" alt="هەنگاوی دووەم" className="w-1/2 rounded-2xl border-2 border-neutral-100 shadow-sm object-cover" />
+          </div>
+
+          <p className="text-xs font-bold text-neutral-600 text-center px-2 mb-2 leading-relaxed">
+            بۆ ئەوەی بتوانیت ئەپەکە بە جوانی بەکاربهێنیت یان بیخەیتە سەر شاشە، پێویستە لە <span className="text-blue-600 font-black">سەفاری</span> یان <span className="text-emerald-600 font-black">کرۆم</span> بیکەیتەوە.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 mt-1">
+            <button onClick={() => { navigator.clipboard.writeText(window.location.href); alert('لینکەکە کۆپی کرا! ئێستا دەتوانیت لە وێبگەڕ بیکەیتەوە.'); }} className="py-3.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-black rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-sm">
+              <Copy size={18}/> کۆپی لینک
+            </button>
+            <button onClick={() => {
+              const url = window.location.href;
+              const hostPath = window.location.host + window.location.pathname;
+              if (/android/i.test(navigator.userAgent)) {
+                 window.location.href = `intent://${hostPath}#Intent;scheme=https;package=com.android.chrome;end;`;
+              } else {
+                 window.location.href = `googlechrome://${hostPath}`;
+                 setTimeout(() => { 
+                   navigator.clipboard.writeText(url); 
+                   alert('ئەگەر کرۆم نەکرایەوە، لینکەکە کۆپی کرا. تکایە لە سەفاری دایبنێ.'); 
+                 }, 1500);
+              }
+            }} className="py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-lg shadow-blue-500/30">
+              <Globe size={18}/> وێبگەڕی فەرمی
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (deviceType === 'ios') {
       return (
         <>

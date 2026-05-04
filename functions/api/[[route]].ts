@@ -12,6 +12,7 @@ export async function onRequest(context: any) {
   const method = request.method;
 
   const json = (data: any, status = 200, cacheType = "none") => {
+    // 🌟 سیستەمی ئۆپتیمایزکردنی KV Reads: کاشکردن بۆ ٥ خولەک لەسەر سێرڤەر 🌟
     let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
     if (cacheType === "public") {
         cacheHeader = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
@@ -43,6 +44,7 @@ export async function onRequest(context: any) {
     const cache = caches.default;
     const cacheKey = new Request(url.toString(), request);
 
+    // 🌟 گەڕاندنەوەی زانیاری ڕاستەوخۆ لە کاشەوە بێ ئەوەی KV Read بکات 🌟
     if (method === "GET") {
       let cachedResponse = await cache.match(cacheKey);
       if (cachedResponse) return cachedResponse; 
@@ -116,7 +118,7 @@ export async function onRequest(context: any) {
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
-          theme: 'light', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
+          theme: 'gold', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
           bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
         };
 
@@ -164,6 +166,7 @@ export async function onRequest(context: any) {
        return json({ success: true });
     }
 
+    // 🌟 ئەپدەیتی گەورە بۆ کەمکردنەوەی KV Reads لەکاتی سەردانی پەڕەی گشتی 🌟
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        let targetUserId = await env.KV.get(`slug:${slug}`);
@@ -180,6 +183,7 @@ export async function onRequest(context: any) {
          nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor
        }, 200, "public");
 
+       // سەیڤکردن لە کاش بۆ ئەوەی جاری داهاتوو KV نەخوێنێتەوە
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
     }
@@ -198,6 +202,7 @@ export async function onRequest(context: any) {
        return json(userStr ? JSON.parse(userStr) : { error: "بەکارهێنەر نەدۆزرایەوە" });
     }
 
+    // 🌟 ئەپدەیتی پرۆفایل تەنها کاتێک ڕوودەدات کە پەنجە بە سەیڤ نرا 🌟
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);

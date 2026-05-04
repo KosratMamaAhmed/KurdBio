@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import PhoneMockup from '../components/PhoneMockup';
+import AppManager from '../components/AppManager'; // 🌟 زۆر گرنگە بۆ ئەوەی پەنجەرەی تیکتۆک لەم پەڕەیەش کار بکات
 
 const OUTER_GLOW: Record<string, string> = {
   mockup: 'from-blue-600/10 via-transparent to-slate-900/30',
@@ -34,6 +35,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
   useEffect(() => {
     if (!slug) return;
+    
+    // 🌟 ئەم بەشە زۆر نایابە و (KV Read) کەم دەکاتەوە 🌟
     const cacheKey = `biokurd_cache_${slug}`;
     const localData = localStorage.getItem(cacheKey);
     if (localData) { setProfile(JSON.parse(localData)); setLoading(false); }
@@ -105,14 +108,13 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     }
 
     if (isInAppBrowser) {
-        // 🌟 ئەمە دیوارەکانی تیکتۆک دەشکێنێت و ڕاستەوخۆ دەچێتە بەرنامەکە 🌟
+        // ئەمە دیوارەکانی تیکتۆک دەشکێنێت و ڕاستەوخۆ دەچێتە بەرنامەکە
         try {
             window.top!.location.href = finalUrl;
         } catch(e) {
             window.location.href = finalUrl;
         }
         
-        // گەر بەرنامەکەی نەبوو، با بگەڕێتەوە سەر لینکی ئاسایی
         if (finalUrl !== url) {
             setTimeout(() => {
                 window.location.href = url;
@@ -136,6 +138,9 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   return (
     <div className={`min-h-[100dvh] w-full flex flex-col items-center justify-start bg-[#050505] pt-8 sm:pt-12 px-2 sm:px-6 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-36`} dir="rtl">
        
+       {/* 🌟 بانگکردنی ئەپ مانیجەر بۆ پەنجەرەی تیکتۆک 🌟 */}
+       <AppManager />
+
        <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGlow} opacity-60 z-0 pointer-events-none fixed`}></div>
        <div className="absolute inset-0 z-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay pointer-events-none fixed"></div>
        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[60%] bg-gradient-to-r ${backgroundGlow} rounded-[100%] blur-[100px] opacity-40 pointer-events-none z-0 fixed`}></div>

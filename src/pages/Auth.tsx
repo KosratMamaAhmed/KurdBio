@@ -42,7 +42,6 @@ export default function Auth({ onLogin, theme }: Props) {
 
     setLoading(true);
     
-    // لەبەر ئەوەی بەکارهێنەر کۆدەکانی login و register جیا کردووەتەوە یان نا لە route دا، بەکارهێنانی api گشتی باشترە کە پێشتر داماننا
     const endpoint = mode === 'login' ? '/api/auth/login' : mode === 'register' ? '/api/auth/register' : '/api/public/reset-password';
     
     const dob = `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`;
@@ -64,10 +63,9 @@ export default function Auth({ onLogin, theme }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'هەڵەیەک ڕوویدا');
       
-      if (mode === 'login') { 
-        onLogin(data); 
-      } else if (mode === 'register') { 
-        // 🌟 چوونەژوورەوەی ڕاستەوخۆ دوای دروستکردنی هەژمار 🌟
+      if (mode === 'login' || mode === 'register') { 
+        // 🌟 هەڵگرتنی تۆکن و چوونەژوورەوەی ڕاستەوخۆ 🌟
+        localStorage.setItem('biokurd_token', data.token);
         onLogin(data); 
       } else {
         setSuccessMsg('تێپەڕەوشەکەت بە سەرکەوتوویی گۆڕدرا! ئێستا بچۆ ژوورەوە.');
@@ -75,7 +73,6 @@ export default function Auth({ onLogin, theme }: Props) {
         setFormData({ ...formData, password: '', confirmPassword: '' });
       }
     } catch (err: any) { 
-      // 🌟 ئەگەر هەڵەی api بوو چونکە فایلەکەمان یەک route یە، هەوڵ دەدەین بە شێوازی پێشوو بینێرین
       if (err.message.includes('ڕوویدا') || err.message.includes('Not Found')) {
          const oldEndpoint = mode === 'login' ? '/api/login' : mode === 'register' ? '/api/register' : '/api/public/reset-password';
          try {
@@ -84,6 +81,8 @@ export default function Auth({ onLogin, theme }: Props) {
             if (!res2.ok) throw new Error(data2.error || 'هەڵەیەک ڕوویدا');
             
             if (mode === 'login' || mode === 'register') { 
+               // 🌟 هەڵگرتنی تۆکن بۆ بەستەری جێگرەوەش 🌟
+               localStorage.setItem('biokurd_token', data2.token);
                onLogin(data2); 
             } else {
                setSuccessMsg('تێپەڕەوشەکەت بە سەرکەوتوویی گۆڕدرا! ئێستا بچۆ ژوورەوە.');
@@ -161,7 +160,6 @@ export default function Auth({ onLogin, theme }: Props) {
                   </div>
                   <div className="relative group">
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><Lock size={20} /></div>
-                    {/* 🌟 pl-12 بەکارهێنراوە بۆ ئەوەی ئایکۆنی چاوەکە نەچێتە سەر پاسوۆردەکە 🌟 */}
                     <input type={showPassword ? "text" : "password"} placeholder="تێپەڕەوشە (Password)" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-12 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 left-4 flex items-center text-neutral-400 hover:text-neutral-700 transition">
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -183,7 +181,6 @@ export default function Auth({ onLogin, theme }: Props) {
                   </div>
                   <div className="relative group">
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-orange-500 transition-colors"><User size={20} /></div>
-                    {/* 🌟 یوزەرنەیم ڕاستەوخۆ دەبێت بە بچووک و بۆشایی نامێنێت 🌟 */}
                     <input type="text" placeholder="ناوی بەکارهێنەر (بۆ نمونە: kosrat99)" required value={formData.username} onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')})} className="w-full pl-4 pr-12 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:bg-white focus:border-neutral-400 focus:shadow-sm outline-none font-bold text-sm transition-all" dir="ltr" />
                   </div>
                   <div className="relative group">
