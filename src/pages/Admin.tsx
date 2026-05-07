@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, LogOut, Trash2, Edit, Settings, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Smartphone, Camera, Lock, Share2, Globe, Eye, EyeOff, Image as ImageIcon, Palette, Search, BarChart3, TrendingUp, MousePointerClick } from 'lucide-react';
-import PhoneMockup from '../components/PhoneMockup';
+import { Users, LogOut, Trash2, Edit, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Camera, Lock, Share2, Globe, Eye, EyeOff, Search } from 'lucide-react';
 
 interface Props { user: any; onLogout: () => void; theme: any; }
 
@@ -27,13 +26,10 @@ const DEFAULT_SOCIALS = [
 export default function Admin({ user, onLogout, theme }: Props) {
   const [users, setUsers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({ 
-    pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
-    siteTheme: 'orange', 
-    mockup: { name: 'کۆسرەت مامە', bio: 'شارەزا لە تەکنەلۆژیا', avatar: '', bgImage: '', buttonDesign: 'gold', nameColor: '', bioColor: '', btnTextColor: '' }, 
     globalButtons: [], ads: [], socialPlatforms: []
   });
   
-  const [activeTab, setActiveTab] = useState('stats');
+  const [activeTab, setActiveTab] = useState('users');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -119,15 +115,15 @@ export default function Admin({ user, onLogout, theme }: Props) {
     setEditingUser(null); fetchData();
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons' | 'mockup' | 'mockupBg', index?: number) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, listType: 'ads' | 'globalButtons', index?: number) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new window.Image(); img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = listType === 'mockupBg' ? 1200 : 800; 
-        const MAX_HEIGHT = listType === 'mockupBg' ? 1200 : 800;
+        const MAX_WIDTH = 800; 
+        const MAX_HEIGHT = 800;
         let width = img.width; let height = img.height;
         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
         canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, width, height);
@@ -137,10 +133,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
           setSettings((prev: any) => ({ ...prev, ads: prev.ads.map((ad: any, i: number) => i === index ? { ...ad, imageUrl: base64 } : ad) }));
         } else if (listType === 'globalButtons' && index !== undefined) {
           setSettings((prev: any) => ({ ...prev, globalButtons: prev.globalButtons.map((btn: any, i: number) => i === index ? { ...btn, imageUrl: base64 } : btn) }));
-        } else if (listType === 'mockup') {
-          setSettings((prev: any) => ({ ...prev, mockup: { ...prev.mockup, avatar: base64 } }));
-        } else if (listType === 'mockupBg') {
-          setSettings((prev: any) => ({ ...prev, mockup: { ...prev.mockup, bgImage: base64 } }));
         }
       };
     };
@@ -149,27 +141,17 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
-  const totalPlatformVisits = safeUsers.reduce((acc, curr) => acc + (curr.visits || 0), 0);
-  const totalPlatformClicks = safeUsers.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
-  const totalProUsers = safeUsers.filter(u => u.isPro).length;
-  
-  const topUsers = [...safeUsers].sort((a, b) => (b.visits || 0) - (a.visits || 0)).slice(0, 10);
-
   const TABS = [
-    { id: 'stats', label: 'ئامارەکان', icon: <BarChart3 size={18}/> },
-    { id: 'theme', label: 'ڕووکار و مۆکئەپ', icon: <Palette size={18}/> },
+    { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
     { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> },
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
-    { id: 'buttons', label: 'بەستەرە گشتییەکان', icon: <LinkIcon size={18}/> },
-    { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
-    { id: 'pages', label: 'پەڕەکان', icon: <Settings size={18}/> }
+    { id: 'buttons', label: 'بەستەرە گشتییەکان', icon: <LinkIcon size={18}/> }
   ];
 
   if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center"><div className={`w-8 h-8 border-4 ${theme?.border || 'border-orange-200'} border-t-transparent rounded-full animate-spin`}></div></div>;
 
   return (
     <div className="min-h-[100dvh] bg-neutral-50 font-sans" dir="rtl">
-      {/* 🌟 لێرەدا paddingTop بۆ هێدەرەکە کراوە تا نۆچی ئایفۆن بیگرێتەوە 🌟 */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-30 shadow-sm pt-[env(safe-area-inset-top)]">
         <div className="max-w-7xl mx-auto px-6 py-4 sm:h-16 flex items-center justify-between">
           <div className={`font-black text-xl flex items-center gap-2 ${theme?.text || 'text-orange-500'} `}><Lock size={20} /> بەڕێوەبەر</div>
@@ -177,7 +159,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
         </div>
       </header>
 
-      {/* 🌟 پەراوێزی خوارەوەی پەیجەکە بۆ ئەوەی نەچێتە ژێر دوگمەی مۆبایل 🌟 */}
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide">
           {TABS.map(t => (
@@ -192,169 +173,56 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
           
-          {activeTab === 'stats' && (
-            <div className="space-y-8">
-              <h2 className="text-2xl font-black text-neutral-900 mb-6 flex items-center gap-3"><BarChart3 className="text-orange-500"/> ئاماری گشتی پلاتفۆرم</h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-[2rem] border border-orange-100 shadow-sm flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white text-orange-500 flex items-center justify-center shrink-0 shadow-sm"><TrendingUp size={28} /></div>
-                  <div><h4 className="text-3xl font-black text-orange-600">{totalPlatformVisits}</h4><p className="text-sm font-bold text-orange-800/60 mt-1">کۆی سەردانی پرۆفایلەکان</p></div>
-                </div>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-[2rem] border border-blue-100 shadow-sm flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white text-blue-500 flex items-center justify-center shrink-0 shadow-sm"><MousePointerClick size={28} /></div>
-                  <div><h4 className="text-3xl font-black text-blue-600">{totalPlatformClicks}</h4><p className="text-sm font-bold text-blue-800/60 mt-1">کۆی کلیک و داگرتنەکان</p></div>
-                </div>
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-[2rem] border border-emerald-100 shadow-sm flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white text-emerald-500 flex items-center justify-center shrink-0 shadow-sm"><Users size={28} /></div>
-                  <div><h4 className="text-3xl font-black text-emerald-600">{safeUsers.length}</h4><p className="text-sm font-bold text-emerald-800/60 mt-1">کۆی بەکارهێنەران ({totalProUsers} VIP)</p></div>
-                </div>
-              </div>
-
-              <div className="mt-10">
-                <h3 className="text-xl font-black text-neutral-800 mb-4 flex items-center gap-2"><Star className="text-amber-500" size={20}/> باشترین ١٠ بەکارهێنەر</h3>
-                <div className="bg-neutral-50 rounded-3xl border border-neutral-200 overflow-hidden">
-                   <div className="overflow-x-auto">
-                     <table className="w-full text-sm text-right">
-                       <thead className="bg-white border-b border-neutral-200 text-neutral-500">
-                         <tr>
-                           <th className="px-6 py-4 font-black">ناو / یوزەرنەیم</th>
-                           <th className="px-6 py-4 font-black">ئامار (سەردان و کلیک)</th>
-                         </tr>
-                       </thead>
-                       <tbody className="divide-y divide-neutral-100">
-                         {topUsers.map((u, i) => (
-                           <tr key={u.id} className="hover:bg-white transition-colors">
-                             <td className="px-6 py-4">
-                               <div className="flex items-center gap-3">
-                                 <span className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center font-black text-neutral-500 shrink-0">{i + 1}</span>
-                                 <div>
-                                    <div className="font-black text-neutral-800 flex items-center gap-1.5">{u.displayName} {u.isPro && <Star size={12} className="text-amber-500 fill-amber-500"/>}</div>
-                                    <div className="text-xs text-neutral-500" dir="ltr">@{u.username}</div>
-                                 </div>
-                               </div>
-                             </td>
-                             <td className="px-6 py-4">
-                               <div className="flex gap-3">
-                                 <span className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-100 px-2.5 py-1 rounded-lg"><Eye size={16}/> {u.visits || 0}</span>
-                                 <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-lg"><MousePointerClick size={16}/> {u.clicks || 0}</span>
-                               </div>
-                             </td>
-                           </tr>
-                         ))}
-                       </tbody>
-                     </table>
-                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'theme' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-xl font-black mb-4">ڕەنگی سەرەکی سایت</h2>
-                <div className="flex gap-4">
-                  {['orange', 'indigo', 'emerald', 'dark'].map(c => (
-                    <button key={c} onClick={() => setSettings({...settings, siteTheme: c})} className={`w-16 h-16 rounded-2xl border-4 ${settings.siteTheme === c ? 'border-neutral-900 scale-110 shadow-xl' : 'border-transparent'} ${c === 'orange' ? 'bg-orange-500' : c === 'indigo' ? 'bg-indigo-600' : c === 'emerald' ? 'bg-emerald-500' : 'bg-neutral-900'} transition-all`}></button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-neutral-50 rounded-[2.5rem] border border-neutral-200 p-6 sm:p-8 flex flex-col lg:flex-row gap-10 items-center shadow-inner relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-64 h-64 bg-orange-200/40 rounded-full blur-3xl pointer-events-none"></div>
-                <div className="flex-1 w-full space-y-5 relative z-10">
-                   <h3 className="text-2xl font-black text-neutral-900 flex items-center gap-2 mb-2"><Smartphone size={28} className={theme?.text || 'text-orange-500'}/> مۆکئەپی سەرەکی شاشە</h3>
-                   
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">ناوی ناو مۆکئەپ</label>
-                     <input type="text" placeholder="کۆسرەت مامە" value={settings.mockup?.name || ''} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, name: e.target.value}}))} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-black shadow-sm focus:border-orange-400 transition" />
-                   </div>
-
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">کورتەیەک (بایۆ)</label>
-                     <input type="text" placeholder="بایۆگرافی لێرە بنووسە" value={settings.mockup?.bio || ''} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, bio: e.target.value}}))} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition" />
-                   </div>
-
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 mb-2 block pl-2">ڕەنگی نووسینەکان (نموونەی سەر شاشە)</label>
-                     <div className="mb-3 bg-white p-2.5 rounded-xl border border-neutral-200 shadow-sm">
-                       <span className="text-[10px] font-bold text-neutral-400 mb-2 block">تێکەڵە ئامادەکراوەکان:</span>
-                       <div className="flex flex-wrap gap-1.5">
-                         {[
-                           { name: 'ئاڵتوونی', col: { nameColor: '#fbbf24', bioColor: '#fcd34d', btnTextColor: '#ffffff' } },
-                           { name: 'زەریایی', col: { nameColor: '#38bdf8', bioColor: '#bae6fd', btnTextColor: '#ffffff' } },
-                           { name: 'زەمردی', col: { nameColor: '#10b981', bioColor: '#a7f3d0', btnTextColor: '#ffffff' } },
-                           { name: 'سڕینەوە', col: { nameColor: '', bioColor: '', btnTextColor: '' } }
-                         ].map(p => (
-                           <button type="button" key={p.name} onClick={() => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, ...p.col}}))} className={`px-2 py-1 text-[10px] font-bold rounded-md border ${p.name === 'سڕینەوە' ? 'bg-red-50 text-red-500 border-red-200' : ''}`} style={p.name !== 'سڕینەوە' ? { backgroundColor: p.col.nameColor + '15', color: p.col.nameColor, borderColor: p.col.nameColor } : {}}>{p.name}</button>
-                         ))}
-                       </div>
-                     </div>
-                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی ناو</span>
-                          <input type="color" value={settings.mockup?.nameColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, nameColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی بایۆ</span>
-                          <input type="color" value={settings.mockup?.bioColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, bioColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-[10px] font-bold text-neutral-400 pr-1">ڕەنگی دوگمە</span>
-                          <input type="color" value={settings.mockup?.btnTextColor || '#ffffff'} onChange={e => setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, btnTextColor: e.target.value}}))} className="w-full h-10 rounded-lg cursor-pointer border-0 p-0" />
-                        </div>
-                     </div>
-                   </div>
-
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 mb-1 block pl-2">جۆری دیزاین</label>
-                     <select value={settings.mockup?.buttonDesign || 'gold'} onChange={e => {
-                         setSettings((prev:any) => ({...prev, mockup: {...prev.mockup, buttonDesign: e.target.value, nameColor: '', bioColor: '', btnTextColor: ''}}));
-                     }} className="w-full p-4 rounded-xl bg-white border border-neutral-200 outline-none font-bold text-sm shadow-sm focus:border-orange-400 transition cursor-pointer">
-                        <option value="gold">ئاڵتوونی شاهانە (Royal Gold)</option>
-                        <option value="aurora">شەبەنگی باکوور (Aurora)</option>
-                        <option value="cyberpunk">سایبەرپەنک (Cyberpunk)</option>
-                        <option value="glass">شوشەیی بلور (Glassmorphism)</option>
-                        <option value="light">سپی پلاتینی (Pearl Light)</option>
-                     </select>
-                   </div>
-
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                     <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
-                       <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی پرۆفایل</label>
-                       <input type="file" id="mockupImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockup')} className="hidden" />
-                       <div className="flex items-center gap-3">
-                         <div className="w-12 h-12 rounded-[12px] bg-neutral-100 border border-neutral-200 p-1 flex items-center justify-center overflow-hidden shrink-0">
-                           {settings.mockup?.avatar ? <img src={settings.mockup.avatar} className="w-full h-full object-cover rounded-[8px]" /> : <ImageIcon className="text-neutral-300"/>}
-                         </div>
-                         <button onClick={() => document.getElementById('mockupImage')?.click()} className="flex-1 py-3 bg-neutral-800 hover:bg-black text-white font-bold rounded-xl transition flex items-center justify-center gap-2 text-xs"><Camera size={14}/> دانان</button>
-                       </div>
-                     </div>
-                     
-                     <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
-                       <label className="text-xs font-bold text-neutral-500 mb-3 block pl-1">وێنەی کەڤەر (باکگراوند)</label>
-                       <input type="file" id="mockupBgImage" accept="image/*" onChange={(e:any) => handleImageUpload(e, 'mockupBg')} className="hidden" />
-                       <div className="flex items-center gap-3">
-                         <div className="w-20 h-12 rounded-[12px] bg-neutral-100 border border-neutral-200 flex items-center justify-center overflow-hidden shrink-0">
-                           {settings.mockup?.bgImage ? <img src={settings.mockup.bgImage} className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-300"/>}
-                         </div>
-                         <button onClick={() => document.getElementById('mockupBgImage')?.click()} className="flex-1 py-3 bg-neutral-800 hover:bg-black text-white font-bold rounded-xl transition flex items-center justify-center gap-2 text-xs"><Camera size={14}/> دانان</button>
-                       </div>
-                     </div>
-                   </div>
-
-                </div>
-
-                <div className="shrink-0 w-full sm:w-auto flex justify-center lg:justify-end relative z-10 pointer-events-none scale-90 sm:scale-100 origin-center lg:origin-left">
-                   <PhoneMockup 
-                     mockup={{...settings.mockup, isPro: true}} 
-                     mockupLinks={[{ name: 'فەیسبووک', icon: '/social/facebook.png', color: '#1877F2' }]} 
-                     sponsoredLinks={settings.ads || []}
-                   />
-                </div>
-              </div>
-            </div>
+          {activeTab === 'users' && (
+             <div className="space-y-6">
+               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+                 <div>
+                   <h2 className="text-xl font-black text-neutral-900">سەرجەم بەکارهێنەران</h2>
+                   <p className="text-sm font-bold text-neutral-500 mt-1">کۆی گشتی: {users.length} هەژمار</p>
+                 </div>
+                 <div className="relative w-full sm:w-72">
+                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-neutral-400"><Search size={18} /></div>
+                   <input type="text" placeholder="گەڕان بەدوای ناو یان ئیمێڵ..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-4 pr-10 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-amber-400 outline-none font-bold text-sm transition-all shadow-sm" />
+                 </div>
+               </div>
+               <div className="overflow-x-auto">
+                 <table className="w-full text-sm text-right">
+                  <thead className="bg-neutral-50 text-neutral-500">
+                    <tr>
+                      <th className="px-6 py-4 rounded-r-xl">بەکارهێنەر</th>
+                      <th className="px-6 py-4">پەیوەندی</th>
+                      <th className="px-6 py-4 text-center rounded-l-xl">دەسەڵاتەکان</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-neutral-50 transition">
+                        <td className="px-6 py-4">
+                          <div className="font-bold flex items-center gap-2 text-base">
+                            {u.displayName || u.username} {u.isPro && <Star size={14} className="text-amber-500 fill-amber-500"/>}
+                          </div>
+                          <div className="text-xs text-neutral-400 mt-1">@{u.username}</div>
+                        </td>
+                        <td className="px-6 py-4 text-neutral-500 font-bold text-xs leading-relaxed" dir="ltr">
+                          {u.email}<br/>{u.phone}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            <span className={`px-2 py-1 rounded-lg text-xs font-black ${u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{u.isActive ? 'چالاک' : 'ڕاگیراو'}</span>
+                            <button onClick={() => handleTogglePro(u.id, u.isPro)} className={`px-2 py-1 rounded-lg text-xs font-black transition shadow-sm ${u.isPro ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{u.isPro ? 'VIP' : 'Free'}</button>
+                            <button onClick={() => forcePasswordChange(u.id)} className="p-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100" title="گۆڕینی پاسوۆرد"><Key size={16} /></button>
+                            <button onClick={() => setEditingUser(u)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="دەستکاریکردن"><Edit size={16} /></button>
+                            <button onClick={() => handleToggleUser(u.id, u.isActive)} className={`p-1.5 rounded-lg ${u.isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="چالاککردن / ڕاگرتن">{u.isActive ? <UserX size={16} /> : <UserCheck size={16} />}</button>
+                            {u.id !== 0 && <button onClick={() => deleteUser(u.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="سڕینەوە"><Trash2 size={16} /></button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-neutral-400 font-black">هیچ بەکارهێنەرێک نەدۆزرایەوە!</td></tr>}
+                  </tbody>
+                </table>
+               </div>
+             </div>
           )}
 
           {activeTab === 'ads' && (
@@ -475,93 +343,9 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {activeTab === 'users' && (
-             <div className="space-y-6">
-               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-                 <div>
-                   <h2 className="text-xl font-black text-neutral-900">سەرجەم بەکارهێنەران</h2>
-                   <p className="text-sm font-bold text-neutral-500 mt-1">کۆی گشتی: {users.length} هەژمار</p>
-                 </div>
-                 <div className="relative w-full sm:w-72">
-                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-neutral-400"><Search size={18} /></div>
-                   <input type="text" placeholder="گەڕان بەدوای ناو یان ئیمێڵ..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-4 pr-10 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-amber-400 outline-none font-bold text-sm transition-all shadow-sm" />
-                 </div>
-               </div>
-               <div className="overflow-x-auto">
-                 <table className="w-full text-sm text-right">
-                  <thead className="bg-neutral-50 text-neutral-500">
-                    <tr>
-                      <th className="px-6 py-4 rounded-r-xl">بەکارهێنەر</th>
-                      <th className="px-6 py-4">پەیوەندی</th>
-                      <th className="px-6 py-4 text-center">ئامارەکان</th>
-                      <th className="px-6 py-4 text-center rounded-l-xl">دەسەڵاتەکان</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-100">
-                    {filteredUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-neutral-50 transition">
-                        <td className="px-6 py-4">
-                          <div className="font-bold flex items-center gap-2 text-base">
-                            {u.displayName || u.username} {u.isPro && <Star size={14} className="text-amber-500 fill-amber-500"/>}
-                          </div>
-                          <div className="text-xs text-neutral-400 mt-1">@{u.username}</div>
-                        </td>
-                        <td className="px-6 py-4 text-neutral-500 font-bold text-xs leading-relaxed" dir="ltr">
-                          {u.email}<br/>{u.phone}
-                        </td>
-                        <td className="px-6 py-4">
-                           <div className="flex flex-col items-center gap-2">
-                             <span className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-100 px-2.5 py-1 rounded-lg w-full justify-center"><Eye size={16}/> {u.visits || 0}</span>
-                             <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-lg w-full justify-center"><MousePointerClick size={16}/> {u.clicks || 0}</span>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap items-center justify-center gap-2">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-black ${u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{u.isActive ? 'چالاک' : 'ڕاگیراو'}</span>
-                            <button onClick={() => handleTogglePro(u.id, u.isPro)} className={`px-2 py-1 rounded-lg text-xs font-black transition shadow-sm ${u.isPro ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{u.isPro ? 'VIP' : 'Free'}</button>
-                            <button onClick={() => forcePasswordChange(u.id)} className="p-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100" title="گۆڕینی پاسوۆرد"><Key size={16} /></button>
-                            <button onClick={() => setEditingUser(u)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="دەستکاریکردن"><Edit size={16} /></button>
-                            <button onClick={() => handleToggleUser(u.id, u.isActive)} className={`p-1.5 rounded-lg ${u.isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="چالاککردن / ڕاگرتن">{u.isActive ? <UserX size={16} /> : <UserCheck size={16} />}</button>
-                            {u.id !== 0 && <button onClick={() => deleteUser(u.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="سڕینەوە"><Trash2 size={16} /></button>}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-neutral-400 font-black">هیچ بەکارهێنەرێک نەدۆزرایەوە!</td></tr>}
-                  </tbody>
-                </table>
-               </div>
-             </div>
-          )}
-
-          {activeTab === 'pages' && (
-            <div className="space-y-12">
-              <h2 className="text-xl font-black">دەستکاریکردنی پەڕە گشتییەکان</h2>
-              {['about', 'terms', 'works'].map((pageType) => (
-                <div key={pageType} className="p-6 bg-neutral-50 rounded-3xl border border-neutral-200 space-y-4">
-                  <h3 className="text-lg font-bold text-neutral-800">{pageType === 'about' ? 'دەربارەی ئێمە' : pageType === 'terms' ? 'یاساکان' : 'کارەکانم'}</h3>
-                  <textarea value={settings.pages?.[pageType]?.text || ''} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...(prev.pages[pageType] || {links:[]}), text: e.target.value}}}))} className="w-full p-4 bg-white border border-neutral-300 rounded-2xl h-32 outline-none focus:border-neutral-500 font-medium" placeholder="نوسینەکان لێرە بنووسە..." />
-                  <div className="pt-4">
-                    <button onClick={() => setSettings((prev:any) => { const links = prev.pages[pageType]?.links || []; return {...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: [...links, {title: '', url: ''}]}}}; })} className="px-4 py-2 bg-neutral-200 text-neutral-700 font-bold rounded-xl mb-4 hover:bg-neutral-300 transition">+ زیادکردنی دوگمە</button>
-                    <div className="space-y-2">
-                      {(settings.pages?.[pageType]?.links || []).map((link: any, idx: number) => (
-                        <div key={idx} className="flex flex-col sm:flex-row gap-2">
-                          <input type="text" placeholder="ناوی دوگمە" value={link.title} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.map((l:any, i:number) => i === idx ? {...l, title: e.target.value} : l)}}}))} className="flex-1 p-3 rounded-xl border" />
-                          <input type="url" placeholder="لینکی دوگمە" value={link.url} onChange={e => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.map((l:any, i:number) => i === idx ? {...l, url: e.target.value} : l)}}}))} className="flex-1 p-3 rounded-xl border" dir="ltr" />
-                          <button onClick={() => setSettings((prev:any) => ({...prev, pages: {...prev.pages, [pageType]: {...prev.pages[pageType], links: prev.pages[pageType].links.filter((_:any, i:number) => i !== idx)}}}))} className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200"><Trash2 size={18}/></button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
         </div>
       </div>
       
-      {/* 🌟 پەراوێزی خوارەوەی پەیجی مۆبایل 🌟 */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-200 z-40 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
          <button onClick={saveSettings} disabled={saving} className={`w-full py-4 rounded-2xl font-black text-white shadow-xl ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} flex justify-center items-center gap-2 disabled:opacity-50`}>
            {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={20}/> پاشەکەوتکردنی هەمووی</>}
