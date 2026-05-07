@@ -228,8 +228,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     }
   };
 
-  if (loading) return <div className="min-h-[100dvh] bg-white flex items-center justify-center font-kosrat"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (error || !profile) return <div className="min-h-[100dvh] bg-white flex flex-col items-center justify-center p-6 text-center font-kosrat"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-gray-900 mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-gray-500 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center font-kosrat"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (error || !profile) return <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center font-kosrat"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-gray-900 mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-gray-500 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
 
   const activeAds = settings?.ads?.filter((ad: any) => ad.isActive !== false) || [];
   const globalBtns = settings?.globalButtons || [];
@@ -239,12 +239,29 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
+    <div className="min-h-screen w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
        
        <FontStyle />
        <AppManager />
 
-       <div className="w-full h-64 sm:h-80 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
+       {/* 🌟 نۆتیفیکەیشن بەدیزاینێکی نوێ و جێگیرکراو لە سەرەوە 🌟 */}
+       <AnimatePresence>
+          {copied && (
+             <motion.div 
+               initial={{ opacity: 0, y: -20, scale: 0.9 }} 
+               animate={{ opacity: 1, y: 0, scale: 1 }} 
+               exit={{ opacity: 0, scale: 0.9 }} 
+               className="fixed top-8 sm:top-12 left-1/2 transform -translate-x-1/2 z-[100] px-5 py-2.5 bg-black/90 backdrop-blur-md rounded-2xl text-white text-xs sm:text-sm font-bold shadow-2xl flex items-center gap-2 border border-white/10" 
+               dir="ltr"
+             >
+                <Check size={16} className="text-green-400" />
+                <span>{profileUrl} کۆپیکرا</span>
+             </motion.div>
+          )}
+       </AnimatePresence>
+
+       {/* 🌟 بەرزی باکگراوند زیاد کرا (h-72 sm:h-96) 🌟 */}
+       <div className="w-full h-72 sm:h-96 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
           {profile?.bgImage && (
              <img 
                 src={profile.bgImage} 
@@ -255,28 +272,14 @@ export default function PublicProfile({ settings }: { settings?: any }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/20 to-transparent"></div>
           
-          {/* 🌟 لێرەدا کێشەی چوونە ژێر نۆچەکەی ئایفۆن لە دوگمەی کۆپیکردن چارەسەر کرا 🌟 */}
           <div className="absolute right-4 sm:right-6 flex flex-col items-end z-30" style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
             <button 
                onClick={handleCopyLink}
                className="p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-white transition-all shadow-sm flex items-center justify-center"
                title="کۆپیکردنی لینک"
             >
-               {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
+               <Share2 size={20} />
             </button>
-            <AnimatePresence>
-               {copied && (
-                 <motion.div 
-                   initial={{ opacity: 0, y: 5, scale: 0.9 }} 
-                   animate={{ opacity: 1, y: 0, scale: 1 }} 
-                   exit={{ opacity: 0, scale: 0.9 }} 
-                   className="mt-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] sm:text-xs font-bold shadow-lg whitespace-nowrap" 
-                   dir="ltr"
-                 >
-                    {profileUrl} کۆپیکرا
-                 </motion.div>
-               )}
-            </AnimatePresence>
           </div>
        </div>
 
@@ -404,7 +407,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
        </div>
 
-       {/* 🌟 لێرەدا کێشەی هێڵی خوارەوەی مۆبایلەکانی ئایفۆنیش چارەسەرکرا 🌟 */}
        <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
           <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>

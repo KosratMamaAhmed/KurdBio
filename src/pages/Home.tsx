@@ -6,7 +6,6 @@ import PhoneMockup from '../components/PhoneMockup';
 interface Props { user: any; settings: any; theme: any; }
 
 export default function Home({ user, settings, theme }: Props) {
-  // 🌟 دانانی دیزاینێکی زۆر جوان و ڕەنگاوڕەنگ وەک دیفۆڵت بۆ مۆکئەپەکە 🌟
   const [mockup, setMockup] = useState(settings?.mockup || { 
     name: 'کۆسرەت مامە', 
     bio: 'گەشەپێدەری بەرنامەکانی ئەندرۆید و وێب', 
@@ -20,7 +19,6 @@ export default function Home({ user, settings, theme }: Props) {
     if (settings?.mockup) setMockup(settings.mockup); 
   }, [settings]);
 
-  // 🌟 ئایکۆنەکان کران بە یەک ستایل و شێواز (Consistent) بە ڕەنگەکانی خۆیانەوە 🌟
   const mockupLinks = [
     { name: 'فەیسبووک', iconName: 'Facebook', color: '#1877F2' },
     { name: 'ئینستاگرام', iconName: 'Instagram', color: '#E4405F' },
@@ -30,16 +28,17 @@ export default function Home({ user, settings, theme }: Props) {
   ];
 
   return (
-    <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-hidden relative selection:bg-orange-200" dir="rtl">
+    // 🌟 لێرەدا `overflow-y-auto` و `h-[100dvh]` دانرا تاوەکو پەڕە گشتییەکە بە تەواوی سکرۆڵ ببێت 🌟
+    <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#f8fafc] flex flex-col font-sans relative selection:bg-orange-200" dir="rtl">
       
-      {/* 🌟 باکگراوندێکی سادە و ڕەنگاوڕەنگ بە ئیفێکتی مۆدێرن 🌟 */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none transform-gpu z-0">
+      {/* 🌟 باکگراوندەکە کرا بە fixed بۆ ئەوەی لەگەڵ سکرۆڵدا تێک نەچێت 🌟 */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none transform-gpu z-0">
          <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[50%] bg-gradient-to-b from-orange-300/40 to-transparent rounded-full blur-[120px]"></div>
          <div className="absolute top-[30%] -left-[10%] w-[50%] h-[60%] bg-gradient-to-t from-blue-400/30 to-transparent rounded-full blur-[120px]"></div>
          <div className="absolute -bottom-[20%] left-[20%] w-[70%] h-[50%] bg-gradient-to-t from-emerald-300/30 to-transparent rounded-full blur-[120px]"></div>
       </div>
 
-      <nav className="max-w-7xl mx-auto w-full px-6 sm:px-8 py-6 flex items-center justify-between relative z-20">
+      <nav className="max-w-7xl mx-auto w-full px-6 sm:px-8 py-6 flex items-center justify-between relative z-20 shrink-0">
         <div className="flex items-center gap-2">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg ${theme?.main || 'bg-orange-500'}`}>B</div>
           <span className="text-2xl font-black tracking-tighter text-neutral-900 hidden sm:block">BioKurd</span>
@@ -55,7 +54,7 @@ export default function Home({ user, settings, theme }: Props) {
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 py-10 lg:py-0 gap-16 relative z-10">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 py-10 lg:py-0 gap-16 relative z-10 pb-24 lg:pb-10">
         
         <div className="flex-1 text-center lg:text-right space-y-8 relative z-10 w-full mt-4 lg:mt-0">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-orange-200/60 text-orange-600 font-bold text-sm shadow-sm mx-auto lg:mx-0">
@@ -82,11 +81,9 @@ export default function Home({ user, settings, theme }: Props) {
             <div className="flex items-center gap-2"><Sparkles size={18} className="text-blue-500"/> ناوازە</div>
           </div>
 
-          {/* 🌟 دوو دوگمە ڕازاوە و جوانەکەی خوارەوە 🌟 */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full border-t border-neutral-200/60 mt-4">
             <a href="https://play.google.com/store/apps/dev?id=6744749568381312149&hl=en" target="_blank" rel="noopener noreferrer" 
                className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               {/* ئیفێکتی درەوشانەوە */}
                <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
                <Play size={22} fill="currentColor" className="relative z-10" />
                <span className="relative z-10 text-sm sm:text-base tracking-wide">بەرنامەکانم لە پلەی ستۆر</span>
@@ -94,7 +91,6 @@ export default function Home({ user, settings, theme }: Props) {
             
             <a href="http://t.me/kosratdev" target="_blank" rel="noopener noreferrer" 
                className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(56,189,248,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               {/* ئیفێکتی درەوشانەوە */}
                <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
                <Send size={22} className="relative z-10" />
                <span className="relative z-10 text-sm sm:text-base tracking-wide">ئێمە لە تەلەگرام</span>
@@ -103,9 +99,11 @@ export default function Home({ user, settings, theme }: Props) {
 
         </div>
 
-        {/* 🌟 مۆکئەپ 🌟 */}
+        {/* 🌟 لێرەدا کۆدی مۆکئەپەکە بە تەواوی وشک (Freeze) کرا بە touch-none و overflow-hidden 🌟 */}
         <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto mt-10 lg:mt-0">
-           <PhoneMockup mockup={mockup} mockupLinks={mockupLinks} />
+           <div className="pointer-events-none select-none touch-none overflow-hidden" style={{ pointerEvents: 'none' }}>
+              <PhoneMockup mockup={mockup} mockupLinks={mockupLinks} />
+           </div>
         </div>
         
       </main>

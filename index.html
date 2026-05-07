@@ -27,49 +27,47 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      /* چارەسەری کێشەی بازدانی شاشە لە iOS کاتێک کیبۆرد دەکرێتەوە */
+      /* ڕێگەدان بە سکرۆڵ و ڕیفڕێش کردنەوە بە پەنجە */
       html, body {
-        height: 100%;
-        overflow: hidden;
-        position: fixed;
+        min-height: 100%;
         width: 100%;
         background-color: #f8fafc;
+        overflow-x: hidden;
+        overscroll-behavior-y: auto; /* ڕێگە بە Pull-to-refresh دەدات */
       }
 
       #root {
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        /* پاراستنی مەودای نۆچ و هۆم ئیندیکەیتەر لە CSS */
+        min-height: 100%;
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
       }
     </style>
 
     <script>
+      // سیستەمی زیرەک بۆ ناسینەوەی وێبگەڕی تۆڕە کۆمەڵایەتییەکان
       (function() {
         var ua = navigator.userAgent || navigator.vendor || window.opera;
         var isInstagram = ua.indexOf('Instagram') > -1;
         var isFacebook = (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
-        var isTikTok = ua.indexOf('TikTok') > -1;
+        var isTikTok = ua.indexOf('TikTok') > -1 || ua.indexOf('Bytedance') > -1;
         var isSnapchat = ua.indexOf('Snapchat') > -1;
         
         var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
         var isAndroid = /Android/i.test(ua);
 
-        // ئەگەر لەناو وێبگەڕی تۆڕە کۆمەڵایەتییەکان بوو
         if (isInstagram || isFacebook || isTikTok || isSnapchat) {
           var currentUrl = window.location.href;
           
           if (isAndroid) {
-            // هەوڵدان بۆ کردنەوەی ڕاستەوخۆ لە کرۆمی ئەندرۆید (Intent)
-            // ئەمە کێشەی "Action can't be completed" لە تیکتۆک چارەسەر دەکات
-            var intentUrl = 'intent://' + window.location.host + window.location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
-            window.location.href = intentUrl;
+            // لە ئەندرۆید فۆرسی کرۆم دەکەین بێ کێشە کار دەکات
+            setTimeout(function() {
+                var intentUrl = 'intent://' + window.location.host + window.location.pathname + window.location.search + '#Intent;scheme=https;package=com.android.chrome;end';
+                window.location.href = intentUrl;
+            }, 300);
           } else if (isIOS) {
-            // ئایفۆن ڕێگەی ئۆتۆماتیکی نییە، بەڵام دەتوانین هانی بدەین بۆ کردنەوەی سەفاری
-            // لێرەدا دەتوانیت نۆتفیکەیشنێکی ناوخۆیی پیشان بدەیت لە AppManager
-            console.log("User is on iOS In-App Browser");
+            // لە ئایفۆن هیچ فۆرسێک ناکەین بۆ ئەوەی ئیرۆری (Action cant be completed) نەدات لە تیکتۆک
+            // تەنها ڕێگە دەدەین بەکارهێنەر خۆی لە سێ خاڵەکەی سەرەوە (Open in Browser) بکات
+            console.log("iOS In-App Browser Detected: Waiting for manual user action to prevent white screen crash.");
           }
         }
       })();
