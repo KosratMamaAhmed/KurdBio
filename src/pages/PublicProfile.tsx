@@ -4,45 +4,38 @@ import { AlertCircle, User, Share2, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AppManager from '../components/AppManager'; // 🌟 زۆر گرنگە بۆ ئەوەی پەنجەرەی تیکتۆک لەم پەڕەیەش کار بکات
 
-const OUTER_GLOW: Record<string, string> = {
-  mockup: 'from-blue-600/10 via-transparent to-slate-900/30',
-  light: 'from-slate-400/20 via-transparent to-gray-200/20',
-  gold: 'from-amber-600/10 via-transparent to-yellow-700/10',
-  neon: 'from-cyan-500/10 via-transparent to-blue-700/10',
-  emerald: 'from-emerald-500/10 via-transparent to-teal-800/20',
-  vintage: 'from-orange-700/10 via-transparent to-amber-900/20',
-  crimson: 'from-red-600/10 via-transparent to-rose-900/20',
-  navy: 'from-blue-700/10 via-transparent to-indigo-900/20',
-  royal: 'from-fuchsia-600/10 via-transparent to-purple-900/20',
-  minimal: 'from-gray-500/10 via-transparent to-slate-700/20',
-  cyberpunk: 'from-pink-600/10 via-transparent to-yellow-600/10',
-  glassmorphism: 'from-indigo-500/10 via-transparent to-purple-600/10',
-  dracula: 'from-pink-500/10 via-transparent to-purple-800/20',
-  aurora: 'from-green-500/10 via-transparent to-teal-600/10',
-  sunset: 'from-orange-500/10 via-transparent to-rose-600/10',
-  ocean: 'from-cyan-500/10 via-transparent to-blue-800/20',
-  forest: 'from-emerald-600/10 via-transparent to-green-900/20',
-  candy: 'from-pink-400/10 via-transparent to-sky-400/10',
-  hacker: 'from-green-500/10 via-transparent to-lime-700/10',
-  luxury: 'from-rose-400/10 via-transparent to-pink-700/10'
-};
-
-// 🌟 دیاریکردنی ڕەنگی دوگمەکان بەپێی جۆری لینکەکە 🌟
-const getBrandStyle = (url: string) => {
-  if (!url) return { bg: 'rgba(255, 255, 255, 0.1)', text: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)' };
-  const lowerUrl = url.toLowerCase();
+// 🌟 دیاریکردنی ڕەنگی دوگمەکان بەپێی جۆری لینکەکە و داتابەیس 🌟
+const getBrandStyle = (url: string, dbColor?: string) => {
+  const lowerUrl = (url || '').toLowerCase();
   
   if (lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp')) return { bg: '#25D366', text: '#fff' };
   if (lowerUrl.includes('instagram')) return { bg: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', text: '#fff' };
   if (lowerUrl.includes('snapchat')) return { bg: '#FFFC00', text: '#000' };
   if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.me')) return { bg: '#1877F2', text: '#fff' };
-  if (lowerUrl.includes('t.me') || lowerUrl.includes('telegram')) return { bg: '#0088cc', text: '#fff' };
+  if (lowerUrl.includes('t.me') || lowerUrl.includes('telegram')) return { bg: '#26A5E4', text: '#fff' };
   if (lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) return { bg: '#FF0000', text: '#fff' };
-  if (lowerUrl.includes('tiktok')) return { bg: '#000000', text: '#fff', border: '1px solid #333' };
-  if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter')) return { bg: '#000000', text: '#fff', border: '1px solid #333' };
+  if (lowerUrl.includes('tiktok')) return { bg: '#000000', text: '#fff' };
+  if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter')) return { bg: '#000000', text: '#fff' };
+  if (lowerUrl.includes('linkedin')) return { bg: '#0A66C2', text: '#fff' };
+  if (lowerUrl.includes('viber')) return { bg: '#7360F2', text: '#fff' };
+  if (lowerUrl.includes('discord')) return { bg: '#5865F2', text: '#fff' };
   
-  return { bg: 'rgba(255, 255, 255, 0.1)', text: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)' };
+  // ئەگەر ڕەنگ لە داتابەیس هەبوو وە جیاواز بوو لە ڕەنگە باوەکان
+  if (dbColor && dbColor !== '#333333' && dbColor !== '') {
+     return { bg: dbColor, text: '#fff', border: 'none' };
+  }
+  
+  // ڕەنگی بنەڕەتی بۆ بەستەرە ئاساییەکان لەسەر باکگراوندی سپی
+  return { bg: '#ffffff', text: '#1f2937', border: '1px solid #e5e7eb' };
 };
+
+// ئایکۆنی باجی VIP
+const VerifiedBadge = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.5213 2.62368C11.3147 1.75255 12.6853 1.75255 13.4787 2.62368L14.4989 3.74391C14.8998 4.18418 15.4761 4.42288 16.071 4.39508L17.5845 4.32435C18.7614 4.26934 19.7307 5.23857 19.6757 6.41554L19.6049 7.92898C19.5771 8.52388 19.8158 9.10016 20.2561 9.50111L21.3763 10.5213C22.2475 11.3147 22.2475 12.6853 21.3763 13.4787L20.2561 14.4989C19.8158 14.8998 19.5771 15.4761 19.6049 16.071L19.6757 17.5845C19.7307 18.7614 18.7614 19.7307 17.5845 19.6757L16.071 19.6049C15.4761 19.5771 14.8998 19.8158 14.4989 20.2561L13.4787 21.3763C12.6853 22.2475 11.3147 22.2475 10.5213 21.3763L9.50111 20.2561C9.10016 19.8158 8.52388 19.5771 7.92898 19.6049L6.41554 19.6757C5.23857 19.7307 4.26934 18.7614 4.32435 17.5845L4.39508 16.071C4.42288 15.4761 4.18418 14.8998 3.74391 14.4989L2.62368 13.4787C1.75255 12.6853 1.75255 11.3147 2.62368 10.5213L3.74391 9.50111C4.18418 9.10016 4.42288 8.52388 4.39508 7.92898L4.32435 6.41554C4.26934 5.23857 5.23857 4.26934 6.41554 4.32435L7.92898 4.39508C8.52388 4.42288 9.10016 4.18418 9.50111 3.74391L10.5213 2.62368Z" fill="#1d9bf0"/>
+    <path d="M10.3333 14.3333L7.16667 11.1667L8.10833 10.225L10.3333 12.45L15.8917 6.89167L16.8333 7.83333L10.3333 14.3333Z" fill="white"/>
+  </svg>
+);
 
 export default function PublicProfile({ settings }: { settings?: any }) {
   const { slug } = useParams();
@@ -50,7 +43,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingCard, setDownloadingCard] = useState(false);
-  const [copied, setCopied] = useState(false); // 🌟 ستەیتی کۆپیکردنی لینک
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -132,7 +125,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     }
   };
 
-  // 🌟 فانکشنی کۆپیکردنی لینک 🌟
   const handleCopyLink = () => {
     const profileUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(profileUrl);
@@ -217,66 +209,87 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     }
   };
 
-  if (loading) return <div className="min-h-[100dvh] bg-[#050505] flex items-center justify-center"><div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (error || !profile) return <div className="min-h-[100dvh] bg-[#050505] flex flex-col items-center justify-center p-6 text-center"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-white mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-white/50 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-white text-black rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
+  if (loading) return <div className="min-h-[100dvh] bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (error || !profile) return <div className="min-h-[100dvh] bg-white flex flex-col items-center justify-center p-6 text-center"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-gray-900 mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-gray-500 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
 
   const activeAds = settings?.ads?.filter((ad: any) => ad.isActive !== false) || [];
   const globalBtns = settings?.globalButtons || [];
-  const sponsoredLinks = [ ...globalBtns.map((b:any) => ({ id: b.id, title: b.title, url: b.url, imageUrl: b.imageUrl, iconName: b.icon })), ...activeAds.map((a:any) => ({ id: a.id, title: a.title, url: a.url, imageUrl: a.imageUrl })) ];
+  const sponsoredLinks = [ ...globalBtns.map((b:any) => ({ id: b.id, title: b.title, url: b.url, imageUrl: b.imageUrl, iconName: b.icon, color: b.color })), ...activeAds.map((a:any) => ({ id: a.id, title: a.title, url: a.url, imageUrl: a.imageUrl })) ];
 
   const allLinks = [...(profile.links || []), ...sponsoredLinks];
-  
-  const themeId = profile.theme || 'mockup';
-  const backgroundGlow = OUTER_GLOW[themeId] || OUTER_GLOW.mockup;
+
+  // 🌟 ڕێکخستنی شوێنی وێنەکان بەپێی داتابەیس 🌟
+  const bgPosStyle = profile?.bgPos ? `${profile.bgPos.x}% ${profile.bgPos.y}%` : '50% 50%';
+  const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div className={`min-h-[100dvh] w-full flex flex-col items-center justify-start bg-[#050505] pt-12 sm:pt-16 px-4 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-36 font-sans`} dir="rtl">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-36 font-sans" dir="rtl">
        
        <AppManager />
 
-       {/* 🌟 باکگراوندە تاریکە درەوشاوەکەی پێشوو 🌟 */}
-       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGlow} opacity-60 z-0 pointer-events-none fixed`}></div>
-       <div className="absolute inset-0 z-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay pointer-events-none fixed"></div>
-       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[60%] bg-gradient-to-r ${backgroundGlow} rounded-[100%] blur-[100px] opacity-40 pointer-events-none z-0 fixed`}></div>
+       {/* 🌟 وێنەی کەڤەر (Background Image) لە پشتی پرۆفایلەکە 🌟 */}
+       <div className="w-full h-48 sm:h-56 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 shadow-sm">
+          {profile?.bgImage && (
+             <img 
+                src={profile.bgImage} 
+                className="w-full h-full object-cover" 
+                style={{ objectPosition: bgPosStyle }} 
+                alt="Cover" 
+             />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          
+          {/* 🌟 دوگمەی شەیر / کۆپیکردنی لینک دەبەینە ناو کەڤەرەکە بۆ ئەوەی جوانتر بێت 🌟 */}
+          <button 
+             onClick={handleCopyLink}
+             className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2.5 bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/30 rounded-full text-white transition-all z-20 flex items-center justify-center shadow-sm"
+             title="کۆپیکردنی لینک"
+          >
+             {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
+          </button>
+       </div>
 
-       <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out]">
+       {/* 🌟 بەشی سەرەکی کە دەچێتە سەر کەڤەرەکە 🌟 */}
+       <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-16 sm:-mt-20">
          
-         {/* 🌟 دوگمەی شەیر / کۆپیکردنی لینک 🌟 */}
-         <button 
-           onClick={handleCopyLink}
-           className="absolute -top-4 right-0 p-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-white backdrop-blur-md transition-all z-20 flex items-center justify-center shadow-lg"
-           title="کۆپیکردنی لینک"
-         >
-           {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
-         </button>
-
          {/* وێنەی پرۆفایل */}
-         {profile.avatarUrl ? (
-           <img 
-             src={profile.avatarUrl} 
-             alt={profile.displayName} 
-             className="w-24 h-24 rounded-full object-cover shadow-[0_0_20px_rgba(255,255,255,0.1)] border-2 border-white/10"
-           />
-         ) : (
-           <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-white/50 border-2 border-white/10">
-             بەتاڵ
-           </div>
-         )}
+         <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full p-1.5 bg-white/40 backdrop-blur-md shadow-lg mb-4">
+            <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-white">
+               {profile?.avatarUrl ? (
+                 <img 
+                   src={profile.avatarUrl} 
+                   alt={profile.displayName} 
+                   className="w-full h-full object-cover"
+                   style={{ objectPosition: avatarPosStyle }}
+                 />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+                   بەتاڵ
+                 </div>
+               )}
+            </div>
+            {/* باجی VIP بۆ بەکارهێنەری Pro */}
+            {profile?.isPro && (
+               <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md">
+                  <VerifiedBadge className="w-7 h-7 text-blue-500 drop-shadow-sm" />
+               </div>
+            )}
+         </div>
 
-         {/* ناو و بایۆ (ڕەنگی سپی چونکە باکگراوند ڕەشە) */}
-         <h1 className="text-xl font-bold text-white mt-4 text-center drop-shadow-md">
+         {/* ناو و بایۆ (بە ڕەنگی تۆخ چونکە باکگراوندی خوارەوە سپییە) */}
+         <h1 className="text-2xl font-black text-gray-900 mt-2 text-center">
            {profile.displayName}
          </h1>
          {profile.bio && (
-           <p className="text-white/70 mt-2 text-center text-sm px-2 leading-relaxed drop-shadow-sm">
+           <p className="text-gray-600 mt-2 text-center text-sm px-2 leading-relaxed font-medium">
              {profile.bio}
            </p>
          )}
 
-         {/* 🌟 بەشی دوگمەکان (بە ڕەنگی براندەکان و ئایکۆنەکانەوە) 🌟 */}
+         {/* 🌟 بەشی دوگمەکان و بەستەرەکان 🌟 */}
          <div className="w-full mt-8 flex flex-col gap-3 mb-12">
            {allLinks.map((link: any, index: number) => {
-             const brandStyle = getBrandStyle(link.url);
+             const brandStyle = getBrandStyle(link.url, link.color);
              
              return (
                <button
@@ -287,19 +300,19 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                    color: brandStyle.text,
                    border: brandStyle.border || 'none'
                  }}
-                 className="w-full py-3 px-4 rounded-xl shadow-lg font-medium text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group"
+                 className="w-full py-3.5 px-4 rounded-xl shadow-sm font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group"
                >
                  {/* ئایکۆن یان پیتی یەکەم */}
-                 <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-black/20 overflow-hidden shadow-inner p-1.5">
+                 <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner p-1.5" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
                    {link.imageUrl ? (
-                     <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-md" />
+                     <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" />
                    ) : (
-                     <span className="text-lg font-bold opacity-80">{link.title?.charAt(0) || '🔗'}</span>
+                     <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>
                    )}
                  </div>
                  
                  {/* تایتڵی دوگمە */}
-                 <span className="flex-grow text-center px-2 z-10 drop-shadow-md font-bold">{link.title}</span>
+                 <span className="flex-grow text-center px-2 z-10">{link.title}</span>
                  
                  {/* بۆشایی بۆ باڵانس ڕاگرتنی دەقەکە لە ناوەڕاست */}
                  <div className="w-9 h-9 flex-shrink-0"></div>
@@ -311,7 +324,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
          {/* 🌟 بەشی دیزاینی کارتی بزنس 🌟 */}
          <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] group cursor-pointer border border-neutral-800 bg-[#111111]"
+            className="relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] group cursor-pointer border border-neutral-800 bg-[#111111]"
             onClick={handleDownloadCard}
          >
             <div className="absolute inset-0 pointer-events-none">
@@ -328,7 +341,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
             <div className="relative z-10 w-full h-full flex p-3 sm:p-4">
                <div className="w-[55%] flex flex-col items-center justify-center h-full relative order-1">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white p-1 rounded-full shadow-lg mb-2 border-2 border-[#fbbf24] overflow-hidden relative group-hover:scale-105 transition-transform duration-300">
-                     {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover rounded-full" /> : <User className="w-full h-full p-2 text-neutral-300" />}
+                     {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover rounded-full" style={{ objectPosition: avatarPosStyle }} /> : <User className="w-full h-full p-2 text-neutral-300" />}
                   </div>
                   <h3 className="text-[14px] sm:text-[18px] font-black drop-shadow-md text-[#fbbf24] line-clamp-1 w-full text-center px-1">{profile?.displayName || 'کۆسرەت مامە'}</h3>
                   <p className="text-[8px] sm:text-[10px] font-bold text-white mt-1.5 line-clamp-2 leading-relaxed text-center px-2 w-full opacity-90">{profile?.bio || 'باشترین بەستەرەکانم لێرە ببینە'}</p>
