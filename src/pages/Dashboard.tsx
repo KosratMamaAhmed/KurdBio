@@ -292,20 +292,27 @@ export default function Dashboard({ user, onLogout }: Props) {
   if (loading) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]" dir="rtl">
+    <div className="h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
       
       <AppManager />
 
       <AnimatePresence>
         {notification.show && (
-          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`fixed top-[calc(env(safe-area-inset-top)+1.5rem)] left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -50 }} 
+            style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}
+            className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}
+          >
             {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle size={20}/>} {notification.message}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className={`fixed inset-y-0 right-0 w-[280px] bg-white border-l border-neutral-200 z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 lg:static lg:block shadow-2xl lg:shadow-none`}>
-        <div className="p-6 flex flex-col h-full mt-[env(safe-area-inset-top)]">
+      {/* 🌟 لێرەدا Padding بۆ نۆچ و لایەکانی خوارەوە کراوە بۆ مێنیو 🌟 */}
+      <div className={`fixed inset-y-0 right-0 w-[280px] bg-white border-l border-neutral-200 z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 lg:static lg:block shadow-2xl lg:shadow-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}>
+        <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-10">
              <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-orange-500 rounded-[14px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-orange-500/30">B</div>
@@ -326,7 +333,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             ))}
           </div>
 
-          <div className="mt-auto space-y-2 mb-[env(safe-area-inset-bottom)]">
+          <div className="mt-auto space-y-2">
             <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-neutral-900 text-white hover:bg-black rounded-2xl font-black shadow-lg transition-transform active:scale-95">
               <Eye size={22} /> بینینی کارت
             </button>
@@ -342,28 +349,30 @@ export default function Dashboard({ user, onLogout }: Props) {
       )}
 
       <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between z-20 shrink-0 sticky top-0 mt-[env(safe-area-inset-top)]">
-          <div className="flex items-center gap-4">
-             <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
-             <div>
-                <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : activeTab === 'profile' ? 'پرۆفایل' : 'ڕووکار'}</h2>
-                <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
-             </div>
-          </div>
-          <div className="flex gap-2 sm:gap-3">
-             <button onClick={() => { navigator.clipboard.writeText(`https://biokurd.com/${profile?.slug}`); showNotif('لینکەکە کۆپی کرا'); }} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-neutral-200 rounded-xl font-black text-neutral-700 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-xs sm:text-sm">
-               <Copy size={18} className="text-neutral-400" /> <span className="hidden sm:block">کۆپی لینک</span>
-             </button>
-             <button onClick={() => setShowCard(true)} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black shadow-[0_4px_15px_rgba(249,115,22,0.3)] transition-all active:scale-95 text-xs sm:text-sm">
-               <Share2 size={18} /> <span className="hidden sm:block">بڵاوکردنەوە</span>
-             </button>
+        {/* 🌟 لێرەدا paddingTop کراوە بە جۆرێک بچێتە ژێر نۆچەکەی ئایفۆن 🌟 */}
+        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 z-20 shrink-0 sticky top-0 pt-[env(safe-area-inset-top)]">
+          <div className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
+               <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : activeTab === 'profile' ? 'پرۆفایل' : 'ڕووکار'}</h2>
+                  <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
+               </div>
+            </div>
+            <div className="flex gap-2 sm:gap-3">
+               <button onClick={() => { navigator.clipboard.writeText(`https://biokurd.com/${profile?.slug}`); showNotif('لینکەکە کۆپی کرا'); }} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-neutral-200 rounded-xl font-black text-neutral-700 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-xs sm:text-sm">
+                 <Copy size={18} className="text-neutral-400" /> <span className="hidden sm:block">کۆپی لینک</span>
+               </button>
+               <button onClick={() => setShowCard(true)} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black shadow-[0_4px_15px_rgba(249,115,22,0.3)] transition-all active:scale-95 text-xs sm:text-sm">
+                 <Share2 size={18} /> <span className="hidden sm:block">بڵاوکردنەوە</span>
+               </button>
+            </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {/* 🌟 بەشی ئامارەکان لەگەڵ تێبینی ٢٤ کاتژمێری 🌟 */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3 px-1">
                  <h3 className="text-lg font-black text-neutral-800">ئامارەکان</h3>

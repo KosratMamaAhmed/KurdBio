@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react'; 
 
 import Home from './pages/Home';
 import Auth from './pages/Auth';
@@ -8,8 +7,9 @@ import Dashboard from './pages/Dashboard';
 import PublicProfile from './pages/PublicProfile';
 import Admin from './pages/Admin';
 import Payment from './pages/Payment';
-// 🌟 هێنانی کۆمپۆنێنتە زیرەکەکە
-import AppPromptModal from './components/AppPromptModal'; 
+
+// 🌟 هێنانی AppManagerە یەکگرتووە زیرەکەکە 🌟
+import AppManager from './components/AppManager'; 
 
 const THEMES: any = {
   orange: { main: 'bg-orange-500', hover: 'bg-orange-600', text: 'text-orange-500', light: 'bg-orange-50', border: 'border-orange-200', grad: 'from-orange-500 to-amber-500', shadow: 'shadow-orange-200' },
@@ -22,62 +22,11 @@ const THEMES: any = {
 
 function ProfileOrApk({ settings }: { settings: any }) {
   const { slug } = useParams();
-  const [apkStatus, setApkStatus] = useState<'loading' | 'error' | null>(null);
 
-  useEffect(() => {
-    if (slug?.endsWith('.apk')) {
-      setApkStatus('loading');
-      const fileUrl = `/${slug}`;
-      
-      fetch(fileUrl, { method: 'HEAD' })
-        .then(res => {
-          if (res.ok) {
-            const link = document.createElement('a');
-            link.href = fileUrl;
-            link.setAttribute('download', slug);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } else {
-            setApkStatus('error');
-          }
-        })
-        .catch(() => {
-          setApkStatus('error');
-        });
-    }
-  }, [slug]);
-
+  // ئەگەر کەسێک ویستی .apk دابگرێت دەیباتەوە سەرەتا، چونکە چیتر باسی APK نەماوە
   if (slug?.endsWith('.apk')) {
-    if (apkStatus === 'error') {
-      return (
-        <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
-          <div className="bg-red-500/10 p-5 rounded-full mb-6 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-            <AlertCircle className="text-red-500 w-12 h-12" />
-          </div>
-          <h2 className="text-white font-black text-2xl mb-4 tracking-wide">بەرنامەکە نەدۆزرایەوە!</h2>
-          <p className="text-red-400 font-bold text-base max-w-sm leading-relaxed bg-red-500/5 p-4 rounded-2xl border border-red-500/10">
-            ئەم ئەپڵیکەیشنە نەدۆزرایەوە یان سڕاوەتەوە. دڵنیابە لە ناوی لینکەکە.
-          </p>
-          <button onClick={() => window.location.href = '/'} className="mt-8 px-8 py-3.5 bg-white text-black font-black rounded-xl hover:scale-105 transition-all shadow-lg">
-            گەڕانەوە بۆ سەرەتا
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-[100dvh] w-full bg-gradient-to-br from-neutral-950 to-black flex flex-col items-center justify-center text-center p-6" dir="rtl">
-        <div className="relative mb-6">
-           <div className="w-16 h-16 border-4 border-amber-500/30 rounded-full absolute inset-0"></div>
-           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin relative z-10"></div>
-        </div>
-        <h2 className="text-white font-black text-2xl mb-2 tracking-wide">لە داگرتنی بەرنامەکەداین...</h2>
-        <p className="text-neutral-400 font-bold text-sm max-w-sm">
-           تکایە چاوەڕێبە، فایلەکە بەشێوەیەکی خێرا دادەبەزێتە ناو ئامێرەکەت.
-        </p>
-      </div>
-    );
+    window.location.href = '/';
+    return null;
   }
 
   return <PublicProfile settings={settings} />;
@@ -137,9 +86,8 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* 🌟 دانانی کۆمپۆنێنتی داگرتنی ئەپەکە لێرە بۆ ئەوەی بەسەر هەموو سایتەکەدا زاڵ بێت 🌟 */}
-      {/* تێبینی: دەتوانیت ناوی .apk ـەکە لێرەدا بگۆڕیت بەوی خۆت */}
-      <AppPromptModal apkUrl="/biokurd.apk" />
+      {/* 🌟 ئەپ مانیجەرە زیرەکەکە کە بەسەر هەموو سایتەکەدا زاڵە 🌟 */}
+      <AppManager />
 
       <Routes>
         <Route path="/" element={<Home user={user} theme={currentTheme} settings={settings} />} />

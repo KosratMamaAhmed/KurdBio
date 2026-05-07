@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { AlertCircle, User, Share2, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
-import AppManager from '../components/AppManager'; // 🌟 زۆر گرنگە بۆ ئەوەی پەنجەرەی تیکتۆک لەم پەڕەیەش کار بکات
+import { AlertCircle, User, Share2, Check, Star, ArrowUpRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import AppManager from '../components/AppManager';
 
-// 🌟 دیاریکردنی ڕەنگی دوگمەکان بەپێی جۆری لینکەکە و داتابەیس 🌟
+const FontStyle = () => (
+  <style dangerouslySetInnerHTML={{ __html: `
+    @font-face {
+      font-family: 'Kosrat';
+      src: url('/font/kosrat.ttf') format('truetype');
+      font-display: swap;
+    }
+    .font-kosrat { 
+      font-family: 'Kosrat', sans-serif !important; 
+    }
+  `}} />
+);
+
 const getBrandStyle = (url: string, dbColor?: string) => {
   const lowerUrl = (url || '').toLowerCase();
   
@@ -20,16 +32,13 @@ const getBrandStyle = (url: string, dbColor?: string) => {
   if (lowerUrl.includes('viber')) return { bg: '#7360F2', text: '#fff' };
   if (lowerUrl.includes('discord')) return { bg: '#5865F2', text: '#fff' };
   
-  // ئەگەر ڕەنگ لە داتابەیس هەبوو وە جیاواز بوو لە ڕەنگە باوەکان
   if (dbColor && dbColor !== '#333333' && dbColor !== '') {
      return { bg: dbColor, text: '#fff', border: 'none' };
   }
   
-  // ڕەنگی بنەڕەتی بۆ بەستەرە ئاساییەکان لەسەر باکگراوندی سپی
   return { bg: '#ffffff', text: '#1f2937', border: '1px solid #e5e7eb' };
 };
 
-// ئایکۆنی باجی VIP
 const VerifiedBadge = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M10.5213 2.62368C11.3147 1.75255 12.6853 1.75255 13.4787 2.62368L14.4989 3.74391C14.8998 4.18418 15.4761 4.42288 16.071 4.39508L17.5845 4.32435C18.7614 4.26934 19.7307 5.23857 19.6757 6.41554L19.6049 7.92898C19.5771 8.52388 19.8158 9.10016 20.2561 9.50111L21.3763 10.5213C22.2475 11.3147 22.2475 12.6853 21.3763 13.4787L20.2561 14.4989C19.8158 14.8998 19.5771 15.4761 19.6049 16.071L19.6757 17.5845C19.7307 18.7614 18.7614 19.7307 17.5845 19.6757L16.071 19.6049C15.4761 19.5771 14.8998 19.8158 14.4989 20.2561L13.4787 21.3763C12.6853 22.2475 11.3147 22.2475 10.5213 21.3763L9.50111 20.2561C9.10016 19.8158 8.52388 19.5771 7.92898 19.6049L6.41554 19.6757C5.23857 19.7307 4.26934 18.7614 4.32435 17.5845L4.39508 16.071C4.42288 15.4761 4.18418 14.8998 3.74391 14.4989L2.62368 13.4787C1.75255 12.6853 1.75255 11.3147 2.62368 10.5213L3.74391 9.50111C4.18418 9.10016 4.42288 8.52388 4.39508 7.92898L4.32435 6.41554C4.26934 5.23857 5.23857 4.26934 6.41554 4.32435L7.92898 4.39508C8.52388 4.42288 9.10016 4.18418 9.50111 3.74391L10.5213 2.62368Z" fill="#1d9bf0"/>
@@ -44,6 +53,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const [error, setError] = useState('');
   const [downloadingCard, setDownloadingCard] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  const profileUrl = `${window.location.origin}/${slug}`;
 
   useEffect(() => {
     if (!slug) return;
@@ -126,16 +137,17 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   };
 
   const handleCopyLink = () => {
-    const profileUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(profileUrl);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   const handleDownloadCard = async () => {
     if (downloadingCard) return;
     setDownloadingCard(true);
     try {
+      try { await document.fonts.load('48px "Kosrat"'); } catch (e) {}
+
       const canvas = document.createElement('canvas');
       canvas.width = 1050; canvas.height = 600;
       const ctx = canvas.getContext('2d');
@@ -170,10 +182,13 @@ export default function PublicProfile({ settings }: { settings?: any }) {
         ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI*2); ctx.fillStyle = '#27272a'; ctx.fill();
       }
 
-      ctx.fillStyle = '#fbbf24'; ctx.font = '900 48px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = '#fbbf24'; 
+      ctx.font = '900 48px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText(profile?.displayName || 'کۆسرەت مامە', rightCenterX, 310, 450);
 
-      ctx.fillStyle = '#ffffff'; ctx.font = '500 24px sans-serif';
+      ctx.fillStyle = '#ffffff'; 
+      ctx.font = '500 24px "Kosrat", sans-serif';
       const wrapText = (context: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
           const words = text.split(' '); let line = '';
           for(let n = 0; n < words.length; n++) {
@@ -184,10 +199,10 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       };
       wrapText(ctx, profile?.bio || 'باشترین بەستەرەکانم لێرە ببینە', rightCenterX, 380, 450, 36);
 
-      const leftCenterX = 240; const profileUrl = `${window.location.origin}/${slug}`;
+      const leftCenterX = 240;
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&margin=1&color=d97706`;
       const qrRes = await fetch(qrUrl); const qrBlob = await qrRes.blob();
-      const qrImg = new Image(); qrImg.src = URL.createObjectURL(qrBlob);
+      const qrImg = new window.Image(); qrImg.src = URL.createObjectURL(qrBlob);
       
       await new Promise(r => qrImg.onload = r);
       
@@ -195,10 +210,14 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(80, 100, 320, 320, 24); ctx.fill(); } else { ctx.fillRect(80, 100, 320, 320); }
       ctx.drawImage(qrImg, 90, 110, 300, 300);
 
-      ctx.fillStyle = '#000000'; ctx.font = '900 22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = '#000000'; 
+      ctx.font = '900 22px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText('سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم', leftCenterX, 450);
 
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff'; 
+      ctx.font = 'bold 18px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'right';
       ctx.fillText('https://biokurd.com', 1020, 560);
 
       const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `BioKurd_Card_${slug}.png`; a.click();
@@ -209,26 +228,23 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     }
   };
 
-  if (loading) return <div className="min-h-[100dvh] bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (error || !profile) return <div className="min-h-[100dvh] bg-white flex flex-col items-center justify-center p-6 text-center"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-gray-900 mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-gray-500 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
+  if (loading) return <div className="min-h-[100dvh] bg-white flex items-center justify-center font-kosrat"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (error || !profile) return <div className="min-h-[100dvh] bg-white flex flex-col items-center justify-center p-6 text-center font-kosrat"><AlertCircle className="text-red-500 mb-4" size={48} /><h2 className="text-2xl font-black text-gray-900 mb-2">پرۆفایل نەدۆزرایەوە</h2><p className="text-gray-500 font-bold mb-8">{error || 'ئەم لینکە بوونی نییە یان سڕاوەتەوە.'}</p><Link to="/" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl hover:scale-105 transition">گەڕانەوە بۆ سەرەتا</Link></div>;
 
   const activeAds = settings?.ads?.filter((ad: any) => ad.isActive !== false) || [];
   const globalBtns = settings?.globalButtons || [];
-  const sponsoredLinks = [ ...globalBtns.map((b:any) => ({ id: b.id, title: b.title, url: b.url, imageUrl: b.imageUrl, iconName: b.icon, color: b.color })), ...activeAds.map((a:any) => ({ id: a.id, title: a.title, url: a.url, imageUrl: a.imageUrl })) ];
+  const normalLinks = [...(profile.links || []), ...globalBtns.map((b:any) => ({ id: b.id, title: b.title, url: b.url, imageUrl: b.imageUrl, iconName: b.icon, color: b.color }))];
 
-  const allLinks = [...(profile.links || []), ...sponsoredLinks];
-
-  // 🌟 ڕێکخستنی شوێنی وێنەکان بەپێی داتابەیس 🌟
   const bgPosStyle = profile?.bgPos ? `${profile.bgPos.x}% ${profile.bgPos.y}%` : '50% 50%';
   const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-36 font-sans" dir="rtl">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
        
+       <FontStyle />
        <AppManager />
 
-       {/* 🌟 وێنەی کەڤەر (Background Image) لە پشتی پرۆفایلەکە 🌟 */}
-       <div className="w-full h-48 sm:h-56 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 shadow-sm">
+       <div className="w-full h-64 sm:h-80 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
           {profile?.bgImage && (
              <img 
                 src={profile.bgImage} 
@@ -237,23 +253,36 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                 alt="Cover" 
              />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/20 to-transparent"></div>
           
-          {/* 🌟 دوگمەی شەیر / کۆپیکردنی لینک دەبەینە ناو کەڤەرەکە بۆ ئەوەی جوانتر بێت 🌟 */}
-          <button 
-             onClick={handleCopyLink}
-             className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2.5 bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/30 rounded-full text-white transition-all z-20 flex items-center justify-center shadow-sm"
-             title="کۆپیکردنی لینک"
-          >
-             {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
-          </button>
+          {/* 🌟 لێرەدا کێشەی چوونە ژێر نۆچەکەی ئایفۆن لە دوگمەی کۆپیکردن چارەسەر کرا 🌟 */}
+          <div className="absolute right-4 sm:right-6 flex flex-col items-end z-30" style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+            <button 
+               onClick={handleCopyLink}
+               className="p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-white transition-all shadow-sm flex items-center justify-center"
+               title="کۆپیکردنی لینک"
+            >
+               {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
+            </button>
+            <AnimatePresence>
+               {copied && (
+                 <motion.div 
+                   initial={{ opacity: 0, y: 5, scale: 0.9 }} 
+                   animate={{ opacity: 1, y: 0, scale: 1 }} 
+                   exit={{ opacity: 0, scale: 0.9 }} 
+                   className="mt-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] sm:text-xs font-bold shadow-lg whitespace-nowrap" 
+                   dir="ltr"
+                 >
+                    {profileUrl} کۆپیکرا
+                 </motion.div>
+               )}
+            </AnimatePresence>
+          </div>
        </div>
 
-       {/* 🌟 بەشی سەرەکی کە دەچێتە سەر کەڤەرەکە 🌟 */}
-       <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-16 sm:-mt-20">
+       <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-20 sm:-mt-24">
          
-         {/* وێنەی پرۆفایل */}
-         <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full p-1.5 bg-white/40 backdrop-blur-md shadow-lg mb-4">
+         <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full p-1.5 bg-white/60 backdrop-blur-md shadow-xl mb-4">
             <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-white">
                {profile?.avatarUrl ? (
                  <img 
@@ -268,7 +297,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                  </div>
                )}
             </div>
-            {/* باجی VIP بۆ بەکارهێنەری Pro */}
             {profile?.isPro && (
                <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md">
                   <VerifiedBadge className="w-7 h-7 text-blue-500 drop-shadow-sm" />
@@ -276,55 +304,67 @@ export default function PublicProfile({ settings }: { settings?: any }) {
             )}
          </div>
 
-         {/* ناو و بایۆ (بە ڕەنگی تۆخ چونکە باکگراوندی خوارەوە سپییە) */}
          <h1 className="text-2xl font-black text-gray-900 mt-2 text-center">
            {profile.displayName}
          </h1>
          {profile.bio && (
-           <p className="text-gray-600 mt-2 text-center text-sm px-2 leading-relaxed font-medium">
+           <p className="text-gray-600 mt-2 text-center text-sm px-2 leading-relaxed font-bold">
              {profile.bio}
            </p>
          )}
 
-         {/* 🌟 بەشی دوگمەکان و بەستەرەکان 🌟 */}
-         <div className="w-full mt-8 flex flex-col gap-3 mb-12">
-           {allLinks.map((link: any, index: number) => {
+         <div className="w-full mt-8 flex flex-col gap-3">
+           {normalLinks.map((link: any, index: number) => {
              const brandStyle = getBrandStyle(link.url, link.color);
-             
              return (
                <button
                  key={link.id || index}
                  onClick={() => handleLinkClick(link.url, link.id)}
-                 style={{
-                   background: brandStyle.bg,
-                   color: brandStyle.text,
-                   border: brandStyle.border || 'none'
-                 }}
+                 style={{ background: brandStyle.bg, color: brandStyle.text, border: brandStyle.border || 'none' }}
                  className="w-full py-3.5 px-4 rounded-xl shadow-sm font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group"
                >
-                 {/* ئایکۆن یان پیتی یەکەم */}
                  <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner p-1.5" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                   {link.imageUrl ? (
-                     <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" />
-                   ) : (
-                     <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>
-                   )}
+                   {link.imageUrl ? <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" /> : <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>}
                  </div>
-                 
-                 {/* تایتڵی دوگمە */}
                  <span className="flex-grow text-center px-2 z-10">{link.title}</span>
-                 
-                 {/* بۆشایی بۆ باڵانس ڕاگرتنی دەقەکە لە ناوەڕاست */}
                  <div className="w-9 h-9 flex-shrink-0"></div>
                </button>
              );
            })}
          </div>
 
-         {/* 🌟 بەشی دیزاینی کارتی بزنس 🌟 */}
+         {activeAds.length > 0 && (
+           <div className="w-full mt-8 mb-6 flex flex-col gap-3">
+              <div className="flex items-center justify-center gap-3 mb-2 opacity-60">
+                <div className="h-[1px] flex-1 bg-gray-300"></div>
+                <span className="text-[10px] font-black px-2 py-1 rounded-md border border-gray-200 text-gray-500 tracking-widest bg-gray-100/50">سپۆنسەرکراو</span>
+                <div className="h-[1px] flex-1 bg-gray-300"></div>
+              </div>
+
+              {activeAds.map((ad: any, idx: number) => (
+                 <a key={idx} href={ad.url} target="_blank" rel="noopener noreferrer" className="relative w-full group transition-transform hover:scale-[1.02] active:scale-95 shadow-sm block">
+                    <div className="absolute -top-2 -left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-md shadow-lg z-20 rotate-[-10deg] border border-orange-200/50">VIP</div>
+                    
+                    <div className="relative z-10 w-full bg-white rounded-2xl p-3 sm:p-4 flex items-center justify-between border-2 border-orange-100 shadow-[0_4px_20px_rgba(249,115,22,0.1)] overflow-hidden">
+                       <div className="flex items-center gap-3 sm:gap-4 w-full pr-1 relative z-10">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gray-50 p-1 flex items-center justify-center shrink-0 border border-gray-100">
+                             {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-lg" /> : <Star size={24} className="text-orange-500" />}
+                          </div>
+                          <div className="flex-1 text-right min-w-0">
+                             <h4 className="font-black text-sm sm:text-base text-gray-900 line-clamp-1">{ad.title}</h4>
+                             <p className="text-[10px] sm:text-xs font-bold text-gray-500 truncate mt-0.5">{(ad.url && ad.url.includes('.apk')) ? 'داگرتنی بەرنامە' : 'بینینی بەستەر'}</p>
+                          </div>
+                       </div>
+                       <ArrowUpRight size={22} className="text-orange-500 shrink-0 ml-1 relative z-10" />
+                    </div>
+                 </a>
+              ))}
+           </div>
+         )}
+
          <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] group cursor-pointer border border-neutral-800 bg-[#111111]"
+            className={`relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] group cursor-pointer border border-neutral-800 bg-[#111111] ${activeAds.length === 0 ? 'mt-8' : ''}`}
             onClick={handleDownloadCard}
          >
             <div className="absolute inset-0 pointer-events-none">
@@ -363,6 +403,19 @@ export default function PublicProfile({ settings }: { settings?: any }) {
          </motion.div>
 
        </div>
+
+       {/* 🌟 لێرەدا کێشەی هێڵی خوارەوەی مۆبایلەکانی ئایفۆنیش چارەسەرکرا 🌟 */}
+       <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
+          <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
+             <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>
+             
+             <div className="relative px-6 py-3.5 bg-gray-900 rounded-full flex items-center justify-center gap-2 text-white shadow-2xl border border-gray-700 hover:scale-[1.02] active:scale-95 transition-transform">
+                <Sparkles size={18} className="text-amber-400 animate-pulse" />
+                <span className="font-black text-sm tracking-wide">لینکێکی ئاوا دروست بکە</span>
+             </div>
+          </a>
+       </div>
+
     </div>
   );
 }

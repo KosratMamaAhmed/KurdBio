@@ -33,7 +33,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
     globalButtons: [], ads: [], socialPlatforms: []
   });
   
-  const [activeTab, setActiveTab] = useState('stats'); // 🌟 تابەکە کرا بە ئامارەکان لەسەرەتا
+  const [activeTab, setActiveTab] = useState('stats');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -149,16 +149,14 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
-  // 🌟 کۆی گشتی ئامارەکان 🌟
   const totalPlatformVisits = safeUsers.reduce((acc, curr) => acc + (curr.visits || 0), 0);
   const totalPlatformClicks = safeUsers.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
   const totalProUsers = safeUsers.filter(u => u.isPro).length;
   
-  // ڕیزبەندی ١٠ باشترین بەکارهێنەران لەسەر بنەمای سەردان
   const topUsers = [...safeUsers].sort((a, b) => (b.visits || 0) - (a.visits || 0)).slice(0, 10);
 
   const TABS = [
-    { id: 'stats', label: 'ئامارەکان', icon: <BarChart3 size={18}/> }, // 🌟 تابی نوێ
+    { id: 'stats', label: 'ئامارەکان', icon: <BarChart3 size={18}/> },
     { id: 'theme', label: 'ڕووکار و مۆکئەپ', icon: <Palette size={18}/> },
     { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> },
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
@@ -170,15 +168,17 @@ export default function Admin({ user, onLogout, theme }: Props) {
   if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center"><div className={`w-8 h-8 border-4 ${theme?.border || 'border-orange-200'} border-t-transparent rounded-full animate-spin`}></div></div>;
 
   return (
-    <div className="min-h-[100dvh] bg-neutral-50 font-sans pb-20" dir="rtl">
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div className="min-h-[100dvh] bg-neutral-50 font-sans" dir="rtl">
+      {/* 🌟 لێرەدا paddingTop بۆ هێدەرەکە کراوە تا نۆچی ئایفۆن بیگرێتەوە 🌟 */}
+      <header className="bg-white border-b border-neutral-200 sticky top-0 z-30 shadow-sm pt-[env(safe-area-inset-top)]">
+        <div className="max-w-7xl mx-auto px-6 py-4 sm:h-16 flex items-center justify-between">
           <div className={`font-black text-xl flex items-center gap-2 ${theme?.text || 'text-orange-500'} `}><Lock size={20} /> بەڕێوەبەر</div>
           <button onClick={onLogout} className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition"><LogOut size={20} /></button>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+      {/* 🌟 پەراوێزی خوارەوەی پەیجەکە بۆ ئەوەی نەچێتە ژێر دوگمەی مۆبایل 🌟 */}
+      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-bold whitespace-nowrap transition-all ${activeTab === t.id ? `${theme?.main || 'bg-orange-500'} text-white shadow-lg` : 'bg-white text-neutral-500 hover:bg-neutral-100'}`}>
@@ -192,7 +192,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
           
-          {/* 🌟 TAB: Statistics (بەشی ئامارەکان) 🌟 */}
           {activeTab === 'stats' && (
             <div className="space-y-8">
               <h2 className="text-2xl font-black text-neutral-900 mb-6 flex items-center gap-3"><BarChart3 className="text-orange-500"/> ئاماری گشتی پلاتفۆرم</h2>
@@ -251,7 +250,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* TAB: Theme & Mockup */}
           {activeTab === 'theme' && (
             <div className="space-y-8">
               <div>
@@ -359,7 +357,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* TAB: Ads */}
           {activeTab === 'ads' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between border-b border-neutral-200 pb-4 gap-4">
@@ -413,7 +410,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* TAB: Global Buttons */}
           {activeTab === 'buttons' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
@@ -446,7 +442,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* TAB: Social Platforms */}
           {activeTab === 'socials' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -480,7 +475,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
             </div>
           )}
 
-          {/* 🌟 TAB: Users (ئامارەکان بۆ خشتەی بەکارهێنەرانیش زیادکرا) 🌟 */}
           {activeTab === 'users' && (
              <div className="space-y-6">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -499,7 +493,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                     <tr>
                       <th className="px-6 py-4 rounded-r-xl">بەکارهێنەر</th>
                       <th className="px-6 py-4">پەیوەندی</th>
-                      <th className="px-6 py-4 text-center">ئامارەکان</th> {/* 🌟 زیادکراو */}
+                      <th className="px-6 py-4 text-center">ئامارەکان</th>
                       <th className="px-6 py-4 text-center rounded-l-xl">دەسەڵاتەکان</th>
                     </tr>
                   </thead>
@@ -516,7 +510,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                           {u.email}<br/>{u.phone}
                         </td>
                         <td className="px-6 py-4">
-                           {/* 🌟 پیشاندانی ئامار لەناو خشتەی بەکارهێنەران 🌟 */}
                            <div className="flex flex-col items-center gap-2">
                              <span className="flex items-center gap-1.5 text-orange-600 font-bold bg-orange-100 px-2.5 py-1 rounded-lg w-full justify-center"><Eye size={16}/> {u.visits || 0}</span>
                              <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-100 px-2.5 py-1 rounded-lg w-full justify-center"><MousePointerClick size={16}/> {u.clicks || 0}</span>
@@ -541,7 +534,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
              </div>
           )}
 
-          {/* TAB: Pages Content */}
           {activeTab === 'pages' && (
             <div className="space-y-12">
               <h2 className="text-xl font-black">دەستکاریکردنی پەڕە گشتییەکان</h2>
@@ -569,14 +561,13 @@ export default function Admin({ user, onLogout, theme }: Props) {
         </div>
       </div>
       
-      {/* Mobile Save Button */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-200 z-40">
+      {/* 🌟 پەراوێزی خوارەوەی پەیجی مۆبایل 🌟 */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-neutral-200 z-40 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
          <button onClick={saveSettings} disabled={saving} className={`w-full py-4 rounded-2xl font-black text-white shadow-xl ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} flex justify-center items-center gap-2 disabled:opacity-50`}>
            {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={20}/> پاشەکەوتکردنی هەمووی</>}
          </button>
       </div>
 
-      {/* Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">

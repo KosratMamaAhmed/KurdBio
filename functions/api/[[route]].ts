@@ -31,7 +31,6 @@ export async function onRequest(context: any) {
   };
 
   const DEFAULT_SETTINGS = { 
-    siteTheme: 'orange',
     socialPlatforms: [
       { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
       { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -53,32 +52,6 @@ export async function onRequest(context: any) {
        const res = json(settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS, 200, "public");
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
-    }
-
-    if (method === "POST" && path.startsWith("/api/public/visit/")) {
-       const slug = escapeHTML(path.split("/").pop() || "");
-       let targetUserId = await env.KV.get(`slug:${slug}`);
-       if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
-       
-       if (targetUserId) {
-           const statKey = `stats_visit:${targetUserId}`;
-           let count = parseInt(await env.KV.get(statKey) || "0");
-           await env.KV.put(statKey, (count + 1).toString());
-       }
-       return json({success: true}); 
-    }
-    
-    if (method === "POST" && path.startsWith("/api/public/click/")) {
-       const slug = escapeHTML(path.split("/").pop() || "");
-       let targetUserId = await env.KV.get(`slug:${slug}`);
-       if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
-       
-       if (targetUserId) {
-           const statKey = `stats_click:${targetUserId}`;
-           let count = parseInt(await env.KV.get(statKey) || "0");
-           await env.KV.put(statKey, (count + 1).toString());
-       }
-       return json({success: true}); 
     }
 
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
@@ -221,9 +194,6 @@ export async function onRequest(context: any) {
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
        
        const user = JSON.parse(userStr);
-       user.visits = parseInt(await env.KV.get(`stats_visit:${userId}`) || "0");
-       user.clicks = parseInt(await env.KV.get(`stats_click:${userId}`) || "0");
-       
        return json(user);
     }
 
@@ -311,7 +281,6 @@ export async function onRequest(context: any) {
          if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
     }
 
-    // 🌟 ئەپدەیتی ئامارەکانی هەموو بەکارهێنەران بۆ داشبۆردی ئەدمین 🌟
     if (method === "GET" && path === "/api/admin/users") {
         const allUsersStr = await env.KV.get("all_users_list");
         if (!allUsersStr) return json([]);
@@ -322,8 +291,6 @@ export async function onRequest(context: any) {
             if (uStr) { 
                 const u = JSON.parse(uStr); 
                 delete u.password; 
-                u.visits = parseInt(await env.KV.get(`stats_visit:${id}`) || "0");
-                u.clicks = parseInt(await env.KV.get(`stats_click:${id}`) || "0");
                 usersList.push(u); 
             }
         }
