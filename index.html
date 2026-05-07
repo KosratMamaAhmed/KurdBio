@@ -21,10 +21,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
+      /* جێگیرکردنی فۆنت لەسەر ئاستی جیهانی */
       * {
         font-family: 'Noto Sans Arabic', sans-serif !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* چارەسەری کێشەی بازدانی شاشە لە iOS کاتێک کیبۆرد دەکرێتەوە */
+      html, body {
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background-color: #f8fafc;
+      }
+
+      #root {
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        /* پاراستنی مەودای نۆچ و هۆم ئیندیکەیتەر لە CSS */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
       }
     </style>
+
+    <script>
+      (function() {
+        var ua = navigator.userAgent || navigator.vendor || window.opera;
+        var isInstagram = ua.indexOf('Instagram') > -1;
+        var isFacebook = (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
+        var isTikTok = ua.indexOf('TikTok') > -1;
+        var isSnapchat = ua.indexOf('Snapchat') > -1;
+        
+        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        var isAndroid = /Android/i.test(ua);
+
+        // ئەگەر لەناو وێبگەڕی تۆڕە کۆمەڵایەتییەکان بوو
+        if (isInstagram || isFacebook || isTikTok || isSnapchat) {
+          var currentUrl = window.location.href;
+          
+          if (isAndroid) {
+            // هەوڵدان بۆ کردنەوەی ڕاستەوخۆ لە کرۆمی ئەندرۆید (Intent)
+            // ئەمە کێشەی "Action can't be completed" لە تیکتۆک چارەسەر دەکات
+            var intentUrl = 'intent://' + window.location.host + window.location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
+            window.location.href = intentUrl;
+          } else if (isIOS) {
+            // ئایفۆن ڕێگەی ئۆتۆماتیکی نییە، بەڵام دەتوانین هانی بدەین بۆ کردنەوەی سەفاری
+            // لێرەدا دەتوانیت نۆتفیکەیشنێکی ناوخۆیی پیشان بدەیت لە AppManager
+            console.log("User is on iOS In-App Browser");
+          }
+        }
+      })();
+    </script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E9GQMQLZTS"></script>
     <script>
@@ -34,10 +83,10 @@
       gtag('config', 'G-E9GQMQLZTS');
     </script>
   </head>
-  <body class="bg-neutral-50 text-neutral-900 font-sans antialiased selection:bg-amber-200 selection:text-amber-900">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d60a46c58d8e47b4ad79fd995f1d3567"}'></script><!-- End Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d60a46c58d8e47b4ad79fd995f1d3567"}'></script>
   </body>
 </html>
