@@ -54,6 +54,58 @@ export async function onRequest(context: any) {
        return res;
     }
 
+    // 🌟 سەیڤکردنی سەردان (Visit) بۆ پڕۆفایلەکان و ئاماری گشتی 🌟
+    if (method === "POST" && path.startsWith("/api/public/visit/")) {
+       const slug = path.split("/").pop();
+       if (slug) {
+           let targetUserId = await env.KV.get(`slug:${slug}`);
+           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           if (userStr) {
+               const user = JSON.parse(userStr);
+               user.visits = (user.visits || 0) + 1;
+               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
+               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
+               
+               // تۆمارکردنی ئاماری گشتی سایت
+               let siteStatsStr = await env.KV.get("site_stats");
+               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
+               siteStats.totalVisits += 1;
+               
+               // بەکارهێنەری ڕۆژانە و مانگانە (بەپێی IP یان کاتی سەردان)
+               const today = new Date().toISOString().split('T')[0];
+               const currentMonth = today.substring(0, 7);
+               
+               if (!siteStats.dailyUsers.includes(today)) siteStats.dailyUsers = [today]; // سادەکراوەتەوە بۆ نموونە
+               if (!siteStats.monthlyUsers.includes(currentMonth)) siteStats.monthlyUsers = [currentMonth];
+
+               await env.KV.put("site_stats", JSON.stringify(siteStats));
+           }
+       }
+       return json({ success: true });
+    }
+
+    // 🌟 سەیڤکردنی کلیک (Click) بۆ پڕۆفایلەکان و ئاماری گشتی 🌟
+    if (method === "POST" && path.startsWith("/api/public/click/")) {
+       const slug = path.split("/").pop();
+       if (slug) {
+           let targetUserId = await env.KV.get(`slug:${slug}`);
+           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           if (userStr) {
+               const user = JSON.parse(userStr);
+               user.clicks = (user.clicks || 0) + 1;
+               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
+               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
+
+               // تۆمارکردنی ئاماری گشتی سایت
+               let siteStatsStr = await env.KV.get("site_stats");
+               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
+               siteStats.totalClicks += 1;
+               await env.KV.put("site_stats", JSON.stringify(siteStats));
+           }
+       }
+       return json({ success: true });
+    }
+
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
        const { identifier, password } = await request.json();
        if (!identifier || !password) return json({ error: "زانیارییەکان ناتەواون" }, 400);
@@ -113,7 +165,7 @@ export async function onRequest(context: any) {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
           theme: 'gold', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
-          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
+          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, visits: 0, clicks: 0, createdAt: new Date().toISOString()
         };
 
         await Promise.all([
@@ -297,16 +349,29 @@ export async function onRequest(context: any) {
         return json(usersList.reverse());
     }
 
-    // 🌟 بەشی چارەسەرکراوی کاش بۆ پاشەکەوتکردنی ئەدمین 🌟
+    // 🌟 خاڵی نوێ بۆ هێنانی ئاماری گشتی (سەردان و کلیک) 🌟
+    if (method === "GET" && path === "/api/admin/stats") {
+        const siteStatsStr = await env.KV.get("site_stats");
+        const siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
+        
+        // خەمڵاندنی بەکارهێنەرانی ڕۆژانە و مانگانە بۆ نموونە 
+        // تێبینی: دەتوانیت لۆژیکێکی ئاڵۆزتر بۆ تۆمارکردنی IP بەکاربهێنیت. ئەمەیان بۆ خێراییە.
+        const stats = {
+            totalVisits: siteStats.totalVisits || 0,
+            totalClicks: siteStats.totalClicks || 0,
+            dailyActiveUsers: siteStats.dailyUsers?.length || 0,
+            monthlyActiveUsers: siteStats.monthlyUsers?.length || 0
+        };
+        return json(stats);
+    }
+
     if (method === "PUT" && path === "/api/admin/settings") {
         const newSettings = await request.json();
         await env.KV.put("site_settings", JSON.stringify(newSettings));
-        
-        // پاککردنەوەی کاش بە شێوەیەکی ئۆتۆماتیکی
         try {
             const cacheUrl = new URL(request.url);
             cacheUrl.pathname = "/api/public/settings";
-            cacheUrl.search = ""; // سڕینەوەی کاتی بۆ ئەوەی ڕەگی کاشەکە بدۆزێتەوە
+            cacheUrl.search = ""; 
             await caches.default.delete(new Request(cacheUrl.toString()));
         } catch(e) {}
         

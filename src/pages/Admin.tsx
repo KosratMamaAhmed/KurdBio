@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, LogOut, Trash2, Edit, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Camera, Lock, Share2, Globe, Eye, EyeOff, Search } from 'lucide-react';
+import { Users, LogOut, Trash2, Edit, Save, Key, UserCheck, UserX, Star, Link as LinkIcon, Camera, Lock, Share2, Globe, Eye, EyeOff, Search, BarChart3, TrendingUp, MousePointerClick, CalendarDays } from 'lucide-react';
 
 interface Props { user: any; onLogout: () => void; theme: any; }
 
@@ -25,11 +25,12 @@ const DEFAULT_SOCIALS = [
 
 export default function Admin({ user, onLogout, theme }: Props) {
   const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({ totalVisits: 0, totalClicks: 0, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
   const [settings, setSettings] = useState<any>({ 
     globalButtons: [], ads: [], socialPlatforms: []
   });
   
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('stats');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -45,14 +46,18 @@ export default function Admin({ user, onLogout, theme }: Props) {
     }
 
     try {
-      const [uRes, sRes] = await Promise.all([
+      const [uRes, sRes, statsRes] = await Promise.all([
         fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`/api/public/settings?_t=${Date.now()}`) // 🌟 بڕینی کاش بۆ ئەوەی داتای نوێ بهێنێت
+        fetch(`/api/public/settings?_t=${Date.now()}`),
+        fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       const uData = await uRes.json();
       const sData = await sRes.json();
+      const statsData = await statsRes.json();
+
       if (uData && !uData.error && Array.isArray(uData)) setUsers(uData); else setUsers([]);
       if (sData && !sData.error) setSettings((prev: any) => ({ ...prev, ...sData }));
+      if (statsData && !statsData.error) setStats(statsData);
     } catch (err) {
       console.error(err); setUsers([]);
     } finally { setLoading(false); }
@@ -141,7 +146,16 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
+  // 🌟 ڕیزبەندکردنی ئەندامەکان بەپێی زۆرترین ڤیو و کلیک 🌟
+  const rankedUsers = [...safeUsers].sort((a, b) => {
+      const aScore = (a.visits || 0) + (a.clicks || 0);
+      const bScore = (b.visits || 0) + (b.clicks || 0);
+      return bScore - aScore;
+  });
+
   const TABS = [
+    { id: 'stats', label: 'ئاماری گشتی', icon: <BarChart3 size={18}/> },
+    { id: 'ranking', label: 'ڕیزبەندی ئەندامان', icon: <TrendingUp size={18}/> },
     { id: 'users', label: 'بەکارهێنەران', icon: <Users size={18}/> },
     { id: 'ads', label: 'سپۆنسەر و ڕیکلامەکان', icon: <Star size={18}/> },
     { id: 'socials', label: 'تۆڕە کۆمەڵایەتییەکان', icon: <Share2 size={18}/> },
@@ -173,6 +187,70 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
           
+          {/* 🌟 تابی نوێ: ئاماری گشتی 🌟 */}
+          {activeTab === 'stats' && (
+             <div className="space-y-6">
+                 <div>
+                   <h2 className="text-xl font-black text-neutral-900">ئاماری گشتی سیستەم</h2>
+                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەم ئامارانە ڕاستەقینەن و لە داتابەیسەوە نوێ دەکرێنەوە.</p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                     <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
+                        <div className="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-2"><TrendingUp size={24}/></div>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalVisits}</h3>
+                        <p className="text-sm font-bold text-neutral-500">کۆی گشتی سەردانەکان</p>
+                     </div>
+                     <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
+                        <div className="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-2"><MousePointerClick size={24}/></div>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalClicks}</h3>
+                        <p className="text-sm font-bold text-neutral-500">کۆی گشتی کلیکەکان</p>
+                     </div>
+                     <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
+                        <div className="w-12 h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-2"><Users size={24}/></div>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.dailyActiveUsers}</h3>
+                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری ڕۆژانە (خەمڵێنراو)</p>
+                     </div>
+                     <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
+                        <div className="w-12 h-12 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center mb-2"><CalendarDays size={24}/></div>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.monthlyActiveUsers}</h3>
+                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری مانگانە (خەمڵێنراو)</p>
+                     </div>
+                 </div>
+             </div>
+          )}
+
+          {/* 🌟 تابی نوێ: ڕیزبەندی ئەندامان 🌟 */}
+          {activeTab === 'ranking' && (
+             <div className="space-y-6">
+                 <div>
+                   <h2 className="text-xl font-black text-neutral-900">ڕیزبەندی ئەندامان (Top Profiles)</h2>
+                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەندامەکان بەپێی زۆرترین بینین و کلیک ڕیزکراون.</p>
+                 </div>
+                 
+                 <div className="space-y-3">
+                    {rankedUsers.slice(0, 50).map((u, index) => (
+                       <div key={u.id} className="flex items-center gap-4 p-4 bg-neutral-50 border border-neutral-200 rounded-2xl">
+                          <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-black text-white ${index === 0 ? 'bg-amber-400 shadow-md shadow-amber-400/50' : index === 1 ? 'bg-slate-400' : index === 2 ? 'bg-amber-700' : 'bg-neutral-300'}`}>
+                             #{index + 1}
+                          </div>
+                          <div className="flex-1">
+                             <div className="font-black text-neutral-900 flex items-center gap-2">
+                                {u.displayName || u.username} {u.isPro && <Star size={14} className="text-amber-500 fill-amber-500"/>}
+                             </div>
+                             <div className="text-xs text-neutral-500 font-bold">@{u.username}</div>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm font-bold">
+                             <div className="flex flex-col items-center text-orange-500"><TrendingUp size={16}/><span>{u.visits || 0}</span></div>
+                             <div className="flex flex-col items-center text-blue-500"><MousePointerClick size={16}/><span>{u.clicks || 0}</span></div>
+                          </div>
+                       </div>
+                    ))}
+                    {rankedUsers.length === 0 && <div className="text-center py-10 text-neutral-400 font-black">هیچ زانیارییەک نییە!</div>}
+                 </div>
+             </div>
+          )}
+
           {activeTab === 'users' && (
              <div className="space-y-6">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -232,7 +310,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                   <h2 className="text-xl font-black text-neutral-900">سپۆنسەر و ڕیکلامەکان (VIP)</h2>
                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە بە ئیفێکتێکی ئاگرین وەک VIP لە سەرەوەی پرۆفایلی هەمووان دەردەکەون.</p>
                 </div>
-                {/* 🌟 دوگمەی سەیڤکردن هێنرایە ئێرە بۆ ئاسانکاری 🌟 */}
                 <div className="flex w-full sm:w-auto gap-2">
                    <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} transition`}>+ زیادکردن</button>
                    <button onClick={saveSettings} disabled={saving} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
@@ -291,7 +368,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                    <h2 className="text-xl font-black text-neutral-900">بەستەرە گشتییەکان (Global Links)</h2>
                    <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە لای هەموو بەکارهێنەران وەک بەستەری ئاسایی دەردەکەون.</p>
                  </div>
-                 {/* 🌟 دوگمەی سەیڤکردن بۆ ئێرەش زیاد کرا 🌟 */}
                  <div className="flex w-full sm:w-auto gap-2">
                     <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: [...(prev.globalButtons||[]), { id: Date.now(), title: '', url: '', icon: 'Globe', imageUrl: '' }] }))} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} transition`}>+ بەستەری نوێ</button>
                     <button onClick={saveSettings} disabled={saving} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
@@ -329,7 +405,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
                 <div className="flex flex-wrap gap-2 justify-center xl:justify-end w-full xl:w-auto">
                   <button onClick={() => { if(confirm('دڵنیایت لەم کارە؟')) setSettings((prev:any) => ({...prev, socialPlatforms: DEFAULT_SOCIALS})); }} className="px-4 py-3 rounded-xl font-bold bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition">گەڕاندنەوەی بنەڕەتییەکان</button>
                   <button onClick={() => setSettings((prev:any) => ({...prev, socialPlatforms: [...(prev.socialPlatforms || []), { id: `platform_${Date.now()}`, name: '', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#000000' }]}))} className={`px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی تۆڕ</button>
-                  {/* 🌟 دوگمەی سەیڤکردن بۆ ئێرەش زیاد کرا 🌟 */}
                   <button onClick={saveSettings} disabled={saving} className={`px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
                      {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18}/> سەیڤکردن</>}
                   </button>
