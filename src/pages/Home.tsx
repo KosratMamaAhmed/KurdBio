@@ -10,8 +10,8 @@ export default function Home({ user, settings, theme }: Props) {
     name: 'کۆسرەت مامە', 
     bio: 'گەشەپێدەری بەرنامەکانی ئەندرۆید و وێب', 
     avatar: 'https://ui-avatars.com/api/?name=Kosrat+Mama&background=f97316&color=fff&size=256', 
-    bgImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop',
-    buttonDesign: 'glass',
+    bgImage: '', // 🌟 باکگراوندەکە سادە کرایەوە
+    buttonDesign: 'light', // 🌟 دیزاینی ڕووناک هەڵبژێردرا بۆ ئەوەی ئایکۆنەکان دەربکەون
     isPro: true
   });
 
@@ -19,19 +19,36 @@ export default function Home({ user, settings, theme }: Props) {
     if (settings?.mockup) setMockup(settings.mockup); 
   }, [settings]);
 
+  // 🌟 بەستەرەکان گۆڕدران بەپێی داواکارییەکەت 🌟
   const mockupLinks = [
-    { name: 'فەیسبووک', iconName: 'Facebook', color: '#1877F2' },
-    { name: 'ئینستاگرام', iconName: 'Instagram', color: '#E4405F' },
-    { name: 'تیکتۆک', iconName: 'Music', color: '#ec4899' },
+    { name: 'تیکتۆک', iconName: 'Music', color: '#000000' },
     { name: 'سناپچات', iconName: 'Ghost', color: '#eab308' },
-    { name: 'واتسئاپ', iconName: 'MessageCircle', color: '#25D366' },
+    { name: 'تێلیگرام', iconName: 'Send', color: '#26A5E4' },
+    { name: 'ئینستاگرام', iconName: 'Instagram', color: '#E4405F' },
+    { name: 'پەیوەندی', iconName: 'Phone', color: '#10B981' },
   ];
 
   return (
-    // 🌟 لێرەدا `overflow-y-auto` و `h-[100dvh]` دانرا تاوەکو پەڕە گشتییەکە بە تەواوی سکرۆڵ ببێت 🌟
     <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#f8fafc] flex flex-col font-sans relative selection:bg-orange-200" dir="rtl">
       
-      {/* 🌟 باکگراوندەکە کرا بە fixed بۆ ئەوەی لەگەڵ سکرۆڵدا تێک نەچێت 🌟 */}
+      {/* 🌟 ئەم ستایلە فۆرس دەکرێت تەنها بۆ ناو مۆکئەپەکە بۆ ئەوەی دوگمەکان باریک بن و ئایکۆنەکانیان ڕەنگاوڕەنگ بێت 🌟 */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .mockup-wrapper button {
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+            border-radius: 12px !important;
+        }
+        .mockup-wrapper button:nth-child(1) svg { color: #000000 !important; }
+        .mockup-wrapper button:nth-child(2) svg { color: #eab308 !important; }
+        .mockup-wrapper button:nth-child(3) svg { color: #26A5E4 !important; }
+        .mockup-wrapper button:nth-child(4) svg { color: #10B981 !important; }
+        .mockup-wrapper button:nth-child(5) svg { color: #E4405F !important; }
+      `}} />
+
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none transform-gpu z-0">
          <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[50%] bg-gradient-to-b from-orange-300/40 to-transparent rounded-full blur-[120px]"></div>
          <div className="absolute top-[30%] -left-[10%] w-[50%] h-[60%] bg-gradient-to-t from-blue-400/30 to-transparent rounded-full blur-[120px]"></div>
@@ -54,7 +71,7 @@ export default function Home({ user, settings, theme }: Props) {
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 py-10 lg:py-0 gap-16 relative z-10 pb-24 lg:pb-10">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 py-10 lg:py-0 gap-16 relative z-10 pb-8">
         
         <div className="flex-1 text-center lg:text-right space-y-8 relative z-10 w-full mt-4 lg:mt-0">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-orange-200/60 text-orange-600 font-bold text-sm shadow-sm mx-auto lg:mx-0">
@@ -80,33 +97,33 @@ export default function Home({ user, settings, theme }: Props) {
             <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-emerald-500"/> پارێزراو</div>
             <div className="flex items-center gap-2"><Sparkles size={18} className="text-blue-500"/> ناوازە</div>
           </div>
-
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full border-t border-neutral-200/60 mt-4">
-            <a href="https://play.google.com/store/apps/dev?id=6744749568381312149&hl=en" target="_blank" rel="noopener noreferrer" 
-               className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
-               <Play size={22} fill="currentColor" className="relative z-10" />
-               <span className="relative z-10 text-sm sm:text-base tracking-wide">بەرنامەکانم لە پلەی ستۆر</span>
-            </a>
-            
-            <a href="http://t.me/kosratdev" target="_blank" rel="noopener noreferrer" 
-               className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(56,189,248,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
-               <Send size={22} className="relative z-10" />
-               <span className="relative z-10 text-sm sm:text-base tracking-wide">ئێمە لە تەلەگرام</span>
-            </a>
-          </div>
-
         </div>
 
-        {/* 🌟 لێرەدا کۆدی مۆکئەپەکە بە تەواوی وشک (Freeze) کرا بە touch-none و overflow-hidden 🌟 */}
         <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto mt-10 lg:mt-0">
-           <div className="pointer-events-none select-none touch-none overflow-hidden" style={{ pointerEvents: 'none' }}>
+           <div className="pointer-events-none select-none touch-none overflow-hidden mockup-wrapper" style={{ pointerEvents: 'none' }}>
               <PhoneMockup mockup={mockup} mockupLinks={mockupLinks} />
            </div>
         </div>
         
       </main>
+
+      {/* 🌟 ئەم دوو دوگمەیە هێنرانە خوار خوارەوەی شاشەکە 🌟 */}
+      <footer className="w-full mt-auto relative z-20 shrink-0 pb-6 pt-4 px-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="https://play.google.com/store/apps/dev?id=6744749568381312149&hl=en" target="_blank" rel="noopener noreferrer" 
+             className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
+             <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
+             <Play size={22} fill="currentColor" className="relative z-10" />
+             <span className="relative z-10 text-sm sm:text-base tracking-wide">بەرنامەکانم لە پلەی ستۆر</span>
+          </a>
+          
+          <a href="http://t.me/kosratdev" target="_blank" rel="noopener noreferrer" 
+             className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(56,189,248,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
+             <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-0"></div>
+             <Send size={22} className="relative z-10" />
+             <span className="relative z-10 text-sm sm:text-base tracking-wide">ئێمە لە تەلەگرام</span>
+          </a>
+      </footer>
+
     </div>
   );
 }

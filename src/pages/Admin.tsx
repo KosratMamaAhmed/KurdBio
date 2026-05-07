@@ -47,7 +47,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
     try {
       const [uRes, sRes] = await Promise.all([
         fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/public/settings')
+        fetch(`/api/public/settings?_t=${Date.now()}`) // 🌟 بڕینی کاش بۆ ئەوەی داتای نوێ بهێنێت
       ]);
       const uData = await uRes.json();
       const sData = await sRes.json();
@@ -70,7 +70,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
         body: JSON.stringify(settings) 
       });
       if(res.ok) {
-        alert('ڕێکخستنەکان بە سەرکەوتوویی پاشەکەوت کران!');
+        alert('زانیارییەکان بە سەرکەوتوویی پاشەکەوت کران!');
       } else {
         alert('کێشەیەک ڕوویدا لە کاتی پاشەکەوتکردن!');
       }
@@ -232,7 +232,13 @@ export default function Admin({ user, onLogout, theme }: Props) {
                   <h2 className="text-xl font-black text-neutral-900">سپۆنسەر و ڕیکلامەکان (VIP)</h2>
                   <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە بە ئیفێکتێکی ئاگرین وەک VIP لە سەرەوەی پرۆفایلی هەمووان دەردەکەون.</p>
                 </div>
-                <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`px-6 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی ڕیکلام</button>
+                {/* 🌟 دوگمەی سەیڤکردن هێنرایە ئێرە بۆ ئاسانکاری 🌟 */}
+                <div className="flex w-full sm:w-auto gap-2">
+                   <button onClick={() => setSettings((prev:any) => ({...prev, ads: [...(prev.ads||[]), { id: Date.now(), title: 'ڕیکلامی نوێ', url: '', imageUrl: '', targetOS: 'all', isActive: true }] }))} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} transition`}>+ زیادکردن</button>
+                   <button onClick={saveSettings} disabled={saving} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
+                      {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18}/> سەیڤکردن</>}
+                   </button>
+                </div>
               </div>
               
               <div className="space-y-6">
@@ -280,12 +286,18 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
           {activeTab === 'buttons' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
+              <div className="flex flex-col sm:flex-row items-center justify-between pb-4 border-b border-neutral-200 gap-4">
                  <div>
                    <h2 className="text-xl font-black text-neutral-900">بەستەرە گشتییەکان (Global Links)</h2>
                    <p className="text-sm font-bold text-neutral-500 mt-1">ئەم بەستەرانە لای هەموو بەکارهێنەران وەک بەستەری ئاسایی دەردەکەون.</p>
                  </div>
-                 <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: [...(prev.globalButtons||[]), { id: Date.now(), title: '', url: '', icon: 'Globe', imageUrl: '' }] }))} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ بەستەری نوێ</button>
+                 {/* 🌟 دوگمەی سەیڤکردن بۆ ئێرەش زیاد کرا 🌟 */}
+                 <div className="flex w-full sm:w-auto gap-2">
+                    <button onClick={() => setSettings((prev:any) => ({...prev, globalButtons: [...(prev.globalButtons||[]), { id: Date.now(), title: '', url: '', icon: 'Globe', imageUrl: '' }] }))} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'} transition`}>+ بەستەری نوێ</button>
+                    <button onClick={saveSettings} disabled={saving} className={`flex-1 sm:flex-none px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
+                       {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18}/> سەیڤکردن</>}
+                    </button>
+                 </div>
               </div>
               
               <div className="space-y-4">
@@ -312,11 +324,15 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
           {activeTab === 'socials' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-4">
                 <h2 className="text-xl font-black">ڕێکخستنی تۆڕە کۆمەڵایەتییەکان</h2>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <button onClick={() => { if(confirm('دڵنیایت لەم کارە؟')) setSettings((prev:any) => ({...prev, socialPlatforms: DEFAULT_SOCIALS})); }} className="px-4 py-2.5 rounded-xl font-bold bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition">گەڕاندنەوەی بنەڕەتییەکان</button>
-                  <button onClick={() => setSettings((prev:any) => ({...prev, socialPlatforms: [...(prev.socialPlatforms || []), { id: `platform_${Date.now()}`, name: '', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#000000' }]}))} className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی تۆڕ</button>
+                <div className="flex flex-wrap gap-2 justify-center xl:justify-end w-full xl:w-auto">
+                  <button onClick={() => { if(confirm('دڵنیایت لەم کارە؟')) setSettings((prev:any) => ({...prev, socialPlatforms: DEFAULT_SOCIALS})); }} className="px-4 py-3 rounded-xl font-bold bg-neutral-200 text-neutral-700 hover:bg-neutral-300 transition">گەڕاندنەوەی بنەڕەتییەکان</button>
+                  <button onClick={() => setSettings((prev:any) => ({...prev, socialPlatforms: [...(prev.socialPlatforms || []), { id: `platform_${Date.now()}`, name: '', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#000000' }]}))} className={`px-4 py-3 rounded-xl font-bold text-white shadow-md ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>+ زیادکردنی تۆڕ</button>
+                  {/* 🌟 دوگمەی سەیڤکردن بۆ ئێرەش زیاد کرا 🌟 */}
+                  <button onClick={saveSettings} disabled={saving} className={`px-4 py-3 rounded-xl font-bold text-white shadow-md bg-green-500 hover:bg-green-600 transition flex items-center justify-center gap-2`}>
+                     {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18}/> سەیڤکردن</>}
+                  </button>
                 </div>
               </div>
               <div className="space-y-4">

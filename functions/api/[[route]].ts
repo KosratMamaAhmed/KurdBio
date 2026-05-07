@@ -297,9 +297,19 @@ export async function onRequest(context: any) {
         return json(usersList.reverse());
     }
 
+    // 🌟 بەشی چارەسەرکراوی کاش بۆ پاشەکەوتکردنی ئەدمین 🌟
     if (method === "PUT" && path === "/api/admin/settings") {
         const newSettings = await request.json();
         await env.KV.put("site_settings", JSON.stringify(newSettings));
+        
+        // پاککردنەوەی کاش بە شێوەیەکی ئۆتۆماتیکی
+        try {
+            const cacheUrl = new URL(request.url);
+            cacheUrl.pathname = "/api/public/settings";
+            cacheUrl.search = ""; // سڕینەوەی کاتی بۆ ئەوەی ڕەگی کاشەکە بدۆزێتەوە
+            await caches.default.delete(new Request(cacheUrl.toString()));
+        } catch(e) {}
+        
         return json({ success: true });
     }
     
@@ -330,9 +340,13 @@ export async function onRequest(context: any) {
         const uStr = await env.KV.get(`user_id:${targetId}`);
         if (uStr) {
             const u = JSON.parse(uStr);
+            
             await env.KV.delete(`user_id:${targetId}`);
             await env.KV.delete(`user:${u.username}`);
             await env.KV.delete(`slug:${u.slug}`);
+            if (u.email) await env.KV.delete(`email:${u.email}`);
+            if (u.phone) await env.KV.delete(`phone:${u.phone}`);
+
             const allUsersStr = await env.KV.get("all_users_list");
             if (allUsersStr) {
                 let allUsers = JSON.parse(allUsersStr);
