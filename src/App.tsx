@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 
 import Home from './pages/Home';
@@ -10,6 +10,32 @@ import Payment from './pages/Payment';
 
 // 🌟 هێنانی AppManagerە یەکگرتووە زیرەکەکە 🌟
 import AppManager from './components/AppManager'; 
+
+// 🔴 سیستەمی دژە-کراش (وەرگیراو لە دەرمانزانی) بۆ ڕێگریکردن لە شاشەی سپی
+class AppErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, errorMsg: string, errorStack: string}> {
+  state = { hasError: false, errorMsg: '', errorStack: '' };
+  static getDerivedStateFromError(error: any) { return { hasError: true, errorMsg: error.toString(), errorStack: error.stack || '' }; }
+  componentDidCatch(error: any) { console.error("App Global Error:", error); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-6 text-center" dir="rtl">
+          <div className="text-rose-500 mb-4">
+             <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h1 className="text-xl font-black text-slate-800 mb-2">هەڵەیەک ڕوویدا!</h1>
+          <p className="text-sm text-slate-500 font-bold mb-4">تکایە وێنەی ئەم هەڵەیە بنێرە بۆم بۆ ئەوەی چاکی بکەم:</p>
+          <div className="w-full bg-white p-4 rounded-xl border border-rose-200 shadow-sm text-left dir-ltr overflow-auto max-h-48 mb-6">
+              <p className="text-rose-600 font-bold text-xs mb-2 border-b border-rose-100 pb-2">{this.state.errorMsg}</p>
+              <pre className="text-[10px] text-slate-500 font-mono whitespace-pre-wrap">{this.state.errorStack}</pre>
+          </div>
+          <button onClick={() => window.location.reload()} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold active:scale-95 transition-transform">نوێکردنەوەی پەڕە</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const THEMES: any = {
   orange: { main: 'bg-orange-500', hover: 'bg-orange-600', text: 'text-orange-500', light: 'bg-orange-50', border: 'border-orange-200', grad: 'from-orange-500 to-amber-500', shadow: 'shadow-orange-200' },
@@ -23,7 +49,6 @@ const THEMES: any = {
 function ProfileOrApk({ settings }: { settings: any }) {
   const { slug } = useParams();
 
-  // ئەگەر کەسێک ویستی .apk دابگرێت دەیباتەوە سەرەتا، چونکە چیتر باسی APK نەماوە
   if (slug?.endsWith('.apk')) {
     window.location.href = '/';
     return null;
@@ -32,7 +57,7 @@ function ProfileOrApk({ settings }: { settings: any }) {
   return <PublicProfile settings={settings} />;
 }
 
-function App() {
+function MainApp() {
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -127,4 +152,11 @@ function App() {
   );
 }
 
-export default App;
+// 🔴 لێرەدا کۆدەکە دەبەسترێتەوە بە سیستەمی دژە-کراشەکە
+export default function App() {
+  return (
+    <AppErrorBoundary>
+      <MainApp />
+    </AppErrorBoundary>
+  );
+}

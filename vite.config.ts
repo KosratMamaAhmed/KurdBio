@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     tailwindcss(), 
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // 🔴 باشترە بۆ کۆنترۆڵی ئەپدەیت (وەک دەرمانزانی)
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'font/*.ttf'],
       manifest: {
         name: 'BioKurd',
@@ -27,10 +27,22 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // 🌟 لێرەدا فایلە زیادەکان و globStrict مان لابرد بۆ ئەوەی ١٠٠٪ کار بکات 🌟
-        globPatterns: ['**/*.{js,css,html,ico,png,ttf}'],
-        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        cleanupOutdatedCaches: true, // 🔴 گرنگ: کاشە کۆنەکان دەسڕێتەوە بۆ ڕێگری لە کراش
+        clientsClaim: true,          // 🔴 گرنگ: سێرڤس وۆرکەری نوێ خێرا جێگەی خۆی دەگرێت
+        skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,ttf,woff,woff2,svg,json}'],
+        maximumFileSizeToCacheInBytes: 15485760, // 🔴 ڕێگری لە کێشەی قەبارەی کاش دەکات
         runtimeCaching: [
+          {
+            // 🔴 کاشکردنی فۆنتەکان بۆ ئۆفلاین و خێرایی (وەک دەرمانزانی)
+            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
           {
             urlPattern: /^https:\/\/api\.qrserver\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
@@ -48,5 +60,13 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  build: {
+    // 🔴 سیستەمی خێراکردن و سڕینەوەی داتای زیادە بۆ پڕۆدەکشن (وەک دەرمانزانی)
+    chunkSizeWarningLimit: 5000,
+    minify: 'terser',
+    terserOptions: {
+      compress: { drop_console: true, drop_debugger: true }
+    }
+  }
 });

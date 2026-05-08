@@ -21,27 +21,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <style>
-      * {
-        font-family: 'Noto Sans Arabic', sans-serif !important;
-        -webkit-tap-highlight-color: transparent;
-      }
-      html, body {
-        height: 100%;
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        background-color: #f8fafc;
-      }
-      #root {
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-    </style>
+    <!-- سیستەمی زیرەک بۆ ناسینەوەی جۆری ئامێر و براوزەر -->
+    <script>
+      window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault(); e.stopImmediatePropagation(); return false;
+      });
 
+      (function() {
+        try {
+          const ua = navigator.userAgent || navigator.vendor || window.opera;
+          const isAndroid = /Android/i.test(ua);
+          
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+          const isWebView = /wv/i.test(ua) || /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(ua);
+          const isTWA = document.referrer.includes('android-app://');
+          
+          window.IS_NATIVE_APP = isStandalone || isTWA || (isAndroid && isWebView);
+          window.IS_IN_APP = /FBAN|FBAV|Instagram|Snapchat|Line|WhatsApp|WeChat|TikTok|Telegram|Messenger|Threads/i.test(ua);
+          
+          if (window.IS_NATIVE_APP) window.IS_IN_APP = false; 
+          
+          const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+          // ئەگەر ویستت ڕاستەوخۆ بچێتە دەرەوە بۆ سەفاری لەسەر ئایفۆن
+          if (isIOS && !window.IS_NATIVE_APP && window.IS_IN_APP) {
+              window.location.replace('https://apps.apple.com/us/app/safari/id1146562112');
+          }
+        } catch (e) { console.error(e); }
+      })();
+    </script>
+
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E9GQMQLZTS"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -49,10 +58,99 @@
       gtag('js', new Date());
       gtag('config', 'G-E9GQMQLZTS');
     </script>
+
+    <style>
+      * {
+        font-family: 'Noto Sans Arabic', sans-serif !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html, body {
+        height: 100%; overflow: hidden; position: fixed; width: 100%; background-color: #f8fafc;
+      }
+      #root {
+        height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
+        padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+      }
+      
+      /* دیزاینی Splash Screen و Popup ی زیرەک */
+      #initial-splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #f8fafc; z-index: 9999; }
+      .splash-logo { width: 90px; height: 90px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 24px; animation: pulse-icon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      @keyframes pulse-icon { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
+      .splash-spinner { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #splash-text { margin-top: 16px; color: #64748b; font-weight: 700; font-size: 14px; text-align: center; }
+
+      /* پۆپئەپی ئەپدەیت (PWA) */
+      .update-toast { position: fixed; bottom: 24px; left: 16px; right: 16px; background: white; border: 1px solid #f1f5f9; padding: 16px; border-radius: 24px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); z-index: 99999; display: flex; justify-content: space-between; align-items: center; transform: translateY(150%); transition: all 0.5s ease-out; }
+      .update-toast.show { transform: translateY(0); }
+    </style>
   </head>
   <body>
+    
+    <!-- شاشەی چاوەڕێکردن بۆ ڕێگری لە کراش و نیشاندانی خێرایی (Splash Screen) -->
+    <div id="initial-splash">
+        <img src="/apple-touch-icon.png" class="splash-logo" alt="BioKurd" onerror="this.style.display='none'" />
+        <div class="splash-spinner"></div>
+        <div id="splash-text">خەریکی ئامادەکردنین...</div>
+    </div>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- کۆنترۆڵکردنی تێکچوونی هێڵی ئینتەرنێت و سڕینەوەی کراشەکان -->
+    <script>
+      // لابردنی شاشەی سپلاش ئەگەر کۆدەکە کێشەی نەبوو
+      window.onload = function() {
+          setTimeout(() => {
+              const splash = document.getElementById('initial-splash');
+              if (splash) splash.style.display = 'none';
+          }, 1500); // دوای ١.٥ چرکە لادەچێت ئەگەر ڕیئاکت لۆد بوو
+      };
+
+      // پشکنینی هێڵی ئینتەرنێت بۆ ڕێگریکردن لە کراش
+      setTimeout(function() {
+          var splashText = document.getElementById('splash-text');
+          if(splashText && !window.IS_IN_APP && document.getElementById('initial-splash').style.display !== 'none') {
+              splashText.innerHTML = 'کێشەیەک هەیە لە هێڵی ئینتەرنێتەکەت<br><button onclick="window.location.reload()" style="margin-top:16px; padding:10px 24px; background:#10b981; color:white; border-radius:12px; border:none; font-family:inherit; font-weight:bold; cursor:pointer;">ڕیفرێش کردنەوە</button>';
+              var spinner = document.querySelector('.splash-spinner');
+              if(spinner) spinner.style.display = 'none';
+          }
+      }, 12000);
+
+      // ڕێگریکردن لە کراشبوونی تەواوی ئەپەکە بەهۆی هەڵەی سکرێپت
+      window.addEventListener('error', function(e) {
+        const msg = e.message ? e.message.toLowerCase() : '';
+        if (msg.includes('script error') || msg === 'script error.' || !e.filename) { e.preventDefault(); return true; }
+      });
+
+      // وەرگرتنی سیگناڵی ئەپدەیت لە main.tsx ـەوە
+      window.addEventListener('app-update-available', (event) => {
+        const updateSWFunction = event.detail;
+        if (document.getElementById('update-toast-box')) return;
+
+        const toast = document.createElement('div');
+        toast.id = 'update-toast-box';
+        toast.className = 'update-toast show';
+        toast.innerHTML = `
+          <div style="display:flex; align-items:center; gap:12px;">
+              <div>
+                  <h4 style="margin:0; font-weight:900; font-size:14px; color:#1e293b;">وەشانی نوێ ئامادەیە</h4>
+                  <p style="margin:0; font-size:11px; color:#64748b; margin-top:2px;">بۆ نوێکردنەوە، کلیک بکە.</p>
+              </div>
+          </div>
+          <button id="btn-update-app" style="background:#10b981; color:white; border:none; padding:8px 16px; border-radius:12px; font-weight:bold; font-size:12px; cursor:pointer;">نوێکردنەوە</button>
+        `;
+        document.body.appendChild(toast);
+
+        document.getElementById('btn-update-app').addEventListener('click', () => {
+            const btn = document.getElementById('btn-update-app');
+            btn.innerText = 'چاوەڕێبە...';
+            btn.style.opacity = '0.7';
+            if(typeof updateSWFunction === 'function') updateSWFunction(true);
+        });
+      });
+    </script>
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d60a46c58d8e47b4ad79fd995f1d3567"}'></script>
   </body>
 </html>

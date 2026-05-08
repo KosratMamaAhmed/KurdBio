@@ -30,22 +30,34 @@
     overscroll-behavior-y: none;
     padding: 0;
     margin: 0;
+    
+    /* ڕێگریکردن لە کۆپیکردن و دیاریکردنی دەق بۆ پاراستنی UX کاتێک دەست لێدەدرێت */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   
   #root {
     @apply min-h-[100dvh] w-full overflow-x-hidden relative flex flex-col;
   }
   
+  /* ڕێگەپێدان بە نووسین لەناو ئینپووتەکان */
   input, textarea, button, select {
     font-family: inherit;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    user-select: auto !important;
   }
 
-  /* 🌟 ئەم کلاسە وادەکات ئینگلیزی ڕاستەوخۆ بچێتە چەپ 🌟 */
   .dir-auto {
     unicode-bidi: plaintext;
     text-align: start;
   }
 
+  /* شاردنەوەی سکڕۆڵبار بۆ جوانی و خێرایی */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -54,3 +66,33 @@
     scrollbar-width: none;
   }
 }
+
+@layer utilities {
+  /* دیزاینی سکڕۆڵباری تایبەت وەکو ئەوەی دەرمانزانی */
+  .custom-scrollbar::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ڕێکخستنی مێزەکان لە حاڵەتی پێویست (لە دەرمانزانییەوە وەرگیراوە بۆ ڕێکخستنی داتا) */
+.markdown-table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  border: 1px solid #e2e8f0;
+}
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+  font-size: 0.875rem;
+}
+.markdown-table th, .markdown-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.markdown-table th { background-color: #f8fafc; font-weight: 700; color: #334155; }
+.markdown-table tr:last-child td { border-bottom: none; }
+.markdown-table tr:nth-child(even) { background-color: #f8fafc; }
