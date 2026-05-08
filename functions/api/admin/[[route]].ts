@@ -38,6 +38,7 @@ export async function onRequest(context: any) {
         return json({success: true});
     }
 
+    // 🌟 هێنانی بەکارهێنەران لەگەڵ ئامارەکانیان لە D1 🌟
     if (method === "GET" && path === "/api/admin/users") {
         let users = [];
         const allUsersStr = await env.KV.get("all_users_list");
@@ -46,9 +47,27 @@ export async function onRequest(context: any) {
         const kvKeys = list.keys.map((k: any) => k.name);
         const allKeys = Array.from(new Set([...kvKeys, ...fastKeys]));
 
+        // هێنانی سەرجەم ئامارەکان لە D1 بە یەک ڕیکوێست بۆ ئەوەی خێرا بێت
+        let statsMap: any = {};
+        try {
+            const { results } = await env.DB.prepare("SELECT * FROM stats").all();
+            results.forEach((s: any) => { statsMap[s.user_id] = s; });
+        } catch(e) {
+            console.error("D1 stats fetch error:", e);
+        }
+
         for (const key of allKeys) {
-            const uStr = await env.KV.get(key);
-            if (uStr) { const { password, ...safeUser } = JSON.parse(uStr); users.push(safeUser); }
+            const uStr = await env.KV.get(key as string);
+            if (uStr) { 
+                const { password, ...safeUser } = JSON.parse(uStr); 
+                
+                // لکاندنی ئامارەکانی D1 بە یوزەرەکەوە
+                const userIdStr = (key as string).replace('user_id:', '');
+                safeUser.visits = statsMap[userIdStr]?.visits || 0;
+                safeUser.clicks = statsMap[userIdStr]?.clicks || 0;
+                
+                users.push(safeUser); 
+            }
         }
         return json(users);
     }
@@ -107,12 +126,19 @@ export async function onRequest(context: any) {
             const user = JSON.parse(userStr);
             const safeUpdates = { displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio || user.bio), slug: escapeHTML(updates.slug || user.slug) };
             const updatedUser = { ...user, ...safeUpdates };
+            
+            if (safeUpdates.slug !== user.slug) {
+                await env.KV.delete(`slug:${user.slug}`);
+                await env.KV.put(`slug:${safeUpdates.slug}`, updates.id.toString());
+            }
+
             await env.KV.put(`user:${updatedUser.username}`, JSON.stringify(updatedUser));
             await env.KV.put(`user_id:${updates.id}`, JSON.stringify(updatedUser));
         }
         return json({success: true});
     }
 
+    // 🌟 سڕینەوەی یوزەر و سڕینەوەی ئامارەکانیشی لەناو D1 🌟
     if (method === "DELETE" && path.match(/^\/api\/admin\/users\/\d+$/)) {
          const idToDelete = path.split("/").pop();
          const userStr = await env.KV.get(`user_id:${idToDelete}`);
@@ -122,6 +148,12 @@ export async function onRequest(context: any) {
              await env.KV.delete(`user_id:${idToDelete}`);
              await env.KV.delete(`slug:${user.slug || user.username}`);
              await env.KV.delete(`email:${user.email}`);
+             
+             // سڕینەوەی ئامارەکانی لە D1
+             try { 
+                 await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
+             } catch(e) {}
+
              const allUsersStr = await env.KV.get("all_users_list");
              if (allUsersStr) {
                  let allUsers = JSON.parse(allUsersStr);
@@ -133,5 +165,7 @@ export async function onRequest(context: any) {
     }
 
     return json({ error: "Admin route not found" }, 404);
-  } catch (err: any) { return json({ error: "هەڵەی سێرڤەر" }, 500); }
+  } catch (err: any) { 
+      return json({ error: "هەڵەی سێرڤەر: " + err.message }, 500); 
+  }
 }

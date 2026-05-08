@@ -2,8 +2,26 @@ import jwt from "@tsndr/cloudflare-worker-jwt";
 import bcrypt from "bcryptjs"; 
 
 const escapeHTML = (str: string) => str.replace(/[&<>'"]/g, 
-  tag => ({ '&': '&', '<': '<', '>': '>', "'": "'", '"': '"' }[tag] || tag)
+  tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
 );
+
+const corsHeaders = {
+  "Content-Type": "application/json", "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization"
+};
+
+const json = (data: any, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, ...extra } });
+
+const DEFAULT_SETTINGS = { 
+  pages: { about: { text: '', links: [] }, terms: { text: '', links: [] }, works: { text: '', links: [] } },
+  siteTheme: 'orange', mockup: { name: 'BioKurd', bio: '', avatar: '' }, globalButtons: [], ads: [], adminBackgrounds: [],
+  socialPlatforms: [
+    { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
+    { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
+    { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' },
+    { id: 'snapchat', name: 'سناپچات', iconName: 'Ghost', imageUrl: '/social/snapchat.png', baseUrl: 'https://www.snapchat.com/add/', color: '#FFFC00' }
+  ]
+};
 
 export async function onRequest(context: any) {
   const { request, env, waitUntil } = context;
@@ -11,81 +29,54 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
-  const json = (data: any, status = 200, cacheType = "none") => {
-    let cacheHeader = "no-store, no-cache, must-revalidate, max-age=0";
-    if (cacheType === "public") {
-        cacheHeader = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
-    }
-    return new Response(JSON.stringify(data), { 
-      status, 
-      headers: { 
-        "Content-Type": "application/json", 
-        "Cache-Control": cacheHeader,
-        "Access-Control-Allow-Origin": "*",
-        "X-Content-Type-Options": "nosniff", 
-        "X-Frame-Options": "DENY", 
-        "X-XSS-Protection": "1; mode=block", 
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains" 
-      } 
-    });
-  };
-
-  const DEFAULT_SETTINGS = { 
-    socialPlatforms: [
-      { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
-      { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
-      { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' }
-    ]
-  };
+  if (method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const cache = caches.default;
     const cacheKey = new Request(url.toString(), request);
-
+    
     if (method === "GET") {
-      let cachedResponse = await cache.match(cacheKey);
-      if (cachedResponse) return cachedResponse; 
+      let response = await cache.match(cacheKey);
+      if (response) return response; 
     }
 
     if (method === "GET" && path === "/api/public/settings") {
        const settingsStr = await env.KV.get("site_settings");
-       const res = json(settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS, 200, "public");
+       const data = settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS;
+       const res = json(data, 200, { "Cache-Control": "public, max-age=300, s-maxage=300" });
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
     }
 
-    // 🌟 APIـیە نوێیەکە بۆ وەرگرتنی ئامارەکان بە کۆمەڵ (Batch) 🌟
-    if (method === "POST" && path.startsWith("/api/public/sync-stats/")) {
+    // 🌟 تۆمارکردنی سەردان ڕاستەوخۆ بۆ ناو D1 (بێبەرامبەر تا ١٠٠ هەزار جار لە ڕۆژێکدا) 🌟
+    if (method === "POST" && path.startsWith("/api/public/visit/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
-       const { visits = 0, clicks = 0 } = await request.json().catch(() => ({ visits: 0, clicks: 0 }));
-       
-       if (slug && (visits > 0 || clicks > 0)) {
+       if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
-           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
            
-           if (userStr) {
-               const user = JSON.parse(userStr);
-               user.visits = (user.visits || 0) + visits;
-               user.clicks = (user.clicks || 0) + clicks;
-               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
-               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-               
-               let siteStatsStr = await env.KV.get("site_stats");
-               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
-               
-               siteStats.totalVisits += visits;
-               siteStats.totalClicks += clicks;
-               
-               const today = new Date().toISOString().split('T')[0];
-               const currentMonth = today.substring(0, 7);
-               
-               if (!siteStats.dailyUsers) siteStats.dailyUsers = [];
-               if (!siteStats.monthlyUsers) siteStats.monthlyUsers = [];
+           if (targetUserId) {
+               await env.DB.prepare(`
+                   INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
+                   ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
+               `).bind(targetUserId).run();
+           }
+       }
+       return json({ success: true });
+    }
 
-               if (!siteStats.dailyUsers.includes(today)) siteStats.dailyUsers.push(today);
-               if (!siteStats.monthlyUsers.includes(currentMonth)) siteStats.monthlyUsers.push(currentMonth);
-
-               await env.KV.put("site_stats", JSON.stringify(siteStats));
+    // 🌟 تۆمارکردنی کلیک ڕاستەوخۆ بۆ ناو D1 🌟
+    if (method === "POST" && path.startsWith("/api/public/click/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       if (slug) {
+           let targetUserId = await env.KV.get(`slug:${slug}`);
+           if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
+           
+           if (targetUserId) {
+               await env.DB.prepare(`
+                   INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
+                   ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
+               `).bind(targetUserId).run();
            }
        }
        return json({ success: true });
@@ -150,7 +141,7 @@ export async function onRequest(context: any) {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
           theme: 'gold', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
-          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, visits: 0, clicks: 0, createdAt: new Date().toISOString()
+          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
         };
 
         await Promise.all([
@@ -173,7 +164,6 @@ export async function onRequest(context: any) {
     if (method === "POST" && path === "/api/public/reset-password") {
        const { identifier, dob, newPassword } = await request.json();
        if (!identifier || !dob || !newPassword) return json({ error: "زانیارییەکان ناتەواون" }, 400);
-       if (newPassword.length < 8) return json({ error: "پاسوۆرد دەبێت لانی کەم ٨ پیت یان ژمارە بێت" }, 400);
 
        const normalizedId = identifier.toLowerCase().trim();
        let targetUserId = await env.KV.get(`user:${normalizedId}`); 
@@ -200,19 +190,27 @@ export async function onRequest(context: any) {
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        let targetUserId = await env.KV.get(`slug:${slug}`);
-       let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
-       if(!userStr) return json({error: "پرۆفایل نەدۆزرایەوە"}, 404, "public"); 
+       let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : null;
        
+       if(!userStr) return json({error: "ئەم پرۆفایلە نەدۆزرایەوە"}, 404);
        const user = JSON.parse(userStr);
-       if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403, "public");
+       if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
-       const res = json({ 
-         id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, avatarPos: user.avatarPos, links: user.links || [], 
-         theme: user.theme, bgImage: user.bgImage, bgPos: user.bgPos, isPro: user.isPro, 
-         nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor
-       }, 200, "public");
-
+       const profileData = { 
+         id: user.id, 
+         displayName: escapeHTML(user.displayName || user.username), 
+         bio: escapeHTML(user.bio || ""), 
+         avatarUrl: user.avatarUrl, 
+         links: user.links || [], 
+         theme: user.theme, 
+         bgImage: user.bgImage, 
+         isPro: user.isPro, 
+         slug: user.slug,
+         nameColor: user.nameColor,        
+         bioColor: user.bioColor,          
+         btnTextColor: user.btnTextColor  
+       };
+       const res = json(profileData, 200, { "Cache-Control": "public, max-age=180, s-maxage=180" });
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
     }
@@ -231,6 +229,16 @@ export async function onRequest(context: any) {
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
        
        const user = JSON.parse(userStr);
+       
+       // 🌟 هێنانی ئامارەکانی ئەم یوزەرە لە D1 🌟
+       try {
+           const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId).first();
+           user.visits = stat?.visits || 0;
+           user.clicks = stat?.clicks || 0;
+       } catch(e) {
+           user.visits = 0; user.clicks = 0;
+       }
+
        return json(user);
     }
 
@@ -318,45 +326,36 @@ export async function onRequest(context: any) {
          if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
     }
 
+    // 🌟 ئەپدەیتی ئامارەکانی هەموو بەکارهێنەران بۆ داشبۆردی ئەدمین بە زیرەکترین شێواز 🌟
     if (method === "GET" && path === "/api/admin/users") {
         const allUsersStr = await env.KV.get("all_users_list");
         if (!allUsersStr) return json([]);
         const allUserIds = JSON.parse(allUsersStr);
         const usersList = [];
+        
+        // یەک جار هەموو ئامارەکانی ناو D1 دەهێنین (بە یەک ڕیکوێست!)
+        let statsMap: any = {};
+        try {
+            const { results } = await env.DB.prepare("SELECT * FROM stats").all();
+            results.forEach((s: any) => { statsMap[s.user_id] = s; });
+        } catch(e) {}
+
         for (const id of allUserIds) {
             const uStr = await env.KV.get(`user_id:${id}`);
             if (uStr) { 
                 const u = JSON.parse(uStr); 
                 delete u.password; 
+                u.visits = statsMap[id]?.visits || 0;
+                u.clicks = statsMap[id]?.clicks || 0;
                 usersList.push(u); 
             }
         }
         return json(usersList.reverse());
     }
 
-    if (method === "GET" && path === "/api/admin/stats") {
-        const siteStatsStr = await env.KV.get("site_stats");
-        const siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
-        
-        const stats = {
-            totalVisits: siteStats.totalVisits || 0,
-            totalClicks: siteStats.totalClicks || 0,
-            dailyActiveUsers: siteStats.dailyUsers?.length || 0,
-            monthlyActiveUsers: siteStats.monthlyUsers?.length || 0
-        };
-        return json(stats);
-    }
-
     if (method === "PUT" && path === "/api/admin/settings") {
         const newSettings = await request.json();
         await env.KV.put("site_settings", JSON.stringify(newSettings));
-        try {
-            const cacheUrl = new URL(request.url);
-            cacheUrl.pathname = "/api/public/settings";
-            cacheUrl.search = ""; 
-            await caches.default.delete(new Request(cacheUrl.toString()));
-        } catch(e) {}
-        
         return json({ success: true });
     }
     
@@ -387,12 +386,12 @@ export async function onRequest(context: any) {
         const uStr = await env.KV.get(`user_id:${targetId}`);
         if (uStr) {
             const u = JSON.parse(uStr);
-            
             await env.KV.delete(`user_id:${targetId}`);
             await env.KV.delete(`user:${u.username}`);
             await env.KV.delete(`slug:${u.slug}`);
-            if (u.email) await env.KV.delete(`email:${u.email}`);
-            if (u.phone) await env.KV.delete(`phone:${u.phone}`);
+            
+            // سڕینەوەی ئامارەکانیشی لە D1
+            try { await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(targetId).run(); } catch(e) {}
 
             const allUsersStr = await env.KV.get("all_users_list");
             if (allUsersStr) {
@@ -429,6 +428,6 @@ export async function onRequest(context: any) {
     return json({ error: "Route not found" }, 404);
 
   } catch (err: any) {
-    return json({ error: "هەڵەی سێرڤەر" }, 500);
+    return json({ error: "هەڵەی سێرڤەر: " + err.message }, 500);
   }
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LogOut, Plus, Link as LinkIcon, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, Camera
+  LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
+  Trash2, X, AlertCircle, Copy, Menu, Layout, TrendingUp, MousePointerClick 
 } from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
+import ProfileSettings from '../components/ProfileSettings';
+import ThemeSettings from '../components/ThemeSettings';
 import Card from '../components/Card';
 import AppManager from '../components/AppManager';
 
@@ -48,11 +50,8 @@ export default function Dashboard({ user, onLogout }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isUploadingBg, setIsUploadingBg] = useState(false);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
-  
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const bgInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProfile = async () => {
@@ -122,7 +121,7 @@ export default function Dashboard({ user, onLogout }: Props) {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon' | 'bgImage') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -132,7 +131,6 @@ export default function Dashboard({ user, onLogout }: Props) {
     }
 
     if (type === 'avatar') setIsUploadingAvatar(true);
-    else if (type === 'bgImage') setIsUploadingBg(true);
     else setIsUploadingIcon(true);
 
     const reader = new FileReader();
@@ -142,8 +140,8 @@ export default function Dashboard({ user, onLogout }: Props) {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = type === 'bgImage' ? 1200 : (type === 'avatar' ? 400 : 150);
-        const MAX_HEIGHT = type === 'bgImage' ? 1200 : (type === 'avatar' ? 400 : 150);
+        const MAX_WIDTH = type === 'avatar' ? 400 : 150;
+        const MAX_HEIGHT = type === 'avatar' ? 400 : 150;
         let width = img.width;
         let height = img.height;
 
@@ -162,9 +160,6 @@ export default function Dashboard({ user, onLogout }: Props) {
         if (type === 'avatar') {
           handleUpdateProfile({ avatarUrl: base64String, avatarPos: { x: 50, y: 50 } });
           setIsUploadingAvatar(false);
-        } else if (type === 'bgImage') {
-          handleUpdateProfile({ bgImage: base64String, bgPos: { x: 50, y: 50 } });
-          setIsUploadingBg(false);
         } else {
           if (editLink) setEditLink({ ...editLink, imageUrl: base64String });
           else setNewLink({ ...newLink, imageUrl: base64String });
@@ -328,7 +323,8 @@ export default function Dashboard({ user, onLogout }: Props) {
           <div className="flex-1 space-y-2">
             {[
               { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
-              { id: 'profile', icon: User, label: 'پرۆفایل و زانیارییەکان' }
+              { id: 'profile', icon: User, label: 'پرۆفایل' },
+              { id: 'theme', icon: Layout, label: 'ڕووکار' } 
             ].map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
@@ -357,7 +353,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             <div className="flex items-center gap-4">
                <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : 'پرۆفایل و زانیارییەکان'}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : activeTab === 'profile' ? 'پرۆفایل' : 'ڕووکار'}</h2>
                   <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
                </div>
             </div>
@@ -375,56 +371,42 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {activeTab === 'profile' && (
-              <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200">
-                <h2 className="text-xl font-black text-neutral-900 mb-6 flex items-center gap-3"><User className="text-orange-500" size={24}/> زانیارییە کەسییەکان</h2>
-
-                {/* 🌟 بەرزی باکگراوندەکە لێرەش زیادکرا 🌟 */}
-                <div className="w-full h-80 sm:h-96 bg-neutral-100 rounded-3xl relative overflow-hidden mb-16 border border-neutral-200 group">
-                  {profile.bgImage ? <img src={profile.bgImage} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-neutral-400"><ImageIcon size={48}/></div>}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                     <button onClick={() => bgInputRef.current?.click()} className="px-6 py-3 bg-white text-neutral-900 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg flex items-center gap-2">
-                        {isUploadingBg ? <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : <Camera size={20}/>} گۆڕینی باکگراوند
-                     </button>
+            {/* 🌟 ئامارەکانی ڕاستەقینەی بەکارهێنەر لەناو داشبۆردەکەی 🌟 */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3 px-1">
+                 <h3 className="text-lg font-black text-neutral-800">ئامارەکانی پرۆفایلەکەت</h3>
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] sm:text-xs font-bold border border-blue-100">
+                   <AlertCircle size={14} /> ژمارەی ڕاستەقینە
+                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-orange-200 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                    <TrendingUp size={24} />
                   </div>
-                  <input type="file" ref={bgInputRef} className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'bgImage')} />
-                </div>
-
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto -mt-28 sm:-mt-32 mb-8 z-10">
-                  <div className="w-full h-full rounded-full border-2 border-white bg-white shadow-[0_8px_20px_rgba(0,0,0,0.1)] overflow-hidden relative group">
-                     {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <User size={40} className="text-neutral-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>}
-                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                        {isUploadingAvatar ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Camera className="text-white"/>}
-                     </div>
+                  <div>
+                    <h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.visits || 0}</h4>
+                    <p className="text-xs font-bold text-neutral-500">سەردانەکان</p>
                   </div>
-                  <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'avatar')} />
                 </div>
-
-                <div className="space-y-6">
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی نیشاندراو</label>
-                     <input type="text" value={profile.displayName} onChange={e => setProfile({...profile, displayName: e.target.value})} className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold transition-colors" />
-                   </div>
-                   <div>
-                     <label className="text-xs font-bold text-neutral-500 block mb-2">کورتەیەک دەربارەی خۆت (Bio)</label>
-                     <textarea 
-                        value={profile.bio} 
-                        onChange={e => setProfile({...profile, bio: e.target.value})} 
-                        className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold min-h-[160px] whitespace-pre-wrap leading-relaxed transition-colors" 
-                        placeholder="کورتەیەک بنووسە... (دەتوانیت ئینتەر بەکاربهێنیت بۆ دێڕی نوێ)" 
-                     />
-                   </div>
-                   <div className="pt-4 flex justify-end">
-                     <button 
-                       onClick={() => handleUpdateProfile({ displayName: profile.displayName, bio: profile.bio })} 
-                       disabled={saving} 
-                       className="w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-70"
-                     >
-                       {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={20}/> پاشەکەوتکردن</>}
-                     </button>
-                   </div>
+                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-blue-200 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                    <MousePointerClick size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.clicks || 0}</h4>
+                    <p className="text-xs font-bold text-neutral-500">کلیکەکان</p>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {activeTab === 'profile' && (
+              <ProfileSettings profile={profile} setProfile={setProfile} theme={null} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
+            )}
+
+            {activeTab === 'theme' && (
+              <ThemeSettings profile={profile} setProfile={setProfile} handleUpdateProfile={handleUpdateProfile} />
             )}
 
             {activeTab === 'links' && (

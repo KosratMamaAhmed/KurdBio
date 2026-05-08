@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function AppManager() {
   const [deviceType, setDeviceType] = useState<'ios' | 'android' | 'desktop'>('desktop');
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(true); // سەرەتا وادادەنێین دابەزیوە تا دڵنیا دەبینەوە
+  const [isStandalone, setIsStandalone] = useState(true);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export default function AppManager() {
     const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone);
     setIsStandalone(checkStandalone);
 
-    if (checkStandalone) return; // ئەگەر ئەپەکە دابەزیبوو، هیچ شتێک مەکە
+    if (checkStandalone) return; 
 
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
     const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
@@ -27,11 +27,9 @@ export default function AppManager() {
 
     if (isSocialBrowser) {
       setIsInAppBrowser(true);
-      // هەوڵدانی ئۆتۆماتیکی بۆ کردنەوەی لە وێبگەڕی فەرمی (Auto-Escape)
-      setTimeout(() => { forceOpenExternalBrowser(isIOS, isAndroid); }, 500);
+      // تێبینی: لێرەدا چیتر بە ئۆتۆماتیکی نایگوازینەوە بۆ ئەوەی ئیرۆری Action cant be completed نەدات. دەبێت خۆی کلیک لە دوگمەکە بکات.
     }
 
-    // گرتنی ئیڤێنتی دابەزاندنی PWA لە ئەندرۆید
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -45,14 +43,13 @@ export default function AppManager() {
 
   const forceOpenExternalBrowser = (isIOS: boolean, isAndroid: boolean) => {
     const currentUrl = window.location.href;
-    const hostPath = window.location.host + window.location.pathname;
+    const hostPath = window.location.host + window.location.pathname + window.location.search;
     
     try {
       if (isAndroid) {
-        // فڕێدانی ئەندرۆید بۆ ناو کرۆم بە زۆرەملێ
+        // فڕێدانی ئەندرۆید بۆ ناو کرۆم پاش کلیک کردن
         window.top!.location.href = `intent://${hostPath}#Intent;scheme=https;package=com.android.chrome;end;`;
       } else if (isIOS) {
-        // فڕێدانی ئایفۆن بۆ ناو سەفاری بە هاکی سێرچ
         window.top!.location.href = `x-web-search://?${currentUrl}`;
       }
     } catch (e) {
@@ -76,35 +73,42 @@ export default function AppManager() {
     alert('لینکەکە کۆپیکرا! لە سەفاری یان کرۆم پەیسنی بکە.');
   };
 
-  // ئەگەر لەناو ئەپە دابەزێنراوەکەدا بوو، هیچ پیشان مەدە
+  // 🌟 ئەم بەشە ڕێگری دەکات لە دەرکەوتنی بۆکسە سپییە بەتاڵەکە 🌟
   if (isStandalone || deviceType === 'desktop') return null;
+
+  const showInAppWarning = isInAppBrowser;
+  const showAndroidPWA = !isInAppBrowser && deviceType === 'android' && deferredPrompt;
+  const showIosPWA = !isInAppBrowser && deviceType === 'ios';
+
+  // ئەگەر هیچ کامیان نەبوو، ڕاستەوخۆ null دەکەین بۆ ئەوەی هیچ بۆکسێکی سپی دروست نەبێت
+  if (!showInAppWarning && !showAndroidPWA && !showIosPWA) return null;
 
   return (
     <AnimatePresence>
       <motion.div 
         initial={{ y: -100, opacity: 0 }} 
         animate={{ y: 0, opacity: 1 }} 
-        className="fixed top-0 left-0 right-0 z-[100] px-2 py-2 pointer-events-none"
+        className="fixed top-0 left-0 right-0 z-[100] px-3 py-3 pointer-events-none"
         dir="rtl"
       >
-        <div className="max-w-md mx-auto bg-white/95 backdrop-blur-xl shadow-xl border border-neutral-200 rounded-2xl p-3 flex items-center justify-between gap-3 pointer-events-auto overflow-hidden relative">
+        <div className="max-w-md mx-auto bg-white/95 backdrop-blur-xl shadow-2xl border border-neutral-200 rounded-2xl p-3 flex items-center justify-between gap-3 pointer-events-auto overflow-hidden relative">
           
           {/* ئەگەر لەناو تیکتۆک یان فەیسبووک بوو */}
-          {isInAppBrowser && (
+          {showInAppWarning && (
             <>
-              <div className="absolute inset-0 bg-rose-500/10 z-0"></div>
+              <div className="absolute inset-0 bg-rose-500/5 z-0"></div>
               <div className="flex flex-col relative z-10 w-full">
                 <div className="flex items-center gap-2 mb-2 text-rose-600">
                   <Smartphone size={18} strokeWidth={2.5}/>
-                  <span className="font-black text-xs">لە وێبگەڕی دەرەکییت!</span>
+                  <span className="font-black text-xs">لە وێبگەڕی دەرەکییت! کێشە لە کردنەوەی لینکەکان دروست دەبێت.</span>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => forceOpenExternalBrowser(deviceType === 'ios', deviceType === 'android')} className="flex-1 py-2 bg-rose-500 text-white rounded-lg text-xs font-black shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
-                    {deviceType === 'ios' ? <Compass size={14}/> : <Chrome size={14}/>}
+                  <button onClick={() => forceOpenExternalBrowser(deviceType === 'ios', deviceType === 'android')} className="flex-1 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-black shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+                    {deviceType === 'ios' ? <Compass size={16}/> : <Chrome size={16}/>}
                     لە {deviceType === 'ios' ? 'سەفاری' : 'کرۆم'} بیکەرەوە
                   </button>
-                  <button onClick={handleCopy} className="py-2 px-3 bg-white text-rose-600 border border-rose-200 rounded-lg text-xs font-black shadow-sm flex items-center justify-center active:scale-95 transition-transform">
-                    <Copy size={16}/>
+                  <button onClick={handleCopy} className="py-2.5 px-4 bg-white text-rose-600 border border-rose-200 rounded-xl text-xs font-black shadow-sm flex items-center justify-center active:scale-95 transition-transform">
+                    <Copy size={18}/>
                   </button>
                 </div>
               </div>
@@ -112,17 +116,17 @@ export default function AppManager() {
           )}
 
           {/* ئەگەر لە ئەندرۆید (کرۆم) بوو وە هێشتا داینەگرتبوو */}
-          {!isInAppBrowser && deviceType === 'android' && deferredPrompt && (
+          {showAndroidPWA && (
             <>
               <div className="flex items-center gap-3 relative z-10 w-full">
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-                  <Download size={20} strokeWidth={2.5} />
+                <div className="w-11 h-11 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Download size={22} strokeWidth={2.5} />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-black text-neutral-900 leading-tight">ئەپەکە دابەزێنە</h4>
-                  <p className="text-[10px] font-bold text-neutral-500">بۆ خێراتر گەیشتن بە بەستەرەکان</p>
+                  <h4 className="text-[13px] font-black text-neutral-900 leading-tight">ئەپەکە دابەزێنە</h4>
+                  <p className="text-[10px] font-bold text-neutral-500 mt-0.5">بۆ خێراتر گەیشتن بە بەستەرەکان</p>
                 </div>
-                <button onClick={handleInstallPWA} className="px-4 py-2 bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md hover:bg-emerald-600 active:scale-95 transition-all shrink-0">
+                <button onClick={handleInstallPWA} className="px-5 py-2.5 bg-emerald-500 text-white font-black text-[13px] rounded-xl shadow-md hover:bg-emerald-600 active:scale-95 transition-all shrink-0">
                   داگرتن
                 </button>
               </div>
@@ -130,13 +134,13 @@ export default function AppManager() {
           )}
 
           {/* ئەگەر لە ئایفۆن (سەفاری) بوو وە هێشتا داینەگرتبوو */}
-          {!isInAppBrowser && deviceType === 'ios' && (
+          {showIosPWA && (
             <div className="flex items-center gap-2 relative z-10 w-full py-1">
-              <div className="w-9 h-9 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
-                <Share size={18} strokeWidth={2.5} />
+              <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+                <Share size={20} strokeWidth={2.5} />
               </div>
-              <p className="text-[11px] font-bold text-neutral-600 leading-snug flex-1">
-                بۆ خستنە سەر شاشە: کرتە لە <span className="text-blue-500 font-black"><Share size={12} className="inline mb-0.5"/> Share</span> بکە لە خوارەوە، پاشان <span className="font-black text-neutral-900"><PlusSquare size={12} className="inline mb-0.5"/> Add to Home Screen</span> هەڵبژێرە.
+              <p className="text-[11px] sm:text-xs font-bold text-neutral-600 leading-snug flex-1 pl-1">
+                بۆ خستنە سەر شاشە: کرتە لە <span className="text-blue-500 font-black"><Share size={14} className="inline mb-0.5"/> Share</span> بکە، پاشان <span className="font-black text-neutral-900"><PlusSquare size={14} className="inline mb-0.5"/> Add to Home Screen</span> هەڵبژێرە.
               </p>
             </div>
           )}

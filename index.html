@@ -6,7 +6,6 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
     
-     <meta charset="UTF-8" />
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <base href="./" />
@@ -23,55 +22,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
-      /* جێگیرکردنی فۆنت لەسەر ئاستی جیهانی */
       * {
         font-family: 'Noto Sans Arabic', sans-serif !important;
         -webkit-tap-highlight-color: transparent;
       }
-
-      /* ڕێگەدان بە سکرۆڵ و ڕیفڕێش کردنەوە بە پەنجە */
       html, body {
-        min-height: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
         width: 100%;
         background-color: #f8fafc;
-        overflow-x: hidden;
-        overscroll-behavior-y: auto;
       }
-
       #root {
-        min-height: 100%;
-        /* بۆشاییە زیادەکانی سەرەوە و خوارەوە سڕانەوە تا هێڵە سپییەکە دروست نەبێت */
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
       }
     </style>
-
-    <script>
-      // سیستەمی زیرەک بۆ ناسینەوەی وێبگەڕی تۆڕە کۆمەڵایەتییەکان
-      (function() {
-        var ua = navigator.userAgent || navigator.vendor || window.opera;
-        var isInstagram = ua.indexOf('Instagram') > -1;
-        var isFacebook = (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1);
-        var isTikTok = ua.indexOf('TikTok') > -1 || ua.indexOf('Bytedance') > -1;
-        var isSnapchat = ua.indexOf('Snapchat') > -1;
-        
-        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-        var isAndroid = /Android/i.test(ua);
-
-        if (isInstagram || isFacebook || isTikTok || isSnapchat) {
-          var currentUrl = window.location.href;
-          
-          if (isAndroid) {
-            // لە ئەندرۆید فۆرسی کرۆم دەکەین بێ کێشە کار دەکات
-            setTimeout(function() {
-                var intentUrl = 'intent://' + window.location.host + window.location.pathname + window.location.search + '#Intent;scheme=https;package=com.android.chrome;end';
-                window.location.href = intentUrl;
-            }, 300);
-          } else if (isIOS) {
-            // لە ئایفۆن هیچ فۆرسێک ناکەین بۆ ئەوەی ئیرۆری (Action cant be completed) نەدات لە تیکتۆک
-            console.log("iOS In-App Browser Detected: Waiting for manual user action to prevent white screen crash.");
-          }
-        }
-      })();
-    </script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E9GQMQLZTS"></script>
     <script>
@@ -84,7 +53,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d60a46c58d8e47b4ad79fd995f1d3567"}'></script>
   </body>
 </html>
