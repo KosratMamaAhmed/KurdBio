@@ -5,15 +5,16 @@ import PhoneMockup from '../components/PhoneMockup';
 
 interface Props { user: any; settings: any; theme: any; }
 
+// 🌟 بەکارهێنانی ئایکۆنە ئۆرجیناڵەکان (بێ imageUrl) بۆ ئەوەی هەڵە نەکات 🌟
 const MOCKUP_DATA_SAMPLES = [
-  { title: 'ئینستاگرام', icon: 'Instagram', url: 'instagram.com', color: '#E4405F', imageUrl: '/social/instagram.png' },
-  { title: 'تیکتۆک', icon: 'Music', url: 'tiktok.com', color: '#000000', imageUrl: '/social/tiktok.png' },
-  { title: 'سناپچات', icon: 'Ghost', url: 'snapchat.com', color: '#FFFC00', imageUrl: '/social/snapchat.png' },
-  { title: 'واتسئاپ', icon: 'MessageCircle', url: 'wa.me', color: '#25D366', imageUrl: '/social/whatsapp.png' },
-  { title: 'تێلیگرام', icon: 'Send', url: 't.me', color: '#26A5E4', imageUrl: '/social/telegram.png' },
-  { title: 'یوتیوب', icon: 'Youtube', url: 'youtube.com', color: '#FF0000', imageUrl: '/social/youtube.png' },
-  { title: 'پلەی ستۆر', icon: 'Play', url: 'play.google.com', color: '#00D859', imageUrl: '/social/playstore.png' },
-  { title: 'ڤایبەر', icon: 'Phone', url: 'viber://', color: '#7360F2', imageUrl: '/social/viber.png' }
+  { title: 'ئینستاگرام', iconName: 'Instagram', url: 'instagram.com', color: '#E4405F', textColor: '#FFFFFF' },
+  { title: 'تیکتۆک', iconName: 'Music', url: 'tiktok.com', color: '#000000', textColor: '#FFFFFF' },
+  { title: 'سناپچات', iconName: 'Ghost', url: 'snapchat.com', color: '#FFFC00', textColor: '#000000' }, // ڕەنگی نووسین ڕەش کرا
+  { title: 'واتسئاپ', iconName: 'MessageCircle', url: 'wa.me', color: '#25D366', textColor: '#FFFFFF' },
+  { title: 'تێلیگرام', iconName: 'Send', url: 't.me', color: '#26A5E4', textColor: '#FFFFFF' },
+  { title: 'یوتیوب', iconName: 'Youtube', url: 'youtube.com', color: '#FF0000', textColor: '#FFFFFF' },
+  { title: 'پلەی ستۆر', iconName: 'Play', url: 'play.google.com', color: '#00D859', textColor: '#FFFFFF' },
+  { title: 'ڤایبەر', iconName: 'Phone', url: 'viber://', color: '#7360F2', textColor: '#FFFFFF' }
 ];
 
 export default function Home({ user, settings, theme }: Props) {
@@ -31,8 +32,8 @@ export default function Home({ user, settings, theme }: Props) {
   }, [settings]);
 
   return (
-    // 🌟 سکرۆڵی ئۆتۆماتیکی (overflow-y-auto) لێرەدا دانراوە بۆ پەڕەی سەرەکی 🌟
-    <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-y-auto overflow-x-hidden relative selection:bg-orange-200 scrollbar-hide pb-24" dir="rtl" style={{ fontFamily: '"Noto Sans Arabic", sans-serif' }}>
+    // 🌟 سکرۆڵی خێرا بۆ پەڕەکە + فۆنتی Noto Sans Arabic 🌟
+    <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-y-auto overflow-x-hidden relative selection:bg-orange-200 scrollbar-hide pb-[120px]" dir="rtl" style={{ fontFamily: '"Noto Sans Arabic", sans-serif', WebkitOverflowScrolling: 'touch' }}>
       
       {/* Background Glows */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
@@ -46,7 +47,7 @@ export default function Home({ user, settings, theme }: Props) {
           <span className="text-2xl font-black tracking-tighter text-neutral-900 hidden sm:block">BioKurd</span>
         </div>
         <div className="flex gap-3">
-          <Link to={user ? "/dashboard" : "/auth"} className={`px-6 py-2.5 rounded-full font-bold text-white shadow-md transition-all transform hover:-translate-y-0.5 active:scale-95 ${theme?.main || 'bg-orange-500'}`}>
+          <Link to={user ? "/dashboard" : "/auth"} className={`px-6 py-2.5 rounded-full font-bold text-white shadow-md transition-all transform hover:-translate-y-0.5 active:scale-95 ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>
             {user ? 'داشبۆرد' : 'دەستپێکردن'}
           </Link>
         </div>
@@ -59,7 +60,7 @@ export default function Home({ user, settings, theme }: Props) {
             <Sparkles size={18} className="animate-pulse" /> <span>باشترین شێوازی پرۆفایلی دیجیتاڵی</span>
           </div>
           
-          {/* 🌟 دیزاینی نووسینەکان (Typography) جوانتر و ڕەنگاوڕەنگتر کران 🌟 */}
+          {/* 🌟 دیزاینی نووسینەکان ڕەنگاوڕەنگتر و سەرنجڕاکێشتر کران 🌟 */}
           <h1 className="text-[3rem] sm:text-[4rem] lg:text-[5rem] font-black text-neutral-900 leading-[1.1] tracking-tight">
             کۆتایی بە <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-rose-500 relative inline-block drop-shadow-sm pb-2">
@@ -73,7 +74,7 @@ export default function Home({ user, settings, theme }: Props) {
           </p>
           
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-            <Link to="/auth" className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-white rounded-2xl font-black text-lg hover:-translate-y-1 transition-all shadow-[0_8px_25px_rgba(249,115,22,0.4)] ${theme?.main || 'bg-orange-500'}`}>
+            <Link to="/auth" className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-white rounded-2xl font-black text-lg hover:-translate-y-1 transition-all shadow-[0_8px_25px_rgba(249,115,22,0.4)] ${theme?.main || 'bg-orange-500'} ${theme?.hover || 'hover:bg-orange-600'}`}>
               هەژمارت دروست بکە <ArrowLeft size={22} strokeWidth={3} className="animate-bounce-x" />
             </Link>
           </div>
@@ -85,15 +86,15 @@ export default function Home({ user, settings, theme }: Props) {
           </div>
         </div>
 
-        {/* مۆکئەپ (سکرۆڵی ناوخۆیی ڕاگیراوە لەناو خودی پێکهاتەکەی PhoneMockup) */}
-        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[0.85] sm:scale-[0.95] lg:scale-[1] origin-top lg:origin-center mt-10 lg:mt-0">
+        {/* 🌟 سکرۆڵی ناو مۆکئەپ ڕاگیرا بە pointer-events-none و select-none 🌟 */}
+        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[0.85] sm:scale-[0.95] lg:scale-[1] origin-top lg:origin-center mt-10 lg:mt-0 pointer-events-none select-none">
            <PhoneMockup mockup={mockup} mockupLinks={MOCKUP_DATA_SAMPLES} isPublic={false} />
         </div>
         
       </main>
 
-      {/* 🌟 دوگمەکانی تەلەگرام و پلەی ستۆر خرانە خوار خوارەوەی شاشەکە بە دیزاینی سەردەمیانە 🌟 */}
-      <div className="fixed bottom-0 left-0 w-full p-4 sm:p-6 z-40 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 backdrop-blur-[2px]">
+      {/* 🌟 دوگمەکانی تەلەگرام و پلەی ستۆر خرانە خوار خوارەوەی شاشەکە 🌟 */}
+      <div className="fixed bottom-0 left-0 w-full p-4 sm:p-6 z-40 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc]/90 to-transparent pointer-events-none flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 backdrop-blur-[2px]">
         <a href="https://play.google.com/store/apps/dev?id=6744749568381312149" target="_blank" rel="noopener noreferrer" className="pointer-events-auto relative w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-3 overflow-hidden group border border-emerald-400/50">
            <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
            <Play size={20} fill="currentColor" className="drop-shadow-md" />
