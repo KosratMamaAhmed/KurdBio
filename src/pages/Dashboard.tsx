@@ -379,7 +379,8 @@ export default function Dashboard({ user, onLogout }: Props) {
               <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200">
                 <h2 className="text-xl font-black text-neutral-900 mb-6 flex items-center gap-3"><User className="text-orange-500" size={24}/> زانیارییە کەسییەکان</h2>
 
-                <div className="w-full h-64 sm:h-80 bg-neutral-100 rounded-3xl relative overflow-hidden mb-16 border border-neutral-200 group">
+                {/* 🌟 بەرزی باکگراوندەکە لێرەش زیادکرا 🌟 */}
+                <div className="w-full h-80 sm:h-96 bg-neutral-100 rounded-3xl relative overflow-hidden mb-16 border border-neutral-200 group">
                   {profile.bgImage ? <img src={profile.bgImage} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-neutral-400"><ImageIcon size={48}/></div>}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                      <button onClick={() => bgInputRef.current?.click()} className="px-6 py-3 bg-white text-neutral-900 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg flex items-center gap-2">
