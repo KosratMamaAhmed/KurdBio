@@ -146,7 +146,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter(u => u.username?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
-  // 🌟 ڕیزبەندکردنی ئەندامەکان بەپێی زۆرترین ڤیو و کلیک 🌟
+  // ڕیزبەندکردنی ئەندامەکان بەپێی زۆرترین ڤیو و کلیک
   const rankedUsers = [...safeUsers].sort((a, b) => {
       const aScore = (a.visits || 0) + (a.clicks || 0);
       const bScore = (b.visits || 0) + (b.clicks || 0);
@@ -187,7 +187,6 @@ export default function Admin({ user, onLogout, theme }: Props) {
 
         <div className="flex-1 bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm border border-neutral-100 overflow-hidden">
           
-          {/* 🌟 تابی نوێ: ئاماری گشتی 🌟 */}
           {activeTab === 'stats' && (
              <div className="space-y-6">
                  <div>
@@ -198,29 +197,28 @@ export default function Admin({ user, onLogout, theme }: Props) {
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                      <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
                         <div className="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-2"><TrendingUp size={24}/></div>
-                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalVisits}</h3>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalVisits || 0}</h3>
                         <p className="text-sm font-bold text-neutral-500">کۆی گشتی سەردانەکان</p>
                      </div>
                      <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
                         <div className="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-2"><MousePointerClick size={24}/></div>
-                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalClicks}</h3>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.totalClicks || 0}</h3>
                         <p className="text-sm font-bold text-neutral-500">کۆی گشتی کلیکەکان</p>
                      </div>
                      <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
                         <div className="w-12 h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-2"><Users size={24}/></div>
-                        <h3 className="text-3xl font-black text-neutral-900">{stats.dailyActiveUsers}</h3>
-                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری ڕۆژانە (خەمڵێنراو)</p>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.dailyActiveUsers || 0}</h3>
+                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری ڕۆژانە</p>
                      </div>
                      <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center text-center gap-2">
                         <div className="w-12 h-12 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center mb-2"><CalendarDays size={24}/></div>
-                        <h3 className="text-3xl font-black text-neutral-900">{stats.monthlyActiveUsers}</h3>
-                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری مانگانە (خەمڵێنراو)</p>
+                        <h3 className="text-3xl font-black text-neutral-900">{stats.monthlyActiveUsers || 0}</h3>
+                        <p className="text-sm font-bold text-neutral-500">بەکارهێنەری مانگانە</p>
                      </div>
                  </div>
              </div>
           )}
 
-          {/* 🌟 تابی نوێ: ڕیزبەندی ئەندامان 🌟 */}
           {activeTab === 'ranking' && (
              <div className="space-y-6">
                  <div>
@@ -296,7 +294,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
                         </td>
                       </tr>
                     ))}
-                    {filteredUsers.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-neutral-400 font-black">هیچ بەکارهێنەرێک نەدۆزرایەوە!</td></tr>}
+                    {filteredUsers.length === 0 && <tr><td colSpan={3} className="py-12 text-center text-neutral-400 font-black">هیچ بەکارهێنەرێک نەدۆزرایەوە!</td></tr>}
                   </tbody>
                 </table>
                </div>
@@ -443,6 +441,7 @@ export default function Admin({ user, onLogout, theme }: Props) {
          </button>
       </div>
 
+      {/* مۆدێڵی دەستکاریکردنی بەکارهێنەر */}
       {editingUser && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">

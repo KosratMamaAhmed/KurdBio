@@ -12,7 +12,7 @@ const FontStyle = () => (
       font-display: swap;
     }
     .font-kosrat { 
-      font-family: 'Kosrat', sans-serif !important; 
+      font-family: 'Kosrat', 'Noto Sans Arabic', sans-serif !important; 
     }
   `}} />
 );
@@ -69,6 +69,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
   }, [slug]);
 
+  // 🌟 ئاماری سەردان ڕاستەوخۆ دەڕوات بۆ D1 🌟
   useEffect(() => {
     if (profile?.id && slug) {
       const visitKey = `visited_profile_${slug}`;
@@ -83,6 +84,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
+    // 🌟 ئاماری کلیک ڕاستەوخۆ دەڕوات بۆ D1 🌟
     const clickKey = `clicked_link_${slug}_${linkId}`;
     const lastClick = localStorage.getItem(clickKey);
     if (!lastClick || Date.now() - parseInt(lastClick) > 24 * 60 * 60 * 1000) {
@@ -235,17 +237,19 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const globalBtns = settings?.globalButtons || [];
   const normalLinks = [...(profile.links || []), ...globalBtns.map((b:any) => ({ id: b.id, title: b.title, url: b.url, imageUrl: b.imageUrl, iconName: b.icon, color: b.color }))];
 
-  // 🌟 لێرەدا پۆزیشنی وێنەی باکگراوند وەردەگرین بۆ ئەوەی Drag & Drop کاریگەری هەبێت 🌟
   const bgPosStyle = profile?.bgPos ? `${profile.bgPos.x}% ${profile.bgPos.y}%` : '50% 50%';
   const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
+    <div 
+      className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" 
+      dir="rtl"
+      style={{ WebkitOverflowScrolling: 'touch' }} // 🌟 سکرۆڵی نەرم و خێرا بۆ مۆبایل 🌟
+    >
        
        <FontStyle />
        <AppManager />
 
-       {/* 🌟 باکگراوندەکە زۆر فراوانتر (بەرزتر) کراوە و Drag and drop بەتەواوی کاری تێدەکات 🌟 */}
        <div className="w-full h-[35vh] sm:h-[40vh] min-h-[250px] relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
           {profile?.bgImage && (
              <img 
@@ -283,7 +287,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
        <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-20 sm:-mt-24">
          
-         {/* 🌟 چوارچێوەی وێنەی پرۆفایل تەنکتر کرا (border-2) و وێنەکە گەورەتر بوو 🌟 */}
          <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full p-1 bg-white/60 backdrop-blur-md shadow-xl mb-4">
             <div className="w-full h-full rounded-full overflow-hidden border-[2px] border-white bg-white">
                {profile?.avatarUrl ? (
@@ -406,7 +409,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
        </div>
 
-       <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
+       {/* 🌟 دوگمەی خوارەوە کە نراوەتە خوار خوارەوەی شاشەکە 🌟 */}
+       <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}>
           <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>
              

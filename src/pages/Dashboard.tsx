@@ -42,7 +42,7 @@ export default function Dashboard({ user, onLogout }: Props) {
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'facebook', imageUrl: '', color: '#333333' });
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
   const [editLink, setEditLink] = useState<any>(null);
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -207,7 +207,7 @@ export default function Dashboard({ user, onLogout }: Props) {
       });
       if (res.ok) {
         showNotif('بەستەری نوێ زیادکرا');
-        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'facebook', imageUrl: '', color: '#333333' });
+        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
         setShowAddForm(false);
         fetchProfile();
       } else throw new Error();
@@ -405,9 +405,7 @@ export default function Dashboard({ user, onLogout }: Props) {
               <ProfileSettings profile={profile} setProfile={setProfile} theme={null} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
             )}
 
-            {activeTab === 'theme' && (
-              <ThemeSettings profile={profile} setProfile={setProfile} handleUpdateProfile={handleUpdateProfile} />
-            )}
+
 
             {activeTab === 'links' && (
               <>
@@ -428,7 +426,7 @@ export default function Dashboard({ user, onLogout }: Props) {
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
                             <select 
-                                value={editLink ? editLink.platformId || 'facebook' : newLink.platformId || 'facebook'} 
+                                value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} 
                                 onChange={(e) => handlePlatformChange(!!editLink, e.target.value)}
                                 className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer"
                             >

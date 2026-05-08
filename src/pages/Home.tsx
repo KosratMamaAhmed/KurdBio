@@ -5,7 +5,6 @@ import PhoneMockup from '../components/PhoneMockup';
 
 interface Props { user: any; settings: any; theme: any; }
 
-// 🌟 بەکارهێنانی لیستە فەرمییەکە بۆ نیشاندان لە پەڕەی سەرەکی 🌟
 const MOCKUP_DATA_SAMPLES = [
   { title: 'ئینستاگرام', icon: 'Instagram', url: 'instagram.com', color: '#E4405F', imageUrl: '/social/instagram.png' },
   { title: 'تیکتۆک', icon: 'Music', url: 'tiktok.com', color: '#000000', imageUrl: '/social/tiktok.png' },
@@ -32,15 +31,16 @@ export default function Home({ user, settings, theme }: Props) {
   }, [settings]);
 
   return (
-    <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-hidden relative selection:bg-orange-200" dir="rtl">
+    // 🌟 سکرۆڵی ئۆتۆماتیکی (overflow-y-auto) لێرەدا دانراوە بۆ پەڕەی سەرەکی 🌟
+    <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-y-auto overflow-x-hidden relative selection:bg-orange-200 scrollbar-hide pb-24" dir="rtl" style={{ fontFamily: '"Noto Sans Arabic", sans-serif' }}>
       
       {/* Background Glows */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
          <div className="absolute -top-[10%] -right-[5%] w-[60%] h-[50%] bg-gradient-to-b from-orange-300/30 to-transparent rounded-full blur-[120px]"></div>
          <div className="absolute top-[30%] -left-[10%] w-[50%] h-[60%] bg-gradient-to-t from-blue-400/20 to-transparent rounded-full blur-[120px]"></div>
       </div>
 
-      <nav className="max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between relative z-20">
+      <nav className="max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between relative z-20 shrink-0">
         <div className="flex items-center gap-2">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg ${theme?.main || 'bg-orange-500'}`}>B</div>
           <span className="text-2xl font-black tracking-tighter text-neutral-900 hidden sm:block">BioKurd</span>
@@ -52,48 +52,61 @@ export default function Home({ user, settings, theme }: Props) {
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 gap-10 lg:gap-16 relative z-10">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 gap-10 lg:gap-16 relative z-10 my-auto py-8">
         
         <div className="flex-1 text-center lg:text-right space-y-8 w-full">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-orange-200/60 text-orange-600 font-bold text-sm shadow-sm mx-auto lg:mx-0">
-            <Sparkles size={16} /> <span>نوێترین شێوازی پرۆفایلی دیجیتاڵی</span>
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-md border border-orange-200 text-orange-600 font-bold text-sm shadow-sm mx-auto lg:mx-0 hover:scale-105 transition-transform cursor-default">
+            <Sparkles size={18} className="animate-pulse" /> <span>باشترین شێوازی پرۆفایلی دیجیتاڵی</span>
           </div>
           
-          <h1 className="text-[2.75rem] sm:text-6xl lg:text-[75px] font-black text-neutral-900 leading-[1.1] tracking-tight">
-            کۆتایی بە <br/><span className="text-transparent bg-clip-text bg-gradient-to-l from-orange-600 to-amber-500 relative inline-block">لینکە زۆرەکان</span> بهێنە
+          {/* 🌟 دیزاینی نووسینەکان (Typography) جوانتر و ڕەنگاوڕەنگتر کران 🌟 */}
+          <h1 className="text-[3rem] sm:text-[4rem] lg:text-[5rem] font-black text-neutral-900 leading-[1.1] tracking-tight">
+            کۆتایی بە <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-rose-500 relative inline-block drop-shadow-sm pb-2">
+              لینکە زۆرەکان
+              <svg className="absolute w-full h-4 -bottom-1 left-0 text-amber-400 opacity-60" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="4" fill="transparent"/></svg>
+            </span> بهێنە
           </h1>
           
-          <p className="text-lg text-neutral-600 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-            هەموو تۆڕە کۆمەڵایەتییەکان، کارەکانت و زانیارییەکانت لە یەک شوێنی ناوازەدا کۆبکەرەوە.
+          <p className="text-lg sm:text-xl text-neutral-500 font-bold leading-relaxed max-w-xl mx-auto lg:mx-0">
+            هەموو تۆڕە کۆمەڵایەتییەکان، کارەکانت و زانیارییەکانت لە یەک شوێنی ناوازەدا کۆبکەرەوە و با هەمووان بە ئاسانی بتبینن.
           </p>
           
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-            <Link to="/auth" className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-white rounded-full font-black text-lg hover:-translate-y-1 transition-all shadow-lg ${theme?.main || 'bg-orange-500'}`}>
-              هەژمارت دروست بکە <ArrowLeft size={22} strokeWidth={3} />
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+            <Link to="/auth" className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-white rounded-2xl font-black text-lg hover:-translate-y-1 transition-all shadow-[0_8px_25px_rgba(249,115,22,0.4)] ${theme?.main || 'bg-orange-500'}`}>
+              هەژمارت دروست بکە <ArrowLeft size={22} strokeWidth={3} className="animate-bounce-x" />
             </Link>
           </div>
 
-          {/* دوگمە جێگیرەکانی خوارەوە */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 border-t border-neutral-200/60 mt-4">
-            <a href="https://play.google.com/store/apps/dev?id=6744749568381312149" target="_blank" className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-md hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
-               <Play size={22} fill="currentColor" />
-               <span className="text-sm">بەرنامەکانم لە پلەی ستۆر</span>
-            </a>
-            <a href="http://t.me/kosratdev" target="_blank" className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-2xl font-black shadow-md hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">
-               <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
-               <Send size={22} />
-               <span className="text-sm">ئێمە لە تەلەگرام</span>
-            </a>
+          <div className="flex items-center justify-center lg:justify-start gap-6 pt-6 text-neutral-400 font-bold text-sm">
+            <div className="flex items-center gap-2"><Zap size={18} className="text-amber-500"/> خێرا</div>
+            <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-emerald-500"/> پارێزراو</div>
+            <div className="flex items-center gap-2"><Sparkles size={18} className="text-blue-500"/> ناوازە</div>
           </div>
         </div>
 
-        {/* 🌟 مۆکئەپ بە دوورخستنەوە (Scale Down) و بەکارهێنانی داتای نوێ 🌟 */}
-        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[0.82] sm:scale-90 lg:scale-[0.88] origin-top lg:origin-center">
-           <PhoneMockup mockup={mockup} mockupLinks={MOCKUP_DATA_SAMPLES} />
+        {/* مۆکئەپ (سکرۆڵی ناوخۆیی ڕاگیراوە لەناو خودی پێکهاتەکەی PhoneMockup) */}
+        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[0.85] sm:scale-[0.95] lg:scale-[1] origin-top lg:origin-center mt-10 lg:mt-0">
+           <PhoneMockup mockup={mockup} mockupLinks={MOCKUP_DATA_SAMPLES} isPublic={false} />
         </div>
         
       </main>
+
+      {/* 🌟 دوگمەکانی تەلەگرام و پلەی ستۆر خرانە خوار خوارەوەی شاشەکە بە دیزاینی سەردەمیانە 🌟 */}
+      <div className="fixed bottom-0 left-0 w-full p-4 sm:p-6 z-40 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 backdrop-blur-[2px]">
+        <a href="https://play.google.com/store/apps/dev?id=6744749568381312149" target="_blank" rel="noopener noreferrer" className="pointer-events-auto relative w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-3 overflow-hidden group border border-emerald-400/50">
+           <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
+           <Play size={20} fill="currentColor" className="drop-shadow-md" />
+           <span className="text-sm tracking-wide drop-shadow-md">بەرنامەکانم لە پلەی ستۆر</span>
+        </a>
+        
+        <a href="http://t.me/kosratdev" target="_blank" rel="noopener noreferrer" className="pointer-events-auto relative w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-500 to-sky-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(56,189,248,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(56,189,248,0.4)] transition-all flex items-center justify-center gap-3 overflow-hidden group border border-blue-400/50">
+           <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
+           <Send size={20} className="drop-shadow-md" />
+           <span className="text-sm tracking-wide drop-shadow-md">ئێمە لە تەلەگرام</span>
+        </a>
+      </div>
+
     </div>
   );
 }
