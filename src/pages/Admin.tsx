@@ -55,9 +55,22 @@ export default function Admin({ user, onLogout, theme }: Props) {
       const sData = await sRes.json();
       const statsData = await statsRes.json();
 
-      if (uData && !uData.error && Array.isArray(uData)) setUsers(uData); else setUsers([]);
+      let finalUsers = [];
+      if (uData && !uData.error && Array.isArray(uData)) finalUsers = uData; 
+      
+      setUsers(finalUsers);
       if (sData && !sData.error) setSettings((prev: any) => ({ ...prev, ...sData }));
-      if (statsData && !statsData.error) setStats(statsData);
+      
+      // 🌟 جێگیرکردنی ئامارەکانی D1 بۆ ناو بۆکسەکانی سەرەوە 🌟
+      const totalV = finalUsers.reduce((acc: number, curr: any) => acc + (curr.visits || 0), 0);
+      const totalC = finalUsers.reduce((acc: number, curr: any) => acc + (curr.clicks || 0), 0);
+      
+      if (statsData && !statsData.error) {
+          setStats({ ...statsData, totalVisits: totalV, totalClicks: totalC });
+      } else {
+          setStats({ totalVisits: totalV, totalClicks: totalC, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
+      }
+
     } catch (err) {
       console.error(err); setUsers([]);
     } finally { setLoading(false); }

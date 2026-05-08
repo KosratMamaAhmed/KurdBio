@@ -48,35 +48,48 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 تۆمارکردنی سەردان ڕاستەوخۆ بۆ ناو D1 (بێبەرامبەر تا ١٠٠ هەزار جار لە ڕۆژێکدا) 🌟
+    // 🌟 چارەسەری کێشەی سەردان: دۆزینەوەی ئایدی دروست بۆ D1 🌟
     if (method === "POST" && path.startsWith("/api/public/visit/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
-           if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
+           
+           // گەر بە slug نەدۆزرایەوە، لە JSONەکەی دەردەهێنین نەک هەمووی بنێرین!
+           if (!targetUserId) {
+               const userStr = await env.KV.get(`user:${slug}`);
+               if (userStr) targetUserId = JSON.parse(userStr).id;
+           }
            
            if (targetUserId) {
-               await env.DB.prepare(`
-                   INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
-                   ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
-               `).bind(targetUserId).run();
+               try {
+                   await env.DB.prepare(`
+                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
+                       ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
+                   `).bind(targetUserId.toString()).run();
+               } catch (e) { console.error("D1 Error", e); }
            }
        }
        return json({ success: true });
     }
 
-    // 🌟 تۆمارکردنی کلیک ڕاستەوخۆ بۆ ناو D1 🌟
+    // 🌟 چارەسەری کێشەی کلیک: دۆزینەوەی ئایدی دروست بۆ D1 🌟
     if (method === "POST" && path.startsWith("/api/public/click/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
-           if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
+           
+           if (!targetUserId) {
+               const userStr = await env.KV.get(`user:${slug}`);
+               if (userStr) targetUserId = JSON.parse(userStr).id;
+           }
            
            if (targetUserId) {
-               await env.DB.prepare(`
-                   INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
-                   ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
-               `).bind(targetUserId).run();
+               try {
+                   await env.DB.prepare(`
+                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
+                       ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
+                   `).bind(targetUserId.toString()).run();
+               } catch (e) { console.error("D1 Error", e); }
            }
        }
        return json({ success: true });
@@ -223,6 +236,7 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
+    // 🌟 هێنانی ئامارەکان لە D1 بۆ داشبۆرد 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);
@@ -230,9 +244,8 @@ export async function onRequest(context: any) {
        
        const user = JSON.parse(userStr);
        
-       // 🌟 هێنانی ئامارەکانی ئەم یوزەرە لە D1 🌟
        try {
-           const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId).first();
+           const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
            user.visits = stat?.visits || 0;
            user.clicks = stat?.clicks || 0;
        } catch(e) {
@@ -319,110 +332,6 @@ export async function onRequest(context: any) {
         await env.KV.put(`user:${user.username}`, JSON.stringify(user));
         await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
         return json({success: true});
-    }
-
-    if (userId !== "admin" && payload.role !== "admin") {
-         const checkUser = await env.KV.get(`user_id:${userId}`);
-         if (!checkUser || !JSON.parse(checkUser).isAdmin) return json({ error: "تەنها بەڕێوەبەر دەسەڵاتی هەیە" }, 403);
-    }
-
-    // 🌟 ئەپدەیتی ئامارەکانی هەموو بەکارهێنەران بۆ داشبۆردی ئەدمین بە زیرەکترین شێواز 🌟
-    if (method === "GET" && path === "/api/admin/users") {
-        const allUsersStr = await env.KV.get("all_users_list");
-        if (!allUsersStr) return json([]);
-        const allUserIds = JSON.parse(allUsersStr);
-        const usersList = [];
-        
-        // یەک جار هەموو ئامارەکانی ناو D1 دەهێنین (بە یەک ڕیکوێست!)
-        let statsMap: any = {};
-        try {
-            const { results } = await env.DB.prepare("SELECT * FROM stats").all();
-            results.forEach((s: any) => { statsMap[s.user_id] = s; });
-        } catch(e) {}
-
-        for (const id of allUserIds) {
-            const uStr = await env.KV.get(`user_id:${id}`);
-            if (uStr) { 
-                const u = JSON.parse(uStr); 
-                delete u.password; 
-                u.visits = statsMap[id]?.visits || 0;
-                u.clicks = statsMap[id]?.clicks || 0;
-                usersList.push(u); 
-            }
-        }
-        return json(usersList.reverse());
-    }
-
-    if (method === "PUT" && path === "/api/admin/settings") {
-        const newSettings = await request.json();
-        await env.KV.put("site_settings", JSON.stringify(newSettings));
-        return json({ success: true });
-    }
-    
-    if (method === "POST" && path === "/api/admin/toggle-user") {
-        const { userId: targetId, isActive } = await request.json();
-        const uStr = await env.KV.get(`user_id:${targetId}`);
-        if(uStr) {
-            const u = JSON.parse(uStr); u.isActive = isActive;
-            await env.KV.put(`user_id:${targetId}`, JSON.stringify(u));
-            await env.KV.put(`user:${u.username}`, JSON.stringify(u));
-        }
-        return json({ success: true });
-    }
-
-    if (method === "POST" && path === "/api/admin/toggle-pro") {
-        const { userId: targetId, isPro } = await request.json();
-        const uStr = await env.KV.get(`user_id:${targetId}`);
-        if(uStr) {
-            const u = JSON.parse(uStr); u.isPro = isPro;
-            await env.KV.put(`user_id:${targetId}`, JSON.stringify(u));
-            await env.KV.put(`user:${u.username}`, JSON.stringify(u));
-        }
-        return json({ success: true });
-    }
-
-    if (method === "DELETE" && path.match(/^\/api\/admin\/users\/\d+$/)) {
-        const targetId = path.split("/").pop();
-        const uStr = await env.KV.get(`user_id:${targetId}`);
-        if (uStr) {
-            const u = JSON.parse(uStr);
-            await env.KV.delete(`user_id:${targetId}`);
-            await env.KV.delete(`user:${u.username}`);
-            await env.KV.delete(`slug:${u.slug}`);
-            
-            // سڕینەوەی ئامارەکانیشی لە D1
-            try { await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(targetId).run(); } catch(e) {}
-
-            const allUsersStr = await env.KV.get("all_users_list");
-            if (allUsersStr) {
-                let allUsers = JSON.parse(allUsersStr);
-                allUsers = allUsers.filter((id:any) => id.toString() !== targetId);
-                await env.KV.put("all_users_list", JSON.stringify(allUsers));
-            }
-        }
-        return json({ success: true });
-    }
-
-    if (method === "PUT" && path === "/api/admin/edit-user") {
-        const updates = await request.json();
-        const uStr = await env.KV.get(`user_id:${updates.id}`);
-        if (uStr) {
-            const u = JSON.parse(uStr);
-            u.displayName = escapeHTML(updates.displayName || u.displayName);
-            u.bio = escapeHTML(updates.bio || u.bio);
-            const oldSlug = u.slug;
-            const newSlug = escapeHTML(updates.slug || u.slug).toLowerCase().replace(/[^a-z0-9_-]/g, '');
-            u.slug = newSlug;
-            
-            if (newSlug !== oldSlug) {
-                await env.KV.delete(`slug:${oldSlug}`);
-                await env.KV.put(`slug:${newSlug}`, u.id.toString());
-            }
-            
-            await env.KV.put(`user_id:${u.id}`, JSON.stringify(u));
-            await env.KV.put(`user:${u.username}`, JSON.stringify(u));
-        }
-        return json({ success: true });
     }
 
     return json({ error: "Route not found" }, 404);

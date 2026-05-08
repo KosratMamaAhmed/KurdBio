@@ -12,7 +12,7 @@ const FontStyle = () => (
       font-display: swap;
     }
     .font-kosrat { 
-      font-family: 'Kosrat', 'Noto Sans Arabic', sans-serif !important; 
+      font-family: 'Kosrat', sans-serif !important; 
     }
   `}} />
 );
@@ -31,6 +31,7 @@ const getBrandStyle = (url: string, dbColor?: string) => {
   if (lowerUrl.includes('linkedin')) return { bg: '#0A66C2', text: '#fff' };
   if (lowerUrl.includes('viber')) return { bg: '#7360F2', text: '#fff' };
   if (lowerUrl.includes('discord')) return { bg: '#5865F2', text: '#fff' };
+  if (lowerUrl.includes('tel:')) return { bg: '#10B981', text: '#fff' };
   
   if (dbColor && dbColor !== '#333333' && dbColor !== '') {
      return { bg: dbColor, text: '#fff', border: 'none' };
@@ -69,14 +70,14 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
   }, [slug]);
 
-  // 🌟 ئاماری سەردان ڕاستەوخۆ دەڕوات بۆ D1 🌟
+  // 🌟 ئاماری سەردان ڕاستەوخۆ دەڕوات بۆ D1 (بە ٥ چرکە بۆ تێست) 🌟
   useEffect(() => {
     if (profile?.id && slug) {
       const visitKey = `visited_profile_${slug}`;
-      const lastVisit = localStorage.getItem(visitKey);
-      if (!lastVisit || Date.now() - parseInt(lastVisit) > 24 * 60 * 60 * 1000) {
+      const lastVisit = sessionStorage.getItem(visitKey);
+      if (!lastVisit || Date.now() - parseInt(lastVisit) > 5000) {
         fetch(`/api/public/visit/${slug}`, { method: 'POST', keepalive: true }).catch(() => {});
-        localStorage.setItem(visitKey, Date.now().toString());
+        sessionStorage.setItem(visitKey, Date.now().toString());
       }
     }
   }, [profile?.id, slug]);
@@ -86,10 +87,10 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     
     // 🌟 ئاماری کلیک ڕاستەوخۆ دەڕوات بۆ D1 🌟
     const clickKey = `clicked_link_${slug}_${linkId}`;
-    const lastClick = localStorage.getItem(clickKey);
-    if (!lastClick || Date.now() - parseInt(lastClick) > 24 * 60 * 60 * 1000) {
+    const lastClick = sessionStorage.getItem(clickKey);
+    if (!lastClick || Date.now() - parseInt(lastClick) > 5000) {
       fetch(`/api/public/click/${slug}`, { method: 'POST', keepalive: true }).catch(() => {});
-      localStorage.setItem(clickKey, Date.now().toString());
+      sessionStorage.setItem(clickKey, Date.now().toString());
     }
 
     if(url.endsWith('.apk')) { 
@@ -241,11 +242,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div 
-      className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" 
-      dir="rtl"
-      style={{ WebkitOverflowScrolling: 'touch' }} // 🌟 سکرۆڵی نەرم و خێرا بۆ مۆبایل 🌟
-    >
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
        
        <FontStyle />
        <AppManager />
@@ -409,8 +406,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
        </div>
 
-       {/* 🌟 دوگمەی خوارەوە کە نراوەتە خوار خوارەوەی شاشەکە 🌟 */}
-       <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}>
+       <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
           <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>
              

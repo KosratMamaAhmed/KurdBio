@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, Layout, TrendingUp, MousePointerClick 
+  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw
 } from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
-import ThemeSettings from '../components/ThemeSettings';
 import Card from '../components/Card';
 import AppManager from '../components/AppManager';
 
@@ -39,10 +38,11 @@ export default function Dashboard({ user, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshingStats, setRefreshingStats] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'facebook', imageUrl: '', color: '#333333' });
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
   const [editLink, setEditLink] = useState<any>(null);
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -54,21 +54,23 @@ export default function Dashboard({ user, onLogout }: Props) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (isRefresh = false) => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) {
         onLogout();
         return;
     }
 
+    if (isRefresh) setRefreshingStats(true);
+
     const cachedProfile = localStorage.getItem('dashboard_profile_cache');
-    if (cachedProfile) {
+    if (cachedProfile && !isRefresh) {
         setProfile(JSON.parse(cachedProfile));
         setLoading(false);
     }
 
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch(`/api/profile?_t=${Date.now()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -83,6 +85,7 @@ export default function Dashboard({ user, onLogout }: Props) {
       if (!cachedProfile) showNotif('کێشەی هێڵ هەیە', 'error');
     } finally {
       setLoading(false);
+      setRefreshingStats(false);
     }
   };
 
@@ -112,7 +115,7 @@ export default function Dashboard({ user, onLogout }: Props) {
         body: JSON.stringify(updates)
       });
       if (!res.ok) throw new Error((await res.json()).error || 'هەڵە');
-      showNotif('زانیارییەکان نوێکرانەوە');
+      showNotif('زانیارییەکان بە سەرکەوتوویی پاشەکەوت کران');
     } catch (err: any) {
       showNotif(err.message, 'error');
       fetchProfile();
@@ -207,7 +210,7 @@ export default function Dashboard({ user, onLogout }: Props) {
       });
       if (res.ok) {
         showNotif('بەستەری نوێ زیادکرا');
-        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'facebook', imageUrl: '', color: '#333333' });
+        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
         setShowAddForm(false);
         fetchProfile();
       } else throw new Error();
@@ -289,7 +292,7 @@ export default function Dashboard({ user, onLogout }: Props) {
       }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-[100dvh] bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
     <div className="h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
@@ -323,8 +326,7 @@ export default function Dashboard({ user, onLogout }: Props) {
           <div className="flex-1 space-y-2">
             {[
               { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
-              { id: 'profile', icon: User, label: 'پرۆفایل' },
-              { id: 'theme', icon: Layout, label: 'ڕووکار' } 
+              { id: 'profile', icon: User, label: 'پرۆفایل' }
             ].map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
@@ -353,7 +355,7 @@ export default function Dashboard({ user, onLogout }: Props) {
             <div className="flex items-center gap-4">
                <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : activeTab === 'profile' ? 'پرۆفایل' : 'ڕووکار'}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : 'پرۆفایل'}</h2>
                   <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
                </div>
             </div>
@@ -371,13 +373,13 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {/* 🌟 ئامارەکانی ڕاستەقینەی بەکارهێنەر لەناو داشبۆردەکەی 🌟 */}
+            {/* 🌟 ئامارەکانی ڕاستەقینەی بەکارهێنەر لەگەڵ دوگمەی ڕیفرێش 🌟 */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3 px-1">
                  <h3 className="text-lg font-black text-neutral-800">ئامارەکانی پرۆفایلەکەت</h3>
-                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] sm:text-xs font-bold border border-blue-100">
-                   <AlertCircle size={14} /> ژمارەی ڕاستەقینە
-                 </div>
+                 <button onClick={() => fetchProfile(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-[10px] sm:text-xs font-bold border border-blue-100 transition-colors">
+                   <RefreshCw size={14} className={refreshingStats ? 'animate-spin' : ''} /> نوێکردنەوەی ئامار
+                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-orange-200 transition-colors">
@@ -402,10 +404,16 @@ export default function Dashboard({ user, onLogout }: Props) {
             </div>
 
             {activeTab === 'profile' && (
-              <ProfileSettings profile={profile} setProfile={setProfile} theme={null} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
+              <ProfileSettings 
+                profile={profile} 
+                setProfile={setProfile} 
+                saving={saving} 
+                handleUpdateProfile={handleUpdateProfile} 
+                handleImageUpload={handleImageUpload} 
+                isUploadingAvatar={isUploadingAvatar} 
+                avatarInputRef={avatarInputRef} 
+              />
             )}
-
-
 
             {activeTab === 'links' && (
               <>
@@ -426,7 +434,7 @@ export default function Dashboard({ user, onLogout }: Props) {
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
                             <select 
-                                value={editLink ? editLink.platformId || 'facebook' : newLink.platformId || 'facebook'} 
+                                value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} 
                                 onChange={(e) => handlePlatformChange(!!editLink, e.target.value)}
                                 className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer"
                             >
