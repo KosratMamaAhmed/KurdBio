@@ -28,17 +28,7 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    if (method === "GET" && path === "/api/admin/stats") return json({ totalVisits: 0, totalClicks: 0, dailyVisits: {} });
-
-    if (method === "PUT" && path === "/api/admin/settings") {
-        const newSettings = await request.json();
-        const currentSettingsStr = await env.KV.get("site_settings");
-        const currentSettings = currentSettingsStr ? JSON.parse(currentSettingsStr) : {};
-        await env.KV.put("site_settings", JSON.stringify({ ...currentSettings, ...newSettings }));
-        return json({success: true});
-    }
-
-    // 🌟 هێنانی بەکارهێنەران لەگەڵ ئامارەکانیان لە D1 🌟
+    // 🌟 هێنانی بەکارهێنەران و تێکەڵکردنیان لەگەڵ ئامارەکانی D1 بۆ خێرایی و کەمکردنەوەی خەرجی 🌟
     if (method === "GET" && path === "/api/admin/users") {
         let users = [];
         const allUsersStr = await env.KV.get("all_users_list");
@@ -47,7 +37,7 @@ export async function onRequest(context: any) {
         const kvKeys = list.keys.map((k: any) => k.name);
         const allKeys = Array.from(new Set([...kvKeys, ...fastKeys]));
 
-        // هێنانی سەرجەم ئامارەکان لە D1 بە یەک ڕیکوێست بۆ ئەوەی خێرا بێت
+        // هێنانی ئامارەکان بە یەکجاری لە D1
         let statsMap: any = {};
         try {
             const { results } = await env.DB.prepare("SELECT * FROM stats").all();
@@ -56,12 +46,12 @@ export async function onRequest(context: any) {
             console.error("D1 stats fetch error:", e);
         }
 
+        // هێنانە ناوەوەی یوزەرەکان
         for (const key of allKeys) {
             const uStr = await env.KV.get(key as string);
             if (uStr) { 
                 const { password, ...safeUser } = JSON.parse(uStr); 
                 
-                // لکاندنی ئامارەکانی D1 بە یوزەرەکەوە
                 const userIdStr = (key as string).replace('user_id:', '');
                 safeUser.visits = statsMap[userIdStr]?.visits || 0;
                 safeUser.clicks = statsMap[userIdStr]?.clicks || 0;
@@ -70,6 +60,14 @@ export async function onRequest(context: any) {
             }
         }
         return json(users);
+    }
+
+    if (method === "PUT" && path === "/api/admin/settings") {
+        const newSettings = await request.json();
+        const currentSettingsStr = await env.KV.get("site_settings");
+        const currentSettings = currentSettingsStr ? JSON.parse(currentSettingsStr) : {};
+        await env.KV.put("site_settings", JSON.stringify({ ...currentSettings, ...newSettings }));
+        return json({success: true});
     }
 
     if (method === "POST" && path === "/api/admin/toggle-user") {
@@ -90,19 +88,6 @@ export async function onRequest(context: any) {
             const user = JSON.parse(userStr); user.isPro = body.isPro;
             await env.KV.put(`user:${user.username}`, JSON.stringify(user));
             await env.KV.put(`user_id:${body.userId}`, JSON.stringify(user));
-        }
-        return json({success: true});
-    }
-
-    if (method === "POST" && path === "/api/admin/approve-password") {
-        const { targetId, approve } = await request.json();
-        const userStr = await env.KV.get(`user_id:${targetId}`);
-        if(userStr) {
-            const user = JSON.parse(userStr);
-            if (approve && user.pendingPassword) user.password = user.pendingPassword;
-            delete user.pendingPassword;
-            await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-            await env.KV.put(`user_id:${targetId}`, JSON.stringify(user));
         }
         return json({success: true});
     }
@@ -138,7 +123,7 @@ export async function onRequest(context: any) {
         return json({success: true});
     }
 
-    // 🌟 سڕینەوەی یوزەر و سڕینەوەی ئامارەکانیشی لەناو D1 🌟
+    // 🌟 سڕینەوەی یوزەر و ئامارەکانیشی لەناو D1 🌟
     if (method === "DELETE" && path.match(/^\/api\/admin\/users\/\d+$/)) {
          const idToDelete = path.split("/").pop();
          const userStr = await env.KV.get(`user_id:${idToDelete}`);
@@ -149,7 +134,6 @@ export async function onRequest(context: any) {
              await env.KV.delete(`slug:${user.slug || user.username}`);
              await env.KV.delete(`email:${user.email}`);
              
-             // سڕینەوەی ئامارەکانی لە D1
              try { 
                  await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
              } catch(e) {}

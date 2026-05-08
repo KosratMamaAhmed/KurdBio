@@ -48,32 +48,7 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 چارەسەری کۆتایی: وەرگرتنی ئامارە کۆکراوەکان (Micro-Batching) و ناردنی بۆ D1 🌟
-    if (method === "POST" && path.startsWith("/api/public/sync-stats/")) {
-       const slug = escapeHTML(path.split("/").pop() || "");
-       if (slug) {
-           const body = await request.json();
-           const visitsToAdd = parseInt(body.visits) || 0;
-           const clicksToAdd = parseInt(body.clicks) || 0;
-           
-           if (visitsToAdd > 0 || clicksToAdd > 0) {
-               let targetUserId = await env.KV.get(`slug:${slug}`);
-               if (!targetUserId) targetUserId = await env.KV.get(`user:${slug}`);
-               
-               if (targetUserId) {
-                   await env.DB.prepare(`
-                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, ?, ?)
-                       ON CONFLICT(user_id) DO UPDATE SET 
-                       visits = visits + ?, 
-                       clicks = clicks + ?
-                   `).bind(targetUserId, visitsToAdd, clicksToAdd, visitsToAdd, clicksToAdd).run();
-               }
-           }
-       }
-       return json({ success: true });
-    }
-
-    // ڕێگای پێشوو بۆ دڵنیایی زیاتر (ئەگەر کۆدەکەی پێشووت بەکارهێنا)
+    // 🌟 ناردنی ئاماری سەردان ڕاستەوخۆ بۆ ناو D1 (خەرجی سفڕە) 🌟
     if (method === "POST" && path.startsWith("/api/public/visit/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -90,6 +65,7 @@ export async function onRequest(context: any) {
        return json({ success: true });
     }
 
+    // 🌟 ناردنی ئاماری کلیک ڕاستەوخۆ بۆ ناو D1 🌟
     if (method === "POST" && path.startsWith("/api/public/click/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -106,7 +82,7 @@ export async function onRequest(context: any) {
        return json({ success: true });
     }
 
-    // هێنانی زانیاری پرۆفایل بۆ یوزەر یان میوان
+    // 🌟 هێنانی زانیاری پرۆفایل بۆ میوان 🌟
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        let targetUserId = await env.KV.get(`slug:${slug}`);
@@ -136,7 +112,7 @@ export async function onRequest(context: any) {
     }
 
     // ---------------------------------------------------------
-    // پاراستنی API ـەکان بە Token بۆ داشبۆرد و ئەدمین
+    // پاراستنی API ـەکان بە Token بۆ داشبۆردی بەکارهێنەر
     // ---------------------------------------------------------
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) return json({ error: "ڕێگەپێنەدراوە" }, 401);
@@ -146,6 +122,7 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
+    // 🌟 هێنانی زانیاری پرۆفایل + ئامارەکانی تایبەت بەخۆی لە D1 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);
@@ -153,7 +130,6 @@ export async function onRequest(context: any) {
        
        const user = JSON.parse(userStr);
        
-       // هێنانی ئامارەکانی تایبەت بەم یوزەرە ڕاستەوخۆ لە D1
        try {
            const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId).first();
            user.visits = stat?.visits || 0;
@@ -165,6 +141,7 @@ export async function onRequest(context: any) {
        return json(user);
     }
 
+    // دەستکاریکردنی پرۆفایل
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);
@@ -209,6 +186,7 @@ export async function onRequest(context: any) {
        return json(updatedUser);
     }
 
+    // بەڕێوەبردنی بەستەرەکان
     if (method === "POST" && path === "/api/links") {
         const newLinkInfo = await request.json();
         const userStr = await env.KV.get(`user_id:${userId}`);
@@ -245,7 +223,6 @@ export async function onRequest(context: any) {
     }
 
     return json({ error: "Route not found" }, 404);
-
   } catch (err: any) {
     return json({ error: "هەڵەی سێرڤەر: " + err.message }, 500);
   }
