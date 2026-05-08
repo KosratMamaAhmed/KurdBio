@@ -40,8 +40,61 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    if (request.method === "POST" && (path.startsWith("/api/public/visit/") || path.startsWith("/api/public/click/"))) {
-       return json({ success: true, message: "Ignored to save KV Write costs" });
+    // 🌟 چارەسەرکرا: تۆمارکردنی سەردان (Visits) 🌟
+    if (request.method === "POST" && path.startsWith("/api/public/visit/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       if (slug) {
+           let targetUserId = await env.KV.get(`slug:${slug}`);
+           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           
+           if (userStr) {
+               const user = JSON.parse(userStr);
+               user.visits = (user.visits || 0) + 1;
+               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
+               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
+               
+               // تۆمارکردنی ئاماری گشتی سایت
+               let siteStatsStr = await env.KV.get("site_stats");
+               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
+               siteStats.totalVisits += 1;
+               
+               const today = new Date().toISOString().split('T')[0];
+               const currentMonth = today.substring(0, 7);
+               
+               if (!siteStats.dailyUsers) siteStats.dailyUsers = [];
+               if (!siteStats.monthlyUsers) siteStats.monthlyUsers = [];
+
+               if (!siteStats.dailyUsers.includes(today)) siteStats.dailyUsers.push(today);
+               if (!siteStats.monthlyUsers.includes(currentMonth)) siteStats.monthlyUsers.push(currentMonth);
+
+               await env.KV.put("site_stats", JSON.stringify(siteStats));
+           }
+       }
+       return json({ success: true });
+    }
+
+    // 🌟 چارەسەرکرا: تۆمارکردنی کلیک (Clicks) 🌟
+    if (request.method === "POST" && path.startsWith("/api/public/click/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       if (slug) {
+           let targetUserId = await env.KV.get(`slug:${slug}`);
+           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           
+           if (userStr) {
+               const user = JSON.parse(userStr);
+               user.clicks = (user.clicks || 0) + 1;
+               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
+               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
+
+               // تۆمارکردنی ئاماری گشتی سایت
+               let siteStatsStr = await env.KV.get("site_stats");
+               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
+               siteStats.totalClicks += 1;
+               
+               await env.KV.put("site_stats", JSON.stringify(siteStats));
+           }
+       }
+       return json({ success: true });
     }
 
     if (request.method === "GET" && path.startsWith("/api/public/profile/")) {
@@ -53,7 +106,6 @@ export async function onRequest(context: any) {
        const user = JSON.parse(userStr);
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
-       // 🌟 لێرەدا کێشەکە چارەسەر کرا: ڕەنگەکانمان زیادکرد بۆ ئەوەی بچنە ناو پەڕەکەوە 🌟
        const profileData = { 
          id: user.id, 
          displayName: escapeHTML(user.displayName || user.username), 
@@ -64,9 +116,9 @@ export async function onRequest(context: any) {
          bgImage: user.bgImage, 
          isPro: user.isPro, 
          slug: user.slug,
-         nameColor: user.nameColor,       // <--- زیادکرا
-         bioColor: user.bioColor,         // <--- زیادکرا
-         btnTextColor: user.btnTextColor  // <--- زیادکرا
+         nameColor: user.nameColor,        
+         bioColor: user.bioColor,          
+         btnTextColor: user.btnTextColor  
        };
        const res = json(profileData, 200, { "Cache-Control": "public, max-age=180, s-maxage=180" });
        waitUntil(cache.put(cacheKey, res.clone()));
