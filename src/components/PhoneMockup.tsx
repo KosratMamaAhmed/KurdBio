@@ -8,25 +8,6 @@ const VerifiedBadge = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
-const getBrandStyle = (url: string, dbColor?: string) => {
-  const lowerUrl = (url || '').toLowerCase();
-  
-  if (lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp')) return { bg: '#25D366', text: '#fff' };
-  if (lowerUrl.includes('instagram')) return { bg: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', text: '#fff' };
-  if (lowerUrl.includes('snapchat')) return { bg: '#FFFC00', text: '#000' };
-  if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.me')) return { bg: '#1877F2', text: '#fff' };
-  if (lowerUrl.includes('t.me') || lowerUrl.includes('telegram')) return { bg: '#26A5E4', text: '#fff' };
-  if (lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) return { bg: '#FF0000', text: '#fff' };
-  if (lowerUrl.includes('tiktok')) return { bg: '#000000', text: '#fff' };
-  if (lowerUrl.includes('linkedin')) return { bg: '#0A66C2', text: '#fff' };
-  
-  if (dbColor && dbColor !== '#333333' && dbColor !== '') {
-     return { bg: dbColor, text: '#fff', border: 'none' };
-  }
-  
-  return { bg: '#ffffff', text: '#1f2937', border: '1px solid #e5e7eb' };
-};
-
 export default function PhoneMockup({ mockup, mockupLinks = [], sponsoredLinks = [] }: any) {
   const bgPosStyle = mockup?.bgPos ? `${mockup.bgPos.x}% ${mockup.bgPos.y}%` : '50% 50%';
   const avatarPosStyle = mockup?.avatarPos ? `${mockup.avatarPos.x}% ${mockup.avatarPos.y}%` : '50% 50%';
@@ -34,76 +15,62 @@ export default function PhoneMockup({ mockup, mockupLinks = [], sponsoredLinks =
   const allLinks = [...mockupLinks, ...sponsoredLinks];
 
   return (
-    <div className="relative w-[280px] sm:w-[300px] lg:w-[320px] h-[580px] sm:h-[600px] lg:h-[640px] bg-black rounded-[3rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-neutral-800 shrink-0 overflow-hidden font-kosrat">
+    <div className="relative w-[300px] h-[610px] bg-black rounded-[3rem] p-3 shadow-2xl border-4 border-neutral-800 shrink-0 overflow-hidden font-kosrat">
       
       {/* Notch */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl z-50 flex items-end justify-center pb-1.5 gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-neutral-800/80"></div>
-        <div className="w-12 h-1.5 rounded-full bg-neutral-800/80"></div>
-      </div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl z-50"></div>
 
       <div className="w-full h-full bg-slate-50 rounded-[2.25rem] overflow-hidden relative flex flex-col">
         
-        {/* Background */}
-        <div className="absolute top-0 left-0 w-full h-[35%] z-0">
+        {/* Background Image */}
+        <div className="absolute top-0 left-0 w-full h-[38%] z-0">
           {mockup?.bgImage ? (
-            <img src={mockup.bgImage} className="w-full h-full object-cover" style={{ objectPosition: bgPosStyle }} alt="cover" />
+            <img src={mockup.bgImage} className="w-full h-full object-cover" style={{ objectPosition: bgPosStyle }} alt="bg" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300"></div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/10 to-transparent"></div>
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pt-16 pb-20 px-3">
+        {/* 🌟 Content: مۆکئەپ بێ سکرۆڵ (Overflow Hidden) 🌟 */}
+        <div className="relative z-10 w-full flex-1 overflow-hidden pt-16 px-4">
           <div className="flex flex-col items-center">
             
-            <div className="relative w-24 h-24 rounded-full p-1 bg-white/60 backdrop-blur-md shadow-lg mb-2">
+            {/* Avatar */}
+            <div className="relative w-24 h-24 rounded-full p-1 bg-white/50 backdrop-blur-md shadow-lg mb-2">
               <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-white">
                 {mockup?.avatar ? (
-                  <img src={mockup.avatar} alt="avatar" className="w-full h-full object-cover scale-105" style={{ objectPosition: avatarPosStyle }} />
+                  <img src={mockup.avatar} className="w-full h-full object-cover scale-105" style={{ objectPosition: avatarPosStyle }} alt="avatar" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">بەتاڵ</div>
                 )}
               </div>
               {mockup?.isPro && (
-                <div className="absolute bottom-1 right-1 z-30 bg-white rounded-full p-[2px] shadow-sm">
+                <div className="absolute bottom-1 right-1 bg-white rounded-full p-[1px] shadow-sm">
                    <VerifiedBadge className="w-5 h-5 text-blue-500" />
                 </div>
               )}
             </div>
 
-            <h3 className="text-[17px] font-black text-gray-900 text-center leading-tight">
-              {mockup?.name || 'ناوی تۆ'}
-            </h3>
-            {mockup?.bio && (
-              <p className="text-[11px] font-bold text-gray-600 mt-1 text-center max-w-[200px] leading-snug">
-                {mockup.bio}
-              </p>
-            )}
+            <h3 className="text-[16px] font-black text-gray-900 text-center leading-tight">{mockup?.name || 'BioKurd'}</h3>
+            {mockup?.bio && <p className="text-[10px] font-bold text-gray-500 mt-1 text-center line-clamp-2 px-2">{mockup.bio}</p>}
 
-            {/* 🌟 بەشی دوگمەکان (لێرەدا دوگمەکان زۆر باریکتر و پێکەوە نووساوتر کراون) 🌟 */}
-            <div className="w-full mt-5 flex flex-col gap-2">
-              {allLinks.map((link: any, index: number) => {
-                const brandStyle = getBrandStyle(link.url, link.color);
+            {/* 🌟 Buttons Section: باریک و ڕێک 🌟 */}
+            <div className="w-full mt-4 flex flex-col gap-2">
+              {allLinks.slice(0, 8).map((link: any, index: number) => {
                 const IconName = link.iconName || link.icon || 'Globe';
                 const Icon = (icons as any)[IconName] || icons.Globe;
-                const isAd = link.targetOS !== undefined;
+                const brandColor = link.color || '#333333';
+                const isSponsored = link.targetOS !== undefined;
 
-                if (isAd) {
+                if (isSponsored) {
                   return (
-                    <div key={index} className="relative w-full shadow-sm rounded-[10px] overflow-hidden bg-white border border-orange-100 p-2 flex items-center justify-between mt-1">
-                      <div className="absolute -top-1 -left-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-sm z-20">VIP</div>
-                      <div className="flex items-center gap-2 relative z-10 w-full">
-                        <div className="w-8 h-8 rounded-md bg-gray-50 p-0.5 shrink-0">
-                          {link.imageUrl ? <img src={link.imageUrl} className="w-full h-full object-cover rounded-sm" /> : <Star size={16} className="text-orange-500 mx-auto mt-1" />}
-                        </div>
-                        <div className="flex-1 text-right min-w-0 pr-1">
-                          <h4 className="font-black text-[11px] text-gray-900 line-clamp-1">{link.title}</h4>
-                          <p className="text-[8px] font-bold text-gray-500 truncate">سپۆنسەرکراو</p>
-                        </div>
-                        <ArrowUpRight size={14} className="text-orange-500 shrink-0" />
-                      </div>
+                    <div key={index} className="w-full bg-white border border-orange-100 p-1.5 rounded-lg flex items-center gap-2 shadow-sm relative">
+                       <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center shrink-0">
+                         {link.imageUrl ? <img src={link.imageUrl} className="w-full h-full object-contain" /> : <Star size={12} className="text-orange-500" />}
+                       </div>
+                       <span className="text-[10px] font-black text-gray-800 flex-1 truncate">{link.title}</span>
+                       <ArrowUpRight size={12} className="text-orange-400" />
                     </div>
                   );
                 }
@@ -111,14 +78,14 @@ export default function PhoneMockup({ mockup, mockupLinks = [], sponsoredLinks =
                 return (
                   <div 
                     key={index}
-                    style={{ background: brandStyle.bg, color: brandStyle.text, border: brandStyle.border || 'none' }}
-                    className="w-full py-1.5 px-2.5 rounded-[10px] flex items-center justify-between shadow-sm relative overflow-hidden"
+                    style={{ backgroundColor: brandColor, color: '#fff' }}
+                    className="w-full py-1.5 px-2.5 rounded-lg flex items-center justify-between shadow-sm"
                   >
-                    <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden p-1 bg-black/10">
-                      {link.imageUrl ? <img src={link.imageUrl} className="w-full h-full object-contain drop-shadow-sm" /> : <Icon size={12} className="opacity-90" />}
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-black/10 shrink-0">
+                      {link.imageUrl ? <img src={link.imageUrl} className="w-full h-full object-contain p-0.5" /> : <Icon size={10} />}
                     </div>
-                    <span className="flex-grow text-center px-1 z-10 font-bold text-[11px]">{link.title || link.name}</span>
-                    <div className="w-6 h-6 flex-shrink-0"></div>
+                    <span className="flex-1 text-center font-bold text-[10px] truncate px-1">{link.title || link.name}</span>
+                    <div className="w-5 h-5 shrink-0"></div>
                   </div>
                 );
               })}
@@ -127,16 +94,13 @@ export default function PhoneMockup({ mockup, mockupLinks = [], sponsoredLinks =
           </div>
         </div>
 
-        {/* 🌟 دوگمەی خوارەوە کە جێگیرە 🌟 */}
-        <div className="absolute bottom-4 left-0 w-full flex justify-center z-40 pointer-events-none px-4">
-          <div className="pointer-events-auto relative group w-full max-w-[200px]">
-             <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur-[4px] opacity-60"></div>
-             <div className="relative px-3 py-2 bg-gray-900 rounded-full flex items-center justify-center gap-1.5 text-white shadow-xl border border-gray-700">
-                <icons.Sparkles size={12} className="text-amber-400 animate-pulse" />
-                <span className="font-black text-[10px] tracking-wide">لینکێکی ئاوا دروست بکە</span>
-             </div>
-          </div>
-       </div>
+        {/* Footer Button */}
+        <div className="absolute bottom-5 left-0 w-full flex justify-center px-4">
+           <div className="w-full py-2 bg-neutral-900 rounded-full flex items-center justify-center gap-2 text-white border border-white/10 shadow-xl">
+              <icons.Sparkles size={12} className="text-amber-400" />
+              <span className="font-black text-[10px]">لینکێکی ئاوا دروست بکە</span>
+           </div>
+        </div>
 
       </div>
     </div>
