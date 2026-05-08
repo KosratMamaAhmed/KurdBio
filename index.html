@@ -100,12 +100,15 @@
 
     <!-- کۆنترۆڵکردنی تێکچوونی هێڵی ئینتەرنێت و سڕینەوەی کراشەکان -->
     <script>
-      // لابردنی شاشەی سپلاش ئەگەر کۆدەکە کێشەی نەبوو
+ 
+     // ڕاستەوخۆ شاشەکە لادەبات بەبێ وەستان
       window.onload = function() {
-          setTimeout(() => {
-              const splash = document.getElementById('initial-splash');
-              if (splash) splash.style.display = 'none';
-          }, 1500); // دوای ١.٥ چرکە لادەچێت ئەگەر ڕیئاکت لۆد بوو
+          const splash = document.getElementById('initial-splash');
+          if (splash) {
+              splash.style.transition = 'opacity 0.2s ease-out';
+              splash.style.opacity = '0';
+              setTimeout(() => splash.style.display = 'none', 200);
+          }
       };
 
       // پشکنینی هێڵی ئینتەرنێت بۆ ڕێگریکردن لە کراش
