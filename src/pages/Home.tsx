@@ -10,8 +10,8 @@ export default function Home({ user, settings, theme }: Props) {
     name: 'کۆسرەت مامە', 
     bio: 'گەشەپێدەری بەرنامەکانی ئەندرۆید و وێب', 
     avatar: 'https://ui-avatars.com/api/?name=Kosrat+Mama&background=f97316&color=fff&size=256', 
-    bgImage: '', // 🌟 باکگراوندەکە سادە کرایەوە
-    buttonDesign: 'light', // 🌟 دیزاینی ڕووناک هەڵبژێردرا بۆ ئەوەی ئایکۆنەکان دەربکەون
+    bgImage: '', 
+    buttonDesign: 'light', 
     isPro: true
   });
 
@@ -19,28 +19,29 @@ export default function Home({ user, settings, theme }: Props) {
     if (settings?.mockup) setMockup(settings.mockup); 
   }, [settings]);
 
-  // 🌟 بەستەرەکان گۆڕدران بەپێی داواکارییەکەت 🌟
   const mockupLinks = [
     { name: 'تیکتۆک', iconName: 'Music', color: '#000000' },
     { name: 'سناپچات', iconName: 'Ghost', color: '#eab308' },
     { name: 'تێلیگرام', iconName: 'Send', color: '#26A5E4' },
-    { name: 'ئینستاگرام', iconName: 'Instagram', color: '#E4405F' },
     { name: 'پەیوەندی', iconName: 'Phone', color: '#10B981' },
+    { name: 'ئینستاگرام', iconName: 'Instagram', color: '#E4405F' },
   ];
 
   return (
     <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#f8fafc] flex flex-col font-sans relative selection:bg-orange-200" dir="rtl">
       
-      {/* 🌟 ئەم ستایلە فۆرس دەکرێت تەنها بۆ ناو مۆکئەپەکە بۆ ئەوەی دوگمەکان باریک بن و ئایکۆنەکانیان ڕەنگاوڕەنگ بێت 🌟 */}
+      {/* 🌟 دوگمەکان زۆر باریکتر و بچووکتر کرانەوە (padding-top & bottom کران بە 6px) 🌟 */}
       <style dangerouslySetInnerHTML={{ __html: `
         .mockup-wrapper button {
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            min-height: 42px !important;
             background: #ffffff !important;
             color: #1f2937 !important;
             border: 1px solid #e5e7eb !important;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
             border-radius: 12px !important;
+            margin-bottom: 8px !important;
         }
         .mockup-wrapper button:nth-child(1) svg { color: #000000 !important; }
         .mockup-wrapper button:nth-child(2) svg { color: #eab308 !important; }
@@ -107,7 +108,6 @@ export default function Home({ user, settings, theme }: Props) {
         
       </main>
 
-      {/* 🌟 ئەم دوو دوگمەیە هێنرانە خوار خوارەوەی شاشەکە 🌟 */}
       <footer className="w-full mt-auto relative z-20 shrink-0 pb-6 pt-4 px-6 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a href="https://play.google.com/store/apps/dev?id=6744749568381312149&hl=en" target="_blank" rel="noopener noreferrer" 
              className="relative w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 overflow-hidden group">

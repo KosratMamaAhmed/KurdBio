@@ -54,52 +54,37 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 سەیڤکردنی سەردان (Visit) بۆ پڕۆفایلەکان و ئاماری گشتی 🌟
-    if (method === "POST" && path.startsWith("/api/public/visit/")) {
-       const slug = path.split("/").pop();
-       if (slug) {
+    // 🌟 APIـیە نوێیەکە بۆ وەرگرتنی ئامارەکان بە کۆمەڵ (Batch) 🌟
+    if (method === "POST" && path.startsWith("/api/public/sync-stats/")) {
+       const slug = escapeHTML(path.split("/").pop() || "");
+       const { visits = 0, clicks = 0 } = await request.json().catch(() => ({ visits: 0, clicks: 0 }));
+       
+       if (slug && (visits > 0 || clicks > 0)) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
            let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
+           
            if (userStr) {
                const user = JSON.parse(userStr);
-               user.visits = (user.visits || 0) + 1;
+               user.visits = (user.visits || 0) + visits;
+               user.clicks = (user.clicks || 0) + clicks;
                await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
                await env.KV.put(`user:${user.username}`, JSON.stringify(user));
                
-               // تۆمارکردنی ئاماری گشتی سایت
                let siteStatsStr = await env.KV.get("site_stats");
                let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
-               siteStats.totalVisits += 1;
                
-               // بەکارهێنەری ڕۆژانە و مانگانە (بەپێی IP یان کاتی سەردان)
+               siteStats.totalVisits += visits;
+               siteStats.totalClicks += clicks;
+               
                const today = new Date().toISOString().split('T')[0];
                const currentMonth = today.substring(0, 7);
                
-               if (!siteStats.dailyUsers.includes(today)) siteStats.dailyUsers = [today]; // سادەکراوەتەوە بۆ نموونە
-               if (!siteStats.monthlyUsers.includes(currentMonth)) siteStats.monthlyUsers = [currentMonth];
+               if (!siteStats.dailyUsers) siteStats.dailyUsers = [];
+               if (!siteStats.monthlyUsers) siteStats.monthlyUsers = [];
 
-               await env.KV.put("site_stats", JSON.stringify(siteStats));
-           }
-       }
-       return json({ success: true });
-    }
+               if (!siteStats.dailyUsers.includes(today)) siteStats.dailyUsers.push(today);
+               if (!siteStats.monthlyUsers.includes(currentMonth)) siteStats.monthlyUsers.push(currentMonth);
 
-    // 🌟 سەیڤکردنی کلیک (Click) بۆ پڕۆفایلەکان و ئاماری گشتی 🌟
-    if (method === "POST" && path.startsWith("/api/public/click/")) {
-       const slug = path.split("/").pop();
-       if (slug) {
-           let targetUserId = await env.KV.get(`slug:${slug}`);
-           let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : await env.KV.get(`user:${slug}`);
-           if (userStr) {
-               const user = JSON.parse(userStr);
-               user.clicks = (user.clicks || 0) + 1;
-               await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
-               await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-
-               // تۆمارکردنی ئاماری گشتی سایت
-               let siteStatsStr = await env.KV.get("site_stats");
-               let siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
-               siteStats.totalClicks += 1;
                await env.KV.put("site_stats", JSON.stringify(siteStats));
            }
        }
@@ -349,13 +334,10 @@ export async function onRequest(context: any) {
         return json(usersList.reverse());
     }
 
-    // 🌟 خاڵی نوێ بۆ هێنانی ئاماری گشتی (سەردان و کلیک) 🌟
     if (method === "GET" && path === "/api/admin/stats") {
         const siteStatsStr = await env.KV.get("site_stats");
         const siteStats = siteStatsStr ? JSON.parse(siteStatsStr) : { totalVisits: 0, totalClicks: 0, dailyUsers: [], monthlyUsers: [] };
         
-        // خەمڵاندنی بەکارهێنەرانی ڕۆژانە و مانگانە بۆ نموونە 
-        // تێبینی: دەتوانیت لۆژیکێکی ئاڵۆزتر بۆ تۆمارکردنی IP بەکاربهێنیت. ئەمەیان بۆ خێراییە.
         const stats = {
             totalVisits: siteStats.totalVisits || 0,
             totalClicks: siteStats.totalClicks || 0,
@@ -447,6 +429,6 @@ export async function onRequest(context: any) {
     return json({ error: "Route not found" }, 404);
 
   } catch (err: any) {
-    return json({ error: "هەڵەی سێرڤەر: " + err.message }, 500);
+    return json({ error: "هەڵەی سێرڤەر" }, 500);
   }
 }

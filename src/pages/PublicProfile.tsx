@@ -56,6 +56,47 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   
   const profileUrl = `${window.location.origin}/${slug}`;
 
+  const recordStat = (type: 'visit' | 'click') => {
+    if (!slug) return;
+    const pendingKey = `pending_stats_${slug}`;
+    const pending = JSON.parse(localStorage.getItem(pendingKey) || '{"visits":0, "clicks":0}');
+    
+    if (type === 'visit') pending.visits += 1;
+    if (type === 'click') pending.clicks += 1;
+    
+    localStorage.setItem(pendingKey, JSON.stringify(pending));
+
+    if ((window as any).syncTimeout) clearTimeout((window as any).syncTimeout);
+    
+    (window as any).syncTimeout = setTimeout(() => {
+      const toSendStr = localStorage.getItem(pendingKey);
+      if (!toSendStr) return;
+      const toSend = JSON.parse(toSendStr);
+      
+      if (toSend.visits > 0 || toSend.clicks > 0) {
+        fetch(`/api/public/sync-stats/${slug}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSend)
+        }).then(res => {
+          if (res.ok) {
+            const currentStr = localStorage.getItem(pendingKey);
+            if (currentStr) {
+               const current = JSON.parse(currentStr);
+               current.visits -= toSend.visits;
+               current.clicks -= toSend.clicks;
+               if (current.visits <= 0 && current.clicks <= 0) {
+                   localStorage.removeItem(pendingKey);
+               } else {
+                   localStorage.setItem(pendingKey, JSON.stringify(current));
+               }
+            }
+          }
+        }).catch(() => {});
+      }
+    }, 3000); 
+  };
+
   useEffect(() => {
     if (!slug) return;
     
@@ -74,7 +115,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       const visitKey = `visited_profile_${slug}`;
       const lastVisit = localStorage.getItem(visitKey);
       if (!lastVisit || Date.now() - parseInt(lastVisit) > 24 * 60 * 60 * 1000) {
-        fetch(`/api/public/visit/${slug}`, { method: 'POST' }).catch(() => {});
+        recordStat('visit');
         localStorage.setItem(visitKey, Date.now().toString());
       }
     }
@@ -86,7 +127,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     const clickKey = `clicked_link_${slug}_${linkId}`;
     const lastClick = localStorage.getItem(clickKey);
     if (!lastClick || Date.now() - parseInt(lastClick) > 24 * 60 * 60 * 1000) {
-      fetch(`/api/public/click/${slug}`, { method: 'POST' }).catch(() => {});
+      recordStat('click');
       localStorage.setItem(clickKey, Date.now().toString());
     }
 
@@ -244,7 +285,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
        <FontStyle />
        <AppManager />
 
-       {/* 🌟 نۆتیفیکەیشن بەدیزاینێکی نوێ و جێگیرکراو لە سەرەوە 🌟 */}
        <AnimatePresence>
           {copied && (
              <motion.div 
@@ -260,8 +300,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
           )}
        </AnimatePresence>
 
-       {/* 🌟 بەرزی باکگراوند زیاد کرا (h-72 sm:h-96) 🌟 */}
-       <div className="w-full h-72 sm:h-96 relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
+       {/* 🌟 بەرزی باکگراوند زۆر زیاد کرا (h-[40vh] یان min-h-[350px]) بۆ ئەوەی ڕووبەری وێنەکە بەتەواوی دەربکەوێت 🌟 */}
+       <div className="w-full h-[40vh] sm:h-[45vh] min-h-[320px] relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
           {profile?.bgImage && (
              <img 
                 src={profile.bgImage} 
