@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import * as icons from 'lucide-react';
 import { ArrowUpRight, Eye } from 'lucide-react';
 
@@ -8,9 +8,26 @@ interface SponsoredProps {
 }
 
 export default function SponsoredSection({ globalBtns, activeAds }: SponsoredProps) {
-  const hasSponsored = activeAds.length > 0 || globalBtns.length > 0;
+  // 🌟 سیستەمی زیرەک بۆ ناسینەوەی جۆری ئامێری بەکارهێنەر 🌟
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+  const isAndroid = /android/.test(ua);
+  const isIOS = /ipad|iphone|ipod/.test(ua);
+  const isWindows = /windows/.test(ua);
 
-  if (!hasSponsored) return null;
+  // 🌟 فلتەرکردنی ڕیکلامەکان بەپێی ئامێرەکە 🌟
+  const filteredAds = activeAds.filter((ad: any) => {
+    if (!ad.targetOS || ad.targetOS === 'all') return true;
+    if (ad.targetOS === 'android' && isAndroid) return true;
+    if (ad.targetOS === 'ios' && isIOS) return true;
+    if (ad.targetOS === 'windows' && isWindows) return true;
+    return false; // ئەگەر هیچ کامیان نەبوو، ڕیکلامەکە مەشارەوە
+  });
+
+  // کۆکردنەوەی دوگمە گشتییەکان و ڕیکلامە فلتەرکراوەکان
+  const itemsToShow = [...globalBtns, ...filteredAds];
+
+  // ئەگەر هیچ شتێک نەبوو بۆ نیشاندان، ئەوا بەشەکە بەتەواوی بشارەوە
+  if (itemsToShow.length === 0) return null;
 
   return (
     <div className="w-full mt-10 space-y-5 relative z-10">
@@ -23,7 +40,7 @@ export default function SponsoredSection({ globalBtns, activeAds }: SponsoredPro
       </div>
 
       {/* 🌟 دیزاینە بەفری و گەورەکە 🌟 */}
-      {[...globalBtns, ...activeAds].map((item: any, index: number) => {
+      {itemsToShow.map((item: any, index: number) => {
         const isAd = item.targetOS !== undefined; 
         const IconName = item.icon || 'Globe';
         const Icon = (icons as any)[IconName] || icons.Globe;

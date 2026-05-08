@@ -12,7 +12,7 @@ const FontStyle = () => (
       font-display: swap;
     }
     .font-kosrat { 
-      font-family: 'Kosrat', sans-serif !important; 
+      font-family: 'Kosrat', 'Noto Sans Arabic', sans-serif !important; 
     }
   `}} />
 );
@@ -70,12 +70,11 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
   }, [slug]);
 
-  // 🌟 ئاماری سەردان ڕاستەوخۆ دەڕوات بۆ D1 (بە ٥ چرکە بۆ تێست) 🌟
   useEffect(() => {
     if (profile?.id && slug) {
       const visitKey = `visited_profile_${slug}`;
       const lastVisit = sessionStorage.getItem(visitKey);
-      if (!lastVisit || Date.now() - parseInt(lastVisit) > 5000) {
+      if (!lastVisit || Date.now() - parseInt(lastVisit) > 5000) { 
         fetch(`/api/public/visit/${slug}`, { method: 'POST', keepalive: true }).catch(() => {});
         sessionStorage.setItem(visitKey, Date.now().toString());
       }
@@ -85,7 +84,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
-    // 🌟 ئاماری کلیک ڕاستەوخۆ دەڕوات بۆ D1 🌟
     const clickKey = `clicked_link_${slug}_${linkId}`;
     const lastClick = sessionStorage.getItem(clickKey);
     if (!lastClick || Date.now() - parseInt(lastClick) > 5000) {
@@ -223,7 +221,46 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       ctx.textAlign = 'right';
       ctx.fillText('https://biokurd.com', 1020, 560);
 
-      const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `BioKurd_Card_${slug}.png`; a.click();
+      const dataUrl = canvas.toDataURL('image/png');
+      const filename = `BioKurd_Card_${slug}.png`;
+
+      // 🌟 چارەسەری داگرتن بۆ ئایفۆن (iOS) 🌟
+      const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+
+      if (isIOS) {
+        try {
+           const blob = await (await fetch(dataUrl)).blob();
+           const file = new File([blob], filename, { type: 'image/png' });
+           if (navigator.canShare && navigator.canShare({ files: [file] })) {
+               await navigator.share({
+                   files: [file],
+                   title: 'کارتەکەم لە BioKurd',
+               });
+               return; 
+           }
+        } catch (err) { console.error("Share failed", err); }
+        
+        // ئەگەر شەیرەکە ئیشی نەکرد، لە پەنجەرەیەکی نوێدا دەیکاتەوە بۆ ئەوەی سەیڤی بکات
+        const newWindow = window.open();
+        if (newWindow) {
+           newWindow.document.write(`
+             <html>
+             <body style="margin:0; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:white; font-family:sans-serif;">
+                <img src="${dataUrl}" style="max-width:90%; border-radius:12px; box-shadow:0 10px 20px rgba(0,0,0,0.5);" />
+                <p style="margin-top:20px; font-weight:bold;">پەنجە بنێ بە وێنەکەدا بۆ داگرتن (Save Image)</p>
+             </body>
+             </html>
+           `);
+           newWindow.document.title = "کارتەکەم";
+        } else {
+           const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
+        }
+      } else {
+        // بۆ ئەندرۆید و کۆمپیوتەر بە شێوەی ئاسایی
+        const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
+      }
+
     } catch (e) {
       alert("کێشەیەک هەیە لە داگرتنی کارتەکە.");
     } finally {
@@ -242,7 +279,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const avatarPosStyle = profile?.avatarPos ? `${profile.avatarPos.x}% ${profile.avatarPos.y}%` : '50% 50%';
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-y-auto overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
        
        <FontStyle />
        <AppManager />

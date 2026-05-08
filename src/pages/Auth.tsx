@@ -64,7 +64,6 @@ export default function Auth({ onLogin, theme }: Props) {
       if (!res.ok) throw new Error(data.error || 'هەڵەیەک ڕوویدا');
       
       if (mode === 'login' || mode === 'register') { 
-        // 🌟 هەڵگرتنی تۆکن و چوونەژوورەوەی ڕاستەوخۆ 🌟
         localStorage.setItem('biokurd_token', data.token);
         onLogin(data); 
       } else {
@@ -81,7 +80,6 @@ export default function Auth({ onLogin, theme }: Props) {
             if (!res2.ok) throw new Error(data2.error || 'هەڵەیەک ڕوویدا');
             
             if (mode === 'login' || mode === 'register') { 
-               // 🌟 هەڵگرتنی تۆکن بۆ بەستەری جێگرەوەش 🌟
                localStorage.setItem('biokurd_token', data2.token);
                onLogin(data2); 
             } else {
@@ -107,18 +105,20 @@ export default function Auth({ onLogin, theme }: Props) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-neutral-100 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden" dir="rtl">
+    // 🌟 بۆشایی پارێزراو درا بە تەواوی پەڕەکە 🌟
+    <div className="min-h-[100dvh] bg-neutral-100 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-y-auto scrollbar-hide" dir="rtl" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}>
       
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
          <div className={`absolute -top-[20%] -right-[10%] w-[70%] h-[60%] ${theme?.main || 'bg-orange-500'} rounded-full blur-[120px] opacity-20 animate-pulse`}></div>
          <div className={`absolute top-[40%] -left-[10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[120px] opacity-10`}></div>
       </div>
 
-      <Link to="/" className="absolute top-6 left-6 z-20 bg-white/50 backdrop-blur-md px-4 py-2 rounded-xl font-black text-neutral-600 hover:text-neutral-900 border border-neutral-200 shadow-sm transition-all active:scale-95">
+      {/* 🌟 دوگمەی گەڕانەوە پارێزرا لە چوونە ژێر کامێرا 🌟 */}
+      <Link to="/" className="absolute left-6 z-20 bg-white/50 backdrop-blur-md px-4 py-2 rounded-xl font-black text-neutral-600 hover:text-neutral-900 border border-neutral-200 shadow-sm transition-all active:scale-95" style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
         گەڕانەوە
       </Link>
 
-      <div className="w-full max-w-[460px] relative z-10 perspective-1000">
+      <div className="w-full max-w-[460px] relative z-10 perspective-1000 my-auto py-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={mode}

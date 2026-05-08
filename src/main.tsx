@@ -22,7 +22,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
-        registration.update(); // بە زۆرەملێ پشکنین بۆ وەشانێکی نوێ دەکات
+        // پشکنینی خێرا بۆ ئەپدەیت کاتێک ئەپەکە دەکرێتەوە
+        registration.update().catch(() => console.log('Offline/No update available'));
       });
     }
   }
@@ -31,7 +32,9 @@ document.addEventListener('visibilitychange', () => {
 // 🚀 لابردنی شاشەی لۆدینگە خاوەکە ڕاستەوخۆ پێش ئەوەی ڕیئاکت دەست پێ بکات
 const splashScreen = document.getElementById('initial-splash');
 if (splashScreen) {
-  splashScreen.remove();
+  // بە نەرمی لایدەبەین بۆ ئەوەی فلاش نەکات
+  splashScreen.style.opacity = '0';
+  setTimeout(() => splashScreen.remove(), 300);
 }
 
 const rootElement = document.getElementById('root');

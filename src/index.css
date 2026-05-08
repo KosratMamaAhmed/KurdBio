@@ -25,9 +25,8 @@
 @layer base {
   body {
     font-family: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
-    @apply bg-[#f8fafc] text-neutral-900 antialiased;
+    @apply bg-[#f8fafc] text-neutral-900 dark:bg-slate-900 dark:text-slate-100 antialiased transition-colors duration-300;
     direction: rtl;
-    overscroll-behavior-y: none;
     padding: 0;
     margin: 0;
     
@@ -41,6 +40,7 @@
   
   #root {
     @apply min-h-[100dvh] w-full overflow-x-hidden relative flex flex-col;
+    /* لابردنی padding لە root بۆ ئەوەی باکگراوند بگاتە ژێر کامێرا (Edge-to-Edge) */
   }
   
   /* ڕێگەپێدان بە نووسین لەناو ئینپووتەکان */
@@ -58,13 +58,8 @@
   }
 
   /* شاردنەوەی سکڕۆڵبار بۆ جوانی و خێرایی */
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer utilities {
@@ -73,6 +68,12 @@
   .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* 🌟 کڵاسە تایبەتەکانی Safe Area بۆ ئەوەی لەناو Component ەکانت بەکاری بهێنیت 🌟 */
+  .safe-pt { padding-top: max(env(safe-area-inset-top), 1rem); }
+  .safe-pb { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
+  .safe-mt { margin-top: env(safe-area-inset-top); }
+  .safe-mb { margin-bottom: env(safe-area-inset-bottom); }
 }
 
 /* ڕێکخستنی مێزەکان لە حاڵەتی پێویست (لە دەرمانزانییەوە وەرگیراوە بۆ ڕێکخستنی داتا) */
@@ -80,7 +81,7 @@
   overflow-x: auto;
   border-radius: 0.75rem;
   margin: 1rem 0;
-  border: 1px solid #e2e8f0;
+  @apply border border-slate-200 dark:border-slate-800;
 }
 .markdown-table {
   width: 100%;
@@ -90,9 +91,13 @@
 }
 .markdown-table th, .markdown-table td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  @apply border-b border-slate-200 dark:border-slate-800;
   white-space: nowrap;
 }
-.markdown-table th { background-color: #f8fafc; font-weight: 700; color: #334155; }
+.markdown-table th { 
+  @apply bg-slate-50 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300; 
+}
 .markdown-table tr:last-child td { border-bottom: none; }
-.markdown-table tr:nth-child(even) { background-color: #f8fafc; }
+.markdown-table tr:nth-child(even) { 
+  @apply bg-slate-50 dark:bg-slate-900/50; 
+}

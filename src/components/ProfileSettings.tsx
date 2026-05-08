@@ -1,28 +1,34 @@
-import { Camera, User, FileText, Save, Image as ImageIcon } from 'lucide-react';
+import { Camera, User, FileText, Save, Image as ImageIcon, Lock } from 'lucide-react';
 
 export default function ProfileSettings({ profile, setProfile, saving, handleUpdateProfile, handleImageUpload, isUploadingAvatar, avatarInputRef }: any) {
   
   return (
     <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-200 shadow-sm">
-      <h2 className="text-xl font-black text-neutral-900 mb-6 flex items-center gap-2">
-        <User className="text-orange-500"/> ڕێکخستنی پرۆفایل
+      <h2 className="text-xl font-black text-neutral-900 mb-8 flex items-center gap-2 border-b border-neutral-100 pb-4">
+        <User className="text-orange-500" size={24} /> ڕێکخستنی پرۆفایل
       </h2>
 
-      {/* بەشی وێنە و باکگراوند */}
+      {/* 🌟 بەشی باکگراوند (زۆر گەورەتر کرا و لە وێنەی پرۆفایل جیاکرایەوە) 🌟 */}
       <div className="mb-8">
-        <label className="text-sm font-bold text-neutral-600 block mb-4">وێنەی پرۆفایل و باکگراوند</label>
-        <div className="relative w-full h-40 sm:h-48 rounded-2xl bg-neutral-100 overflow-hidden border border-neutral-200 shadow-inner group">
+        <label className="text-sm font-black text-neutral-700 block mb-3 flex items-center gap-2">
+           <ImageIcon size={18} className="text-orange-400" /> وێنەی باکگراوند (Cover)
+        </label>
+        <div className="relative w-full h-64 sm:h-[300px] rounded-3xl bg-neutral-900 overflow-hidden border-4 border-neutral-100 shadow-inner group">
           {profile?.bgImage ? (
-            <img src={profile.bgImage} className="w-full h-full object-cover" alt="Background" />
+            <img 
+               src={profile.bgImage} 
+               className="w-full h-full object-contain bg-neutral-900" 
+               alt="Background" 
+            />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
-              <ImageIcon size={32} className="mb-2 opacity-50" />
-              <span className="text-xs font-bold">باکگراوند بەتاڵە</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-500 bg-neutral-100">
+              <ImageIcon size={40} className="mb-2 opacity-50" />
+              <span className="text-sm font-bold">باکگراوند بەتاڵە</span>
             </div>
           )}
           
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <label className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl text-white font-bold text-sm cursor-pointer hover:bg-white/30 transition">
+            <label className="px-6 py-3 bg-white/20 backdrop-blur-md rounded-2xl text-white font-black text-sm cursor-pointer hover:bg-white/30 transition shadow-lg flex items-center gap-2">
               <input type="file" accept="image/*" className="hidden" onChange={(e:any) => {
                  const file = e.target.files?.[0];
                  if (file) {
@@ -30,27 +36,38 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
                     reader.onload = (ev) => handleUpdateProfile({ bgImage: ev.target?.result as string });
                  }
               }} />
-              گۆڕینی باکگراوند
-            </label>
-          </div>
-
-          <div className="absolute -bottom-8 left-6 w-24 h-24 rounded-full border-4 border-white bg-neutral-50 shadow-lg overflow-hidden flex items-center justify-center group/avatar">
-            {isUploadingAvatar ? (
-              <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-            ) : profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
-            ) : (
-              <User size={32} className="text-neutral-400" />
-            )}
-            <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity">
-              <input type="file" accept="image/*" className="hidden" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} />
-              <Camera size={24} />
+              <Camera size={18} /> گۆڕینی باکگراوند
             </label>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 pt-6 mt-6 border-t border-neutral-100">
+      {/* 🌟 بەشی وێنەی پرۆفایل (بە جیا و سەربەخۆ دانرا) 🌟 */}
+      <div className="mb-10 pb-8 border-b border-neutral-100">
+        <label className="text-sm font-black text-neutral-700 block mb-3 flex items-center gap-2">
+           <User size={18} className="text-orange-400" /> وێنەی پرۆفایل (Avatar)
+        </label>
+        <div className="flex items-center gap-6">
+           <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-neutral-100 bg-neutral-50 shadow-md overflow-hidden flex items-center justify-center group/avatar shrink-0">
+             {isUploadingAvatar ? (
+               <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+             ) : profile?.avatarUrl ? (
+               <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
+             ) : (
+               <User size={40} className="text-neutral-300" />
+             )}
+             <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity">
+               <input type="file" accept="image/*" className="hidden" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} />
+               <Camera size={28} />
+             </label>
+           </div>
+           <div className="text-xs font-bold text-neutral-400 max-w-xs leading-relaxed">
+             بۆ گۆڕینی وێنەی پرۆفایلەکەت کلیک لە وێنەکە بکە. تکایە با قەبارەی وێنەکەت لە 2MB کەمتر بێت بۆ خێراتر لۆدبوون.
+           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
         <div>
           <label className="text-sm font-bold text-neutral-600 block mb-2">ناوی تەواو</label>
           <input 
@@ -62,36 +79,40 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
           />
         </div>
         
-        {/* 🌟 بەشی کورتەیەک دەربارەی خۆت (گەورەکراو) 🌟 */}
+        {/* 🌟 یوزەرنەیم داخرا (Disabled) بۆ ئەوەی دەستکاری نەکرێت 🌟 */}
         <div>
-          <label className="text-sm font-bold text-neutral-600 mb-2 flex items-center gap-2"><FileText size={16}/> کورتەیەک دەربارەی خۆت</label>
-          <textarea 
-            value={profile?.bio || ''} 
-            onChange={e => setProfile({...profile, bio: e.target.value})} 
-            className="w-full p-5 bg-neutral-50 border border-neutral-200 rounded-2xl outline-none focus:bg-white focus:border-orange-500 font-bold h-40 sm:h-56 resize-none leading-relaxed transition-colors" 
-            placeholder="شتێک دەربارەی خۆت بنووسە لێرەدا بۆ ئەوەی خەڵکی زیاتر بتبینن..."
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-bold text-neutral-600 block mb-2">ناوی لینک (یوزەرنەیم)</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-sm" dir="ltr">biokurd.com/</span>
+          <label className="text-sm font-bold text-neutral-600 block mb-2 flex items-center gap-2">
+             ناوی لینک (یوزەرنەیم) <Lock size={14} className="text-red-400" />
+          </label>
+          <div className="relative opacity-70">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-black text-sm" dir="ltr">biokurd.com/</span>
             <input 
               type="text" 
               value={profile?.slug || ''} 
-              onChange={e => setProfile({...profile, slug: e.target.value.toLowerCase()})} 
-              className="w-full p-4 pl-[110px] bg-neutral-50 border border-neutral-200 rounded-2xl outline-none focus:bg-white focus:border-orange-500 font-bold text-left transition-colors" 
+              disabled={true}
+              className="w-full p-4 pl-[115px] bg-neutral-200 border border-neutral-300 rounded-2xl outline-none font-bold text-left text-neutral-600 cursor-not-allowed" 
               dir="ltr"
             />
           </div>
+          <p className="text-[10px] font-bold text-red-400 mt-1.5">بۆ پاراستنی لینکەکانت ناتوانیت ناوەکە بگۆڕیت.</p>
+        </div>
+
+        {/* بەشی کورتەیەک دەربارەی خۆت (گەورەکراو) */}
+        <div className="md:col-span-2 mt-2">
+          <label className="text-sm font-bold text-neutral-600 mb-2 flex items-center gap-2"><FileText size={16}/> کورتەیەک دەربارەی خۆت (بایۆ)</label>
+          <textarea 
+            value={profile?.bio || ''} 
+            onChange={e => setProfile({...profile, bio: e.target.value})} 
+            className="w-full p-5 bg-neutral-50 border border-neutral-200 rounded-2xl outline-none focus:bg-white focus:border-orange-500 font-bold h-40 sm:h-48 resize-none leading-relaxed transition-colors" 
+            placeholder="شتێک دەربارەی خۆت بنووسە لێرەدا بۆ ئەوەی خەڵکی زیاتر بتبینن..."
+          />
         </div>
       </div>
 
       {/* 🌟 دوگمەی پاشەکەوتکردن کە زۆر گەورە و دیارە 🌟 */}
-      <div className="mt-10 flex justify-end">
+      <div className="mt-8 pt-6 border-t border-neutral-100 flex justify-end">
          <button 
-            onClick={() => handleUpdateProfile({ displayName: profile.displayName, bio: profile.bio, slug: profile.slug })} 
+            onClick={() => handleUpdateProfile({ displayName: profile.displayName, bio: profile.bio })} 
             disabled={saving}
             className="w-full sm:w-auto px-10 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-lg shadow-[0_8px_20px_rgba(249,115,22,0.3)] flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
          >

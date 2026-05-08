@@ -7,8 +7,12 @@
     <link rel="manifest" href="/manifest.webmanifest">
     
     <meta name="google" content="notranslate" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <base href="./" />
+    
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,12 +25,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- سیستەمی زیرەک بۆ ناسینەوەی جۆری ئامێر و براوزەر -->
     <script>
       window.addEventListener('beforeinstallprompt', function(e) {
           e.preventDefault(); e.stopImmediatePropagation(); return false;
       });
 
+      // زیرەکی ناسینەوەی سیستەمەکان کە خۆتت نووسیبوو بەڵام پاککراوەتەوە
       (function() {
         try {
           const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -40,17 +44,10 @@
           window.IS_IN_APP = /FBAN|FBAV|Instagram|Snapchat|Line|WhatsApp|WeChat|TikTok|Telegram|Messenger|Threads/i.test(ua);
           
           if (window.IS_NATIVE_APP) window.IS_IN_APP = false; 
-          
-          const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-          // ئەگەر ویستت ڕاستەوخۆ بچێتە دەرەوە بۆ سەفاری لەسەر ئایفۆن
-          if (isIOS && !window.IS_NATIVE_APP && window.IS_IN_APP) {
-              window.location.replace('https://apps.apple.com/us/app/safari/id1146562112');
-          }
         } catch (e) { console.error(e); }
       })();
     </script>
 
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E9GQMQLZTS"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -64,30 +61,44 @@
         font-family: 'Noto Sans Arabic', sans-serif !important;
         -webkit-tap-highlight-color: transparent;
       }
+      
+      /* 🌟 چارەسەری ڕیفرێش و پاڵپشتی دارک مۆد لە بنچینەوە 🌟 */
       html, body {
-        height: 100%; overflow: hidden; position: fixed; width: 100%; background-color: #f8fafc;
+        min-height: 100%; width: 100%; margin: 0; padding: 0;
+        background-color: #f8fafc; color: #0f172a;
       }
-      #root {
-        height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
-        padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+      @media (prefers-color-scheme: dark) {
+        html, body { background-color: #0f172a; color: #f1f5f9; }
       }
       
-      /* دیزاینی Splash Screen و Popup ی زیرەک */
+      /* 🌟 لابردنی padding بۆ ئەوەی Edge-to-Edge کار بکات لەگەڵ Tailwind 🌟 */
+      #root {
+        min-height: 100%; display: flex; flex-direction: column;
+      }
+      
+      /* دیزاینی Splash Screen بە پاڵپشتی دارک مۆد */
       #initial-splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #f8fafc; z-index: 9999; }
+      @media (prefers-color-scheme: dark) { #initial-splash { background-color: #0f172a; } }
+      
       .splash-logo { width: 90px; height: 90px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 24px; animation: pulse-icon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
       @keyframes pulse-icon { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
-      .splash-spinner { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
+      
+      /* لۆدینگ کراوە بە پڕتەقاڵی تا لەگەڵ ثیمی BioKurd بگونجێت */
+      .splash-spinner { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: #f97316; border-radius: 50%; animation: spin 1s linear infinite; }
+      @media (prefers-color-scheme: dark) { .splash-spinner { border-color: #1e293b; border-top-color: #f97316; } }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      
       #splash-text { margin-top: 16px; color: #64748b; font-weight: 700; font-size: 14px; text-align: center; }
+      @media (prefers-color-scheme: dark) { #splash-text { color: #94a3b8; } }
 
-      /* پۆپئەپی ئەپدەیت (PWA) */
-      .update-toast { position: fixed; bottom: 24px; left: 16px; right: 16px; background: white; border: 1px solid #f1f5f9; padding: 16px; border-radius: 24px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); z-index: 99999; display: flex; justify-content: space-between; align-items: center; transform: translateY(150%); transition: all 0.5s ease-out; }
+      /* پۆپئەپی ئەپدەیت (PWA) پارێزراو بە Safe Area و دارک مۆد */
+      .update-toast { position: fixed; bottom: max(env(safe-area-inset-bottom), 24px); left: 16px; right: 16px; background: white; border: 1px solid #f1f5f9; padding: 16px; border-radius: 24px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); z-index: 99999; display: flex; justify-content: space-between; align-items: center; transform: translateY(150%); transition: all 0.5s ease-out; }
+      @media (prefers-color-scheme: dark) { .update-toast { background: #1e293b; border-color: #334155; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); } }
       .update-toast.show { transform: translateY(0); }
     </style>
   </head>
   <body>
     
-    <!-- شاشەی چاوەڕێکردن بۆ ڕێگری لە کراش و نیشاندانی خێرایی (Splash Screen) -->
     <div id="initial-splash">
         <img src="/apple-touch-icon.png" class="splash-logo" alt="BioKurd" onerror="this.style.display='none'" />
         <div class="splash-spinner"></div>
@@ -98,10 +109,8 @@
 
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- کۆنترۆڵکردنی تێکچوونی هێڵی ئینتەرنێت و سڕینەوەی کراشەکان -->
     <script>
- 
-     // ڕاستەوخۆ شاشەکە لادەبات بەبێ وەستان
+      // ڕاستەوخۆ شاشەکە لادەبات بەبێ وەستان
       window.onload = function() {
           const splash = document.getElementById('initial-splash');
           if (splash) {
@@ -115,7 +124,7 @@
       setTimeout(function() {
           var splashText = document.getElementById('splash-text');
           if(splashText && !window.IS_IN_APP && document.getElementById('initial-splash').style.display !== 'none') {
-              splashText.innerHTML = 'کێشەیەک هەیە لە هێڵی ئینتەرنێتەکەت<br><button onclick="window.location.reload()" style="margin-top:16px; padding:10px 24px; background:#10b981; color:white; border-radius:12px; border:none; font-family:inherit; font-weight:bold; cursor:pointer;">ڕیفرێش کردنەوە</button>';
+              splashText.innerHTML = 'کێشەیەک هەیە لە هێڵی ئینتەرنێتەکەت<br><button onclick="window.location.reload()" style="margin-top:16px; padding:10px 24px; background:#f97316; color:white; border-radius:12px; border:none; font-family:inherit; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);">ڕیفرێش کردنەوە</button>';
               var spinner = document.querySelector('.splash-spinner');
               if(spinner) spinner.style.display = 'none';
           }
@@ -127,10 +136,14 @@
         if (msg.includes('script error') || msg === 'script error.' || !e.filename) { e.preventDefault(); return true; }
       });
 
-      // وەرگرتنی سیگناڵی ئەپدەیت لە main.tsx ـەوە
+      // وەرگرتنی سیگناڵی ئەپدەیت لە main.tsx ـەوە (پاڵپشتی دارک مۆد کراوە)
       window.addEventListener('app-update-available', (event) => {
         const updateSWFunction = event.detail;
         if (document.getElementById('update-toast-box')) return;
+
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const titleColor = isDark ? '#f8fafc' : '#1e293b';
+        const subtitleColor = isDark ? '#94a3b8' : '#64748b';
 
         const toast = document.createElement('div');
         toast.id = 'update-toast-box';
@@ -138,11 +151,11 @@
         toast.innerHTML = `
           <div style="display:flex; align-items:center; gap:12px;">
               <div>
-                  <h4 style="margin:0; font-weight:900; font-size:14px; color:#1e293b;">وەشانی نوێ ئامادەیە</h4>
-                  <p style="margin:0; font-size:11px; color:#64748b; margin-top:2px;">بۆ نوێکردنەوە، کلیک بکە.</p>
+                  <h4 style="margin:0; font-weight:900; font-size:14px; color:${titleColor};">وەشانی نوێ ئامادەیە</h4>
+                  <p style="margin:0; font-size:11px; color:${subtitleColor}; margin-top:2px;">بۆ نوێکردنەوە، کلیک بکە.</p>
               </div>
           </div>
-          <button id="btn-update-app" style="background:#10b981; color:white; border:none; padding:8px 16px; border-radius:12px; font-weight:bold; font-size:12px; cursor:pointer;">نوێکردنەوە</button>
+          <button id="btn-update-app" style="background:#f97316; color:white; border:none; padding:8px 16px; border-radius:12px; font-weight:bold; font-size:12px; cursor:pointer;">نوێکردنەوە</button>
         `;
         document.body.appendChild(toast);
 
