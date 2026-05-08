@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Share, PlusSquare, Compass, Chrome, Copy, Smartphone, X, Zap } from 'lucide-react';
+import { Download, Share, Compass, Chrome, Copy, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppManager() {
@@ -10,6 +10,7 @@ export default function AppManager() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
+    // پشکنین بزانە ئەگەر ئەپەکە پێشتر دابەزێنراوە (Standalone)
     const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone);
     setIsStandalone(checkStandalone);
 
@@ -17,28 +18,32 @@ export default function AppManager() {
 
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
     
+    // پشکنینی جۆری ئامێر
     const isIOS = (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) || 
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = /android/i.test(ua);
     
-    const inAppBrowsers = ['FBAN', 'FBAV', 'Instagram', 'TikTok', 'ByteLocale', 'Snapchat', 'Line', 'Viber', 'Twitter'];
+    // پشکنین بزانە لەناو وێبگەڕی تۆڕە کۆمەڵایەتییەکانە (Instagram, TikTok, FB, etc.)
+    const inAppBrowsers = ['FBAN', 'FBAV', 'Instagram', 'TikTok', 'ByteLocale', 'Snapchat', 'Line', 'Viber', 'Twitter', 'Threads'];
     const isSocialBrowser = inAppBrowsers.some(browser => ua.includes(browser));
 
     setDeviceType(isIOS ? 'ios' : isAndroid ? 'android' : 'desktop');
 
+    // لۆجیکی نیشاندانی ئاگادارکەرەوە
     if (isSocialBrowser) {
       setIsInAppBrowser(true);
       setShowPrompt(true);
+      // هەوڵدان بۆ کردنەوەی ڕاستەوخۆ بە زۆرەملێ، گەر سەرینەگرت ئاگادارکەرەوەکە دەمێنێتەوە
       setTimeout(() => { forceOpenExternalBrowser(isIOS, isAndroid); }, 500);
     } else {
-      const lastDismissed = localStorage.getItem('app_install_last_shown');
-      const cooldown = 12 * 60 * 60 * 1000;
-
-      if (!lastDismissed || Date.now() - parseInt(lastDismissed) > cooldown) {
-        setTimeout(() => setShowPrompt(true), 3000);
+      // ئەگەر پێشتر دایخستبێت، هەرگیز پیشانی مەدەرەوە
+      const dismissed = localStorage.getItem('biokurd_app_dismissed');
+      if (!dismissed) {
+        setTimeout(() => setShowPrompt(true), 2500);
       }
     }
 
+    // گرتنی ئیڤێنتی داگرتنی PWA بۆ ئەندرۆید
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -53,7 +58,6 @@ export default function AppManager() {
   const forceOpenExternalBrowser = (isIOS: boolean, isAndroid: boolean) => {
     const currentUrl = window.location.href;
     const hostPath = window.location.host + window.location.pathname;
-    
     try {
       if (isAndroid) {
         window.top!.location.href = `intent://${hostPath}#Intent;scheme=https;package=com.android.chrome;end;`;
@@ -73,100 +77,86 @@ export default function AppManager() {
         setDeferredPrompt(null);
         setIsStandalone(true);
         setShowPrompt(false);
-      } else {
-        handleDismiss();
       }
     }
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('لینکەکە کۆپیکرا! لە سەفاری یان کرۆم پەیسنی بکە.');
+    alert('لینکەکە کۆپیکرا! ئێستا دەتوانیت لە سەفاری یان کرۆم بیکەیتەوە.');
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    if (!isInAppBrowser) {
-      localStorage.setItem('app_install_last_shown', Date.now().toString());
-    }
+    // 🌟 ئەگەر دایخست، بۆ هەمیشە بیشارەوە 🌟
+    localStorage.setItem('biokurd_app_dismissed', 'true');
   };
 
+  // ئەگەر پێشتر دایبەزاندبوو یان کۆمپیوتەر بوو، هیچ پیشان مەدە
   if (isStandalone || deviceType === 'desktop' || !showPrompt) return null;
 
   return (
     <AnimatePresence>
       <motion.div 
-        initial={{ y: -100, opacity: 0 }} 
-        animate={{ y: 0, opacity: 1 }} 
-        exit={{ y: -100, opacity: 0 }}
-        className="fixed left-0 right-0 z-[100] pointer-events-none flex justify-center"
-        // 🌟 لێرەدا بەتەواوی Safe Area جێبەجێ کراوە بە بەکارهێنانی max بۆ ئەوەی ئەگەر شاشەکە نۆچی نەبوو، لایەنی کەم بۆشاییەک هەبێت
-        style={{ 
-          paddingTop: 'max(env(safe-area-inset-top), 16px)',
-          paddingLeft: 'max(env(safe-area-inset-left), 16px)',
-          paddingRight: 'max(env(safe-area-inset-right), 16px)'
-        }}
+        initial={{ y: -100, opacity: 0, scale: 0.95 }} 
+        animate={{ y: 0, opacity: 1, scale: 1 }} 
+        exit={{ y: -100, opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none flex justify-center px-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }} // 🌟 پاراستن لە کامێرای مۆبایل 🌟
         dir="rtl"
       >
-        <div className="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border border-neutral-200 dark:border-slate-800 rounded-2xl p-3 flex flex-col pointer-events-auto relative overflow-hidden">
+        {/* دیزاینە باریک و خڕەکە (Pill Shape) */}
+        <div className="w-full max-w-[360px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-neutral-200/50 dark:border-slate-700/50 rounded-full p-1.5 pl-2.5 flex items-center gap-3 pointer-events-auto relative">
           
-          <button 
-            onClick={handleDismiss} 
-            className="absolute top-2 left-2 p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-slate-800 rounded-full transition-colors z-20"
-          >
-            <X size={14} />
-          </button>
+          {/* ئایکۆنی ئەپەکە */}
+          <img src="/apple-touch-icon.png" className="w-11 h-11 rounded-full shadow-sm shrink-0 border border-neutral-100 dark:border-slate-800" alt="BioKurd" />
 
-          <div className="flex items-center justify-between gap-3 w-full pr-1">
-            {isInAppBrowser && (
-              <>
-                <div className="absolute inset-0 bg-rose-500/10 z-0"></div>
-                <div className="flex flex-col relative z-10 w-full mt-1">
-                  <div className="flex items-center gap-2 mb-3 text-rose-600">
-                    <Smartphone size={18} strokeWidth={2.5}/>
-                    <span className="font-black text-xs">لە وێبگەڕی دەرەکییت!</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => forceOpenExternalBrowser(deviceType === 'ios', deviceType === 'android')} className="flex-1 py-2 bg-rose-500 text-white rounded-lg text-xs font-black shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
-                      {deviceType === 'ios' ? <Compass size={14}/> : <Chrome size={14}/>}
-                      لە {deviceType === 'ios' ? 'سەفاری' : 'کرۆم'} بیکەرەوە
-                    </button>
-                    <button onClick={handleCopy} className="py-2 px-3 bg-white dark:bg-slate-800 text-rose-600 border border-rose-200 dark:border-rose-900/50 rounded-lg text-xs font-black shadow-sm flex items-center justify-center active:scale-95 transition-transform">
-                      <Copy size={16}/>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {!isInAppBrowser && deviceType === 'android' && deferredPrompt && (
-              <div className="flex items-center gap-3 relative z-10 w-full">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center shrink-0">
-                  <Download size={20} strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-black text-neutral-900 dark:text-white leading-tight">ئەپەکە دابەزێنە</h4>
-                  <p className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 mt-0.5">بەبێ ئینتەرنێتیش بەکاریبهێنە</p>
-                </div>
-                <button onClick={handleInstallPWA} className="px-3 py-1.5 bg-emerald-500 text-white font-black text-xs rounded-lg shadow-md hover:bg-emerald-600 active:scale-95 transition-all shrink-0 flex items-center gap-1 mr-2">
-                  <Zap size={12} fill="currentColor"/> داگرتن
+          {isInAppBrowser ? (
+            <>
+              {/* بۆ وێبگەڕی ئینستاگرام و تیکتۆک */}
+              <div className="flex-1 min-w-0 pr-1">
+                <p className="text-[12px] font-black text-neutral-800 dark:text-white leading-tight truncate">لێرە کێشەی هەیە!</p>
+                <p className="text-[10px] font-bold text-rose-500 leading-tight mt-0.5 truncate">لە سەفاری یان کرۆم بیکەرەوە</p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button onClick={() => forceOpenExternalBrowser(deviceType === 'ios', deviceType === 'android')} className="w-9 h-9 flex items-center justify-center bg-rose-500 text-white rounded-full shadow-sm active:scale-95 transition-transform" title="کردنەوە لە وێبگەڕ">
+                  {deviceType === 'ios' ? <Compass size={18}/> : <Chrome size={18}/>}
+                </button>
+                <button onClick={handleCopy} className="w-9 h-9 flex items-center justify-center bg-neutral-100 dark:bg-slate-800 text-neutral-600 dark:text-neutral-300 rounded-full shadow-sm active:scale-95 transition-transform" title="کۆپیکردنی لینک">
+                  <Copy size={16}/>
                 </button>
               </div>
-            )}
-
-            {!isInAppBrowser && deviceType === 'ios' && (
-              <div className="flex items-center gap-3 relative z-10 w-full py-1">
-                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
-                  <Share size={18} strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 leading-snug">
-                    بۆ دابەزاندن: کرتە لە <span className="text-blue-500 font-black"><Share size={12} className="inline mb-0.5"/> Share</span> بکە، پاشان <span className="font-black text-neutral-900 dark:text-white"><PlusSquare size={12} className="inline mb-0.5"/> Add to Home</span> هەڵبژێرە.
-                  </p>
-                </div>
+            </>
+          ) : deviceType === 'android' && deferredPrompt ? (
+            <>
+              {/* بۆ داگرتن لە ئەندرۆید */}
+              <div className="flex-1 min-w-0 pr-1">
+                <p className="text-[13px] font-black text-neutral-800 dark:text-white leading-tight truncate">BioKurd</p>
+                <p className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 leading-tight mt-0.5 truncate">بەبێ ئینتەرنێتیش خێرایە</p>
               </div>
-            )}
-          </div>
+              <button onClick={handleInstallPWA} className="px-5 py-2 bg-emerald-500 text-white text-[12px] font-black rounded-full shadow-sm active:scale-95 transition-transform shrink-0 flex items-center gap-1.5">
+                <Download size={14}/> داگرتن
+              </button>
+            </>
+          ) : deviceType === 'ios' ? (
+            <>
+              {/* بۆ داگرتن لە ئایفۆن */}
+              <div className="flex-1 min-w-0 pr-1">
+                <p className="text-[11px] font-black text-neutral-800 dark:text-white leading-tight truncate">بیخەرە سەر شاشەکەت</p>
+                <p className="text-[9px] font-bold text-neutral-500 dark:text-neutral-400 leading-tight mt-0.5">
+                  لە خوارەوە <Share size={10} className="inline text-blue-500 mx-0.5"/> بگرە، پاشان <span className="text-neutral-700 dark:text-neutral-300 font-black">Add to Home</span>
+                </p>
+              </div>
+            </>
+          ) : null}
+
+          {/* هێڵی جیاکەرەوە و دوگمەی لادان (X) */}
+          <div className="w-[1px] h-6 bg-neutral-200 dark:bg-slate-700 mx-0.5 shrink-0"></div>
+          <button onClick={handleDismiss} className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-full active:scale-95 transition-colors shrink-0">
+            <X size={18} strokeWidth={2.5}/>
+          </button>
+
         </div>
       </motion.div>
     </AnimatePresence>
