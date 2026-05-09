@@ -26,10 +26,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script>
-      window.addEventListener('beforeinstallprompt', function(e) {
-          e.preventDefault(); e.stopImmediatePropagation(); return false;
-      });
-
       // زیرەکی ناسینەوەی سیستەمەکان کە خۆتت نووسیبوو بەڵام پاککراوەتەوە
       (function() {
         try {
@@ -83,7 +79,6 @@
       .splash-logo { width: 90px; height: 90px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 24px; animation: pulse-icon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
       @keyframes pulse-icon { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
       
-      /* لۆدینگ کراوە بە پڕتەقاڵی تا لەگەڵ ثیمی BioKurd بگونجێت */
       .splash-spinner { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: #f97316; border-radius: 50%; animation: spin 1s linear infinite; }
       @media (prefers-color-scheme: dark) { .splash-spinner { border-color: #1e293b; border-top-color: #f97316; } }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -110,7 +105,6 @@
     <script type="module" src="/src/main.tsx"></script>
 
     <script>
-      // ڕاستەوخۆ شاشەکە لادەبات بەبێ وەستان
       window.onload = function() {
           const splash = document.getElementById('initial-splash');
           if (splash) {
@@ -120,7 +114,6 @@
           }
       };
 
-      // پشکنینی هێڵی ئینتەرنێت بۆ ڕێگریکردن لە کراش
       setTimeout(function() {
           var splashText = document.getElementById('splash-text');
           if(splashText && !window.IS_IN_APP && document.getElementById('initial-splash').style.display !== 'none') {
@@ -130,13 +123,11 @@
           }
       }, 12000);
 
-      // ڕێگریکردن لە کراشبوونی تەواوی ئەپەکە بەهۆی هەڵەی سکرێپت
       window.addEventListener('error', function(e) {
         const msg = e.message ? e.message.toLowerCase() : '';
         if (msg.includes('script error') || msg === 'script error.' || !e.filename) { e.preventDefault(); return true; }
       });
 
-      // وەرگرتنی سیگناڵی ئەپدەیت لە main.tsx ـەوە (پاڵپشتی دارک مۆد کراوە)
       window.addEventListener('app-update-available', (event) => {
         const updateSWFunction = event.detail;
         if (document.getElementById('update-toast-box')) return;

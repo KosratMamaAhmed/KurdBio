@@ -28,26 +28,12 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    // 🌟 زیادکردنی ڕاوتێک بۆ هێنانی کۆی گشتی ئامارەکان ڕاستەوخۆ لە D1 🌟
     if (method === "GET" && path === "/api/admin/stats") {
-        let totalVisits = 0;
-        let totalClicks = 0;
-        try {
-            if (env.DB) {
-                await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
-                const stat: any = await env.DB.prepare("SELECT SUM(visits) as v, SUM(clicks) as c FROM stats").first();
-                if (stat) {
-                    totalVisits = stat.v || 0;
-                    totalClicks = stat.c || 0;
-                }
-            }
-        } catch(e) {}
-        return json({ totalVisits, totalClicks, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
+        return json({ totalVisits: 0, totalClicks: 0, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
     }
 
-    // 🌟 هێنانی بەکارهێنەران و ئامارەکانیان (بە چارەسەری کێشەی نەخوێندنەوەی ئایدی) 🌟
+    // 🌟 هێنانی بەکارهێنەران زۆر بە خێرایی بە Promise.all 🌟
     if (method === "GET" && path === "/api/admin/users") {
-        let users = [];
         const allUsersStr = await env.KV.get("all_users_list");
         const fastKeys = allUsersStr ? JSON.parse(allUsersStr).map((id: any) => `user_id:${id}`) : [];
         const list = await env.KV.list({prefix: "user_id:"});
@@ -57,30 +43,32 @@ export async function onRequest(context: any) {
         let statsMap: any = {};
         try {
             if (env.DB) {
-                await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
                 const { results } = await env.DB.prepare("SELECT * FROM stats").all();
-                if (results) {
-                    results.forEach((s: any) => { 
-                        // 🌟 چارەسەرەکە لێرەدایە: دڵنیابوون لەوەی ئایدییەکە ستڕینگە نەک ژمارە 🌟
-                        statsMap[String(s.user_id)] = s; 
-                    });
-                }
+                if(results) results.forEach((s: any) => { statsMap[String(s.user_id)] = s; });
             }
         } catch(e) {}
 
-        for (const key of allKeys) {
-            const uStr = await env.KV.get(key as string);
-            if (uStr) { 
-                const { password, ...safeUser } = JSON.parse(uStr); 
-                // 🌟 دڵنیابوون لەوەی کە لێرەش ستڕینگە بۆ ئەوەی بەتەواوی یەکبگرنەوە 🌟
-                const userIdStr = String((key as string).replace('user_id:', ''));
-                
-                safeUser.visits = statsMap[userIdStr]?.visits || 0;
-                safeUser.clicks = statsMap[userIdStr]?.clicks || 0;
-                
-                users.push(safeUser); 
-            }
-        }
+        // 🚀 لێرەدا هەموو یوزەرەکان لە یەک کاتدا دەهێنێت نەک یەک بە یەک 🚀
+        const userPromises = allKeys.map(async (key: any) => {
+            const uStr = await env.KV.get(key);
+            if (!uStr) return null;
+            const { password, ...safeUser } = JSON.parse(uStr); 
+            
+            const userIdStr = String(key.replace('user_id:', ''));
+            
+            let kvVisits = 0, kvClicks = 0;
+            try {
+                const kvSt = await env.KV.get(`stats_fallback:${userIdStr}`, "json");
+                if (kvSt) { kvVisits = (kvSt as any).visits || 0; kvClicks = (kvSt as any).clicks || 0; }
+            } catch(e) {}
+
+            safeUser.visits = (statsMap[userIdStr]?.visits || 0) + kvVisits;
+            safeUser.clicks = (statsMap[userIdStr]?.clicks || 0) + kvClicks;
+            
+            return safeUser;
+        });
+
+        const users = (await Promise.all(userPromises)).filter(u => u !== null);
         return json(users);
     }
 
@@ -97,8 +85,7 @@ export async function onRequest(context: any) {
         const userStr = await env.KV.get(`user_id:${body.userId}`);
         if(userStr) {
             const user = JSON.parse(userStr); user.isActive = body.isActive;
-            await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-            await env.KV.put(`user_id:${body.userId}`, JSON.stringify(user));
+            await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${body.userId}`, JSON.stringify(user)) ]);
         }
         return json({success: true});
     }
@@ -108,8 +95,7 @@ export async function onRequest(context: any) {
         const userStr = await env.KV.get(`user_id:${body.userId}`);
         if(userStr) {
             const user = JSON.parse(userStr); user.isPro = body.isPro;
-            await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-            await env.KV.put(`user_id:${body.userId}`, JSON.stringify(user));
+            await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${body.userId}`, JSON.stringify(user)) ]);
         }
         return json({success: true});
     }
@@ -120,8 +106,7 @@ export async function onRequest(context: any) {
         if(userStr) {
             const user = JSON.parse(userStr);
             user.password = await bcrypt.hash(newPassword, 10);
-            await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-            await env.KV.put(`user_id:${targetId}`, JSON.stringify(user));
+            await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${targetId}`, JSON.stringify(user)) ]);
         }
         return json({success: true});
     }
@@ -139,8 +124,7 @@ export async function onRequest(context: any) {
                 await env.KV.put(`slug:${safeUpdates.slug}`, updates.id.toString());
             }
 
-            await env.KV.put(`user:${updatedUser.username}`, JSON.stringify(updatedUser));
-            await env.KV.put(`user_id:${updates.id}`, JSON.stringify(updatedUser));
+            await Promise.all([ env.KV.put(`user:${updatedUser.username}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${updates.id}`, JSON.stringify(updatedUser)) ]);
         }
         return json({success: true});
     }
@@ -150,16 +134,16 @@ export async function onRequest(context: any) {
          const userStr = await env.KV.get(`user_id:${idToDelete}`);
          if(userStr) {
              const user = JSON.parse(userStr);
-             await env.KV.delete(`user:${user.username}`);
-             await env.KV.delete(`user_id:${idToDelete}`);
-             await env.KV.delete(`slug:${user.slug || user.username}`);
-             await env.KV.delete(`email:${user.email}`);
+             await Promise.all([
+                 env.KV.delete(`user:${user.username}`),
+                 env.KV.delete(`user_id:${idToDelete}`),
+                 env.KV.delete(`slug:${user.slug || user.username}`),
+                 env.KV.delete(`email:${user.email}`),
+                 env.KV.delete(`stats_fallback:${idToDelete}`)
+             ]);
              
              try { 
-                 if (env.DB) {
-                     await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
-                     await env.DB.prepare("DELETE FROM ip_tracking WHERE id LIKE ?").bind(`%_${idToDelete}_%`).run(); 
-                 }
+                 if (env.DB) await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
              } catch(e) {}
 
              const allUsersStr = await env.KV.get("all_users_list");

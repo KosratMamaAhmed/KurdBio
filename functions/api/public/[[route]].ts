@@ -19,9 +19,38 @@ const DEFAULT_SETTINGS = {
     { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
     { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
     { id: 'tiktok', name: 'تیکتۆک', iconName: 'Music', imageUrl: '/social/tiktok.png', baseUrl: 'https://www.tiktok.com/@', color: '#000000' },
-    { id: 'snapchat', name: 'سناپچات', iconName: 'Ghost', imageUrl: '/social/snapchat.png', baseUrl: 'https://www.snapchat.com/add/', color: '#FFFC00' }
+    { id: 'snapchat', name: 'سناپچات', iconName: 'Ghost', imageUrl: '/social/snapchat.png', baseUrl: 'https://www.snapchat.com/add/', color: '#FFFC00' },
+    { id: 'youtube', name: 'یوتیوب', iconName: 'Youtube', imageUrl: '/social/youtube.png', baseUrl: 'https://www.youtube.com/@', color: '#FF0000' },
+    { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' }
   ]
 };
+
+// 🌟 سیستەمی Hybrid ـەکەی خۆت کە کار دەکات 🌟
+async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
+  let savedToD1 = false;
+  try {
+      if (env.DB) {
+          await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+          if (type === 'visit') {
+              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0) ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1`).bind(userId).run();
+          } else {
+              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1) ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1`).bind(userId).run();
+          }
+          savedToD1 = true;
+      }
+  } catch (e) { console.error("D1 Failed", e); }
+
+  // ئەگەر D1 کێشەی هەبوو، ڕاستەوخۆ دەچێتە ناو KV و هەرگیز ئامارەکانت نابێتە سفڕ
+  if (!savedToD1) {
+      try {
+          let kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
+          if (!kvStats) kvStats = { visits: 0, clicks: 0 };
+          if (type === 'visit') kvStats.visits += 1;
+          else kvStats.clicks += 1;
+          await env.KV.put(`stats_fallback:${userId}`, JSON.stringify(kvStats));
+      } catch (e) {}
+  }
+}
 
 export async function onRequest(context: any) {
   const { request, env, waitUntil } = context;
@@ -48,8 +77,8 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 تۆمارکردنی سەردانەکان ڕاستەوخۆ بۆ D1 (بەبێ قفڵی ئایپی) 🌟
-    if (method === "POST" && path.startsWith("/api/public/v/")) {
+    // 🌟 بەکارهێنانی /v/ و /visit/ هەردووکی بۆ دڵنیایی 🌟
+    if (method === "POST" && (path.startsWith("/api/public/v/") || path.startsWith("/api/public/visit/"))) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
@@ -57,21 +86,13 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId && env.DB) {
-               try {
-                   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
-                   await env.DB.prepare(`
-                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
-                       ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
-                   `).bind(targetUserId.toString()).run();
-               } catch (e) { console.error("D1 Visit Error:", e); }
-           }
+           if (targetUserId) await saveStat(env, targetUserId.toString(), 'visit');
        }
        return json({ success: true });
     }
 
-    // 🌟 تۆمارکردنی کلیکەکان ڕاستەوخۆ بۆ D1 (بەبێ قفڵی ئایپی) 🌟
-    if (method === "POST" && path.startsWith("/api/public/c/")) {
+    // 🌟 بەکارهێنانی /c/ و /click/ هەردووکی 🌟
+    if (method === "POST" && (path.startsWith("/api/public/c/") || path.startsWith("/api/public/click/"))) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
@@ -79,15 +100,7 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId && env.DB) {
-               try {
-                   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
-                   await env.DB.prepare(`
-                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
-                       ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
-                   `).bind(targetUserId.toString()).run();
-               } catch (e) { console.error("D1 Click Error:", e); }
-           }
+           if (targetUserId) await saveStat(env, targetUserId.toString(), 'click');
        }
        return json({ success: true });
     }
@@ -130,7 +143,6 @@ export async function onRequest(context: any) {
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
         const { name, username, email, phone, password, dob } = await request.json();
         if (!name || !username || !email || !phone || !password || !dob) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
-        if (password.length < 8) return json({ error: "پاسوۆرد دەبێت لانی کەم ٨ پیت یان ژمارە بێت" }, 400);
 
         const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
         const normalizedEmail = email.toLowerCase().trim();
@@ -207,22 +219,11 @@ export async function onRequest(context: any) {
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
        const profileData = { 
-         id: user.id, 
-         displayName: escapeHTML(user.displayName || user.username), 
-         bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, 
-         links: user.links || [], 
-         theme: user.theme, 
-         bgImage: user.bgImage, 
-         isPro: user.isPro, 
-         slug: user.slug,
-         nameColor: user.nameColor,        
-         bioColor: user.bioColor,          
-         btnTextColor: user.btnTextColor  
+         id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
+         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, 
+         isPro: user.isPro, slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
-       const res = json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
-       waitUntil(cache.put(cacheKey, res.clone()));
-       return res;
+       return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
     }
 
     const authHeader = request.headers.get("Authorization");
@@ -233,21 +234,30 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
+    // 🌟 خێراکردنی داشبۆرد بە Promise.all 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
+       
        let userStr = await env.KV.get(`user_id:${userId}`);
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
        
        const user = JSON.parse(userStr);
-       user.visits = 0;
-       user.clicks = 0;
+       let totalVisits = 0; let totalClicks = 0;
        
        try {
            if(env.DB) {
                const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
-               if(stat) { user.visits = stat.visits; user.clicks = stat.clicks; }
+               if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; }
            }
        } catch(e) {}
+
+       try {
+           const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
+           if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); }
+       } catch(e) {}
+
+       user.visits = totalVisits; 
+       user.clicks = totalClicks;
 
        return json(user);
     }
@@ -277,22 +287,15 @@ export async function onRequest(context: any) {
        }
        
        const updatedUser = { 
-           ...user, 
-           username: newUsername,
+           ...user, ...updates, username: newUsername, slug: newSlug,
            displayName: escapeHTML(updates.displayName || user.displayName), 
-           bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio), 
-           slug: newSlug, 
-           theme: updates.theme !== undefined ? updates.theme : user.theme, 
-           bgImage: updates.bgImage !== undefined ? updates.bgImage : user.bgImage, 
-           bgPos: updates.bgPos !== undefined ? updates.bgPos : user.bgPos, 
-           avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : user.avatarUrl,
-           avatarPos: updates.avatarPos !== undefined ? updates.avatarPos : user.avatarPos, 
-           nameColor: updates.nameColor !== undefined ? updates.nameColor : user.nameColor,
-           bioColor: updates.bioColor !== undefined ? updates.bioColor : user.bioColor,
-           btnTextColor: updates.btnTextColor !== undefined ? updates.btnTextColor : user.btnTextColor
+           bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio)
        };
-       await env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser));
-       await env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser));
+       
+       await Promise.all([
+          env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)),
+          env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser))
+       ]);
        return json(updatedUser);
     }
 
@@ -302,8 +305,7 @@ export async function onRequest(context: any) {
         const user = JSON.parse(userStr);
         if(!user.links) user.links = [];
         user.links.push({ id: Date.now(), title: escapeHTML(newLinkInfo.title), url: newLinkInfo.url, icon: escapeHTML(newLinkInfo.icon), color: newLinkInfo.color, platformId: escapeHTML(newLinkInfo.platformId || ''), imageUrl: newLinkInfo.imageUrl || '' });
-        await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-        await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
+        await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${userId}`, JSON.stringify(user)) ]);
         return json({success: true, linkId: user.links[user.links.length-1].id});
     }
 
@@ -315,8 +317,7 @@ export async function onRequest(context: any) {
         const linkIndex = user.links?.findIndex((l:any) => l.id === linkId);
         if(linkIndex > -1) {
             user.links[linkIndex] = { ...user.links[linkIndex], title: escapeHTML(updates.title), url: updates.url, icon: escapeHTML(updates.icon), color: updates.color, platformId: escapeHTML(updates.platformId || ''), imageUrl: updates.imageUrl || '' };
-            await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-            await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
+            await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${userId}`, JSON.stringify(user)) ]);
         }
         return json({success: true});
     }
@@ -326,8 +327,7 @@ export async function onRequest(context: any) {
         const userStr = await env.KV.get(`user_id:${userId}`);
         const user = JSON.parse(userStr);
         user.links = user.links.filter((l: any) => l.id !== linkId);
-        await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-        await env.KV.put(`user_id:${userId}`, JSON.stringify(user));
+        await Promise.all([ env.KV.put(`user:${user.username}`, JSON.stringify(user)), env.KV.put(`user_id:${userId}`, JSON.stringify(user)) ]);
         return json({success: true});
     }
 

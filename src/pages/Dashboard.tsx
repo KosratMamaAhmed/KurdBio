@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup, Globe
+  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup, Globe, Star
 } from 'lucide-react';
 import * as icons from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
@@ -10,12 +11,7 @@ import ProfileSettings from '../components/ProfileSettings';
 import Card from '../components/Card';
 import AppManager from '../components/AppManager';
 
-interface Props {
-  user: any;
-  onLogout: () => void;
-  settings?: any;
-  theme?: any;
-}
+interface Props { user: any; onLogout: () => void; settings?: any; theme?: any; }
 
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
@@ -38,6 +34,7 @@ const DEFAULT_SOCIALS = [
 ];
 
 export default function Dashboard({ user, onLogout, settings, theme }: Props) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -59,30 +56,16 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
   const fetchProfile = async (isRefresh = false) => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) {
-        onLogout();
-        return;
-    }
-
+    if (!token) { onLogout(); return; }
     if (isRefresh) setRefreshingStats(true);
-
     try {
-      const res = await fetch(`/api/profile?_t=${Date.now()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(`/api/profile?_t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
-        setProfile(data);
-        localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
-      } else {
-        if (res.status === 401) onLogout();
-      }
-    } catch (err) {
-      showNotif('کێشەی هێڵ هەیە', 'error');
-    } finally {
-      setLoading(false);
-      setRefreshingStats(false);
-    }
+        setProfile(data); localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
+      } else if (res.status === 401) onLogout();
+    } catch (err) { showNotif('کێشەی هێڵ هەیە', 'error'); } 
+    finally { setLoading(false); setRefreshingStats(false); }
   };
 
   useEffect(() => { fetchProfile(); }, []);
@@ -93,74 +76,38 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   };
 
   const handleUpdateProfile = async (updates: any) => {
-    const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) return;
+    const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
     setSaving(true);
-    
-    const updatedProfile = { ...profile, ...updates };
-    setProfile(updatedProfile);
-
+    const updatedProfile = { ...profile, ...updates }; setProfile(updatedProfile);
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updates)
-      });
+      const res = await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(updates) });
       if (!res.ok) throw new Error((await res.json()).error || 'هەڵە');
       showNotif('زانیارییەکان بە سەرکەوتوویی پاشەکەوت کران');
-    } catch (err: any) {
-      showNotif(err.message, 'error');
-      fetchProfile();
-    } finally {
-      setSaving(false);
-    }
+    } catch (err: any) { showNotif(err.message, 'error'); fetchProfile(); } 
+    finally { setSaving(false); }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      showNotif('قەبارەی وێنە دەبێت لە 2MB کەمتر بێت', 'error');
-      return;
-    }
-
-    if (type === 'avatar') setIsUploadingAvatar(true);
-    else setIsUploadingIcon(true);
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+    const file = e.target.files?.[0]; if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return showNotif('قەبارەی وێنە دەبێت لە 2MB کەمتر بێت', 'error');
+    
+    if (type === 'avatar') setIsUploadingAvatar(true); else setIsUploadingIcon(true);
+    
+    const reader = new FileReader(); reader.readAsDataURL(file);
     reader.onload = (event) => {
-      const img = new window.Image();
-      img.src = event.target?.result as string;
+      const img = new window.Image(); img.src = event.target?.result as string;
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = type === 'avatar' ? 400 : 150;
-        const MAX_HEIGHT = type === 'avatar' ? 400 : 150;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
+        const canvas = document.createElement('canvas'); 
+        const MAX = type === 'avatar' ? 400 : 150; 
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+        canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, w, h);
         const base64String = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.8);
         
         if (type === 'avatar') {
-          handleUpdateProfile({ avatarUrl: base64String, avatarPos: { x: 50, y: 50 } });
-          setIsUploadingAvatar(false);
+          handleUpdateProfile({ avatarUrl: base64String }); setIsUploadingAvatar(false);
         } else {
-          if (editLink) setEditLink({ ...editLink, imageUrl: base64String });
-          else setNewLink({ ...newLink, imageUrl: base64String });
+          if (editLink) setEditLink({ ...editLink, imageUrl: base64String }); else setNewLink({ ...newLink, imageUrl: base64String });
           setIsUploadingIcon(false);
         }
       };
@@ -168,122 +115,55 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   };
 
   const saveLinksOrder = async (newLinks: any[]) => {
-    const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) return;
-    
-    const updatedProfile = { ...profile, links: newLinks };
-    setProfile(updatedProfile);
+    const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
+    const updatedProfile = { ...profile, links: newLinks }; setProfile(updatedProfile);
+    try { await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ links: newLinks }) }); } catch (err) { showNotif('کێشە هەیە', 'error'); }
+  };
 
-    try {
-      await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ links: newLinks })
-      });
-    } catch (err) {
-      showNotif('کێشە لە پاشەکەوتکردنی ڕیزبەندی', 'error');
-    }
+  const handleAddLinkClick = () => {
+     if (!profile?.isPro && profile?.links?.length >= 1) {
+         showNotif('بۆ دانانی لینکی زیاتر، پێویستە VIP بیت!', 'error');
+         setTimeout(() => navigate('/payment'), 2000);
+         return;
+     }
+     setShowAddForm(!showAddForm); setEditLink(null);
   };
 
   const handleAddLink = async () => {
     if (!newLink.title || !newLink.url) return showNotif('ناو و لینک پێویستە', 'error');
-    const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) return;
+    if (!profile?.isPro && profile?.links?.length >= 1) { navigate('/payment'); return; }
+    
+    const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newLink)
-      });
-      if (res.ok) {
-        showNotif('بەستەری نوێ زیادکرا');
-        setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
-        setShowAddForm(false);
-        fetchProfile();
-      } else throw new Error();
-    } catch (err) {
-      showNotif('کێشە لە زیادکردن', 'error');
-    } finally {
-      setSaving(false);
-    }
+      const res = await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(newLink) });
+      if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
+    } catch (err) { showNotif('کێشە لە زیادکردن', 'error'); } finally { setSaving(false); }
   };
 
   const handleEditLink = async () => {
     if (!editLink.title || !editLink.url) return showNotif('ناو و لینک پێویستە', 'error');
-    const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) return;
+    const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/links/${editLink.id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(editLink)
-      });
-      if (res.ok) {
-        showNotif('بەستەرەکە نوێکرایەوە');
-        setEditLink(null);
-        fetchProfile();
-      } else throw new Error();
-    } catch (err) {
-      showNotif('کێشە لە نوێکردنەوە', 'error');
-    } finally {
-      setSaving(false);
-    }
+      const res = await fetch(`/api/links/${editLink.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(editLink) });
+      if (res.ok) { showNotif('بەستەرەکە نوێکرایەوە'); setEditLink(null); fetchProfile(); } else throw new Error();
+    } catch (err) { showNotif('کێشە لە نوێکردنەوە', 'error'); } finally { setSaving(false); }
   };
 
   const handleDeleteLink = async (id: number) => {
     if(!confirm('دڵنیایت لە سڕینەوەی ئەم بەستەرە؟')) return;
-    const token = localStorage.getItem('biokurd_token') || user?.token;
-    if (!token) return;
+    const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
     try {
-      const res = await fetch(`/api/links/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        showNotif('بەستەر سڕایەوە');
-        fetchProfile();
-      } else throw new Error();
-    } catch (err) {
-      showNotif('کێشە لە سڕینەوە', 'error');
-    }
+      const res = await fetch(`/api/links/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { showNotif('بەستەر سڕایەوە'); fetchProfile(); } else throw new Error();
+    } catch (err) { showNotif('کێشە لە سڕینەوە', 'error'); }
   };
 
   const handlePlatformChange = (isEdit: boolean, platformId: string) => {
-      const selected = DEFAULT_SOCIALS.find(s => s.id === platformId);
-      if (!selected) return;
-
-      if (isEdit && editLink) {
-          setEditLink({
-              ...editLink,
-              platformId,
-              title: selected.name,
-              icon: selected.iconName,
-              imageUrl: selected.imageUrl,
-              color: selected.color,
-              url: selected.baseUrl !== '' ? selected.baseUrl : editLink.url
-          });
-      } else {
-          setNewLink({
-              ...newLink,
-              platformId,
-              title: selected.name,
-              icon: selected.iconName,
-              imageUrl: selected.imageUrl,
-              color: selected.color,
-              url: selected.baseUrl
-          });
-      }
+      const selected = DEFAULT_SOCIALS.find(s => s.id === platformId); if (!selected) return;
+      if (isEdit && editLink) { setEditLink({ ...editLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl !== '' ? selected.baseUrl : editLink.url }); } 
+      else { setNewLink({ ...newLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl }); }
   };
 
   if (loading) return <div className="min-h-[100dvh] bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
@@ -295,13 +175,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
       <AnimatePresence>
         {notification.show && (
-          <motion.div 
-            initial={{ opacity: 0, y: -50 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -50 }} 
-            style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}
-            className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}
-          >
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }} className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
             {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle size={20}/>} {notification.message}
           </motion.div>
         )}
@@ -318,10 +192,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
           </div>
 
           <div className="flex-1 space-y-2">
-            {[
-              { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' },
-              { id: 'profile', icon: User, label: 'پرۆفایل' }
-            ].map(tab => (
+            {[ { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' }, { id: 'profile', icon: User, label: 'پرۆفایل' } ].map(tab => (
               <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
               </button>
@@ -329,6 +200,11 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
           </div>
 
           <div className="mt-auto space-y-2">
+            {!profile?.isPro && (
+               <button onClick={() => navigate('/payment')} className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 rounded-2xl font-black shadow-lg transition-transform active:scale-95 mb-4 animate-pulse">
+                 <Star size={20} /> ببە بە VIP
+               </button>
+            )}
             <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-neutral-900 text-white hover:bg-black rounded-2xl font-black shadow-lg transition-transform active:scale-95">
               <Eye size={22} /> بینینی کارت
             </button>
@@ -339,9 +215,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>
-      )}
+      {mobileMenuOpen && <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>}
 
       <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
         <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 z-20 shrink-0 sticky top-0 pt-[env(safe-area-inset-top)]">
@@ -369,9 +243,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
             
             {profile?.dbError && (
               <div className="bg-red-50 border-2 border-red-500 text-red-700 p-5 rounded-[2rem] mb-6 font-bold flex flex-col gap-2 shadow-sm text-sm">
-                 <div className="flex items-center gap-2 text-red-600 text-lg">
-                    <DatabaseBackup /> <span>هەڵە لە بەستنەوەی داتابەیس هەیە!</span>
-                 </div>
+                 <div className="flex items-center gap-2 text-red-600 text-lg"><DatabaseBackup /> <span>هەڵە لە بەستنەوەی داتابەیس هەیە!</span></div>
                  <p dir="ltr" className="font-mono bg-red-100 p-3 rounded-xl text-xs overflow-x-auto text-left border border-red-200">{profile.dbError}</p>
               </div>
             )}
@@ -404,13 +276,12 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                 <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200 mb-6 sm:mb-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-black text-neutral-900 flex items-center gap-3"><LinkIcon className="text-orange-500" size={24}/> بەستەرەکانت</h2>
-                    <button onClick={() => { setShowAddForm(!showAddForm); setEditLink(null); }} className={`p-3 rounded-full transition-transform active:scale-95 shadow-md ${showAddForm ? 'bg-red-50 text-red-500 hover:bg-red-100 rotate-45' : 'bg-orange-500 text-white hover:bg-orange-600 hover:-translate-y-0.5'}`}>
+                    <button onClick={handleAddLinkClick} className={`p-3 rounded-full transition-transform active:scale-95 shadow-md ${showAddForm ? 'bg-red-50 text-red-500 hover:bg-red-100 rotate-45' : 'bg-orange-500 text-white hover:bg-orange-600 hover:-translate-y-0.5'}`}>
                       <Plus size={24} strokeWidth={3}/>
                     </button>
                   </div>
 
-                  {/* 🌟 نیشاندانی بەستەرە گشتییەکانی ئەدمین (Global Links) 🌟 */}
-                  {settings?.globalButtons && settings.globalButtons.length > 0 && (
+                  {settings?.globalButtons?.length > 0 && (
                      <div className="mb-8 p-5 bg-blue-50/50 border border-blue-100 rounded-3xl">
                        <h3 className="text-[13px] font-black text-blue-800 mb-4 flex items-center gap-1.5"><Globe size={16}/> بەستەرە گشتییەکان (لە لایەن ئەدمینەوە دانراوە)</h3>
                        <div className="space-y-3 pointer-events-none opacity-90">
@@ -441,26 +312,14 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
-                            <select 
-                                value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} 
-                                onChange={(e) => handlePlatformChange(!!editLink, e.target.value)}
-                                className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer"
-                            >
-                                {DEFAULT_SOCIALS.map(social => (
-                                    <option key={social.id} value={social.id}>{social.name}</option>
-                                ))}
+                            <select value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
+                                {DEFAULT_SOCIALS.map(social => (<option key={social.id} value={social.id}>{social.name}</option>))}
                             </select>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
-                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
-                            </div>
-                            <div>
-                              <label className="text-xs font-bold text-neutral-500 block mb-2">لینک (URL)</label>
-                              <input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left" dir="ltr" />
-                            </div>
+                            <div><label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label><input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" /></div>
+                            <div><label className="text-xs font-bold text-neutral-500 block mb-2">لینک (URL)</label><input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left" dir="ltr" /></div>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -479,7 +338,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                                 </button>
                               </div>
                             </div>
-                            
                             <div>
                                 <label className="text-xs font-bold text-neutral-500 block mb-2">ڕەنگی دوگمە</label>
                                 <div className="flex items-center gap-3 p-2 bg-white border border-neutral-200 rounded-xl">
@@ -490,9 +348,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           </div>
 
                           <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 mt-2">
-                            <button onClick={() => { setShowAddForm(false); setEditLink(null); }} className="px-5 py-3 text-neutral-500 font-bold hover:bg-neutral-200 rounded-xl text-sm transition-colors">
-                              پاشگەزبوونەوە
-                            </button>
+                            <button onClick={() => { setShowAddForm(false); setEditLink(null); }} className="px-5 py-3 text-neutral-500 font-bold hover:bg-neutral-200 rounded-xl text-sm transition-colors">پاشگەزبوونەوە</button>
                             <button disabled={saving} onClick={editLink ? handleEditLink : handleAddLink} className="px-8 py-3 bg-neutral-900 hover:bg-black text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-70">
                               {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18} /> پاشەکەوتکردن</>}
                             </button>
