@@ -23,35 +23,6 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
-// 🌟 تۆمارکردنی ئامارەکان ١٠٠٪ تەنها لەناو D1 بۆ کەمکردنەوەی خەرجی 🌟
-async function recordActionD1(env: any, userId: string, ip: string, type: 'visit' | 'click') {
-  if (!env.DB) return; // ئەگەر D1 نەبوو هیچ مەکە، با KV بەکارنەهێنێت
-  
-  try {
-      // دروستکردنی خشتەکان گەر بوونیان نەبوو
-      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
-      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ip_tracking (id TEXT PRIMARY KEY, expires_at INTEGER)`).run();
-      
-      const trackId = `${type}_${userId}_${ip}`;
-      const now = Date.now();
-      
-      // پشکنین بزانە ئەم ئایپییە پێشتر تۆمارکراوە لە ٢٤ کاتژمێری ڕابردوودا؟
-      const track: any = await env.DB.prepare("SELECT expires_at FROM ip_tracking WHERE id = ?").bind(trackId).first();
-      
-      if (!track || track.expires_at < now) {
-          // ١. تۆمارکردنی ئایپییەکە بۆ ٢٤ کاتژمێر (86400000 میللی چرکە)
-          await env.DB.prepare("INSERT OR REPLACE INTO ip_tracking (id, expires_at) VALUES (?, ?)").bind(trackId, now + 86400000).run();
-          
-          // ٢. زیادکردنی ئامارەکە
-          if (type === 'visit') {
-              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0) ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1`).bind(userId).run();
-          } else {
-              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1) ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1`).bind(userId).run();
-          }
-      }
-  } catch (e) { console.error("D1 Action Error:", e); }
-}
-
 export async function onRequest(context: any) {
   const { request, env, waitUntil } = context;
   const url = new URL(request.url);
@@ -77,7 +48,7 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 وەرگرتنی سەردانەکان بەبێ بەکارهێنانی یەک دێڕی KV 🌟
+    // 🌟 تۆمارکردنی سەردانەکان ڕاستەوخۆ بۆ D1 (بەبێ قفڵی ئایپی) 🌟
     if (method === "POST" && path.startsWith("/api/public/v/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -86,15 +57,20 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId) {
-               const ip = request.headers.get("cf-connecting-ip") || "unknown";
-               await recordActionD1(env, targetUserId.toString(), ip, 'visit');
+           if (targetUserId && env.DB) {
+               try {
+                   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+                   await env.DB.prepare(`
+                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
+                       ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
+                   `).bind(targetUserId.toString()).run();
+               } catch (e) { console.error("D1 Visit Error:", e); }
            }
        }
        return json({ success: true });
     }
 
-    // 🌟 وەرگرتنی کلیکەکان بەبێ بەکارهێنانی یەک دێڕی KV 🌟
+    // 🌟 تۆمارکردنی کلیکەکان ڕاستەوخۆ بۆ D1 (بەبێ قفڵی ئایپی) 🌟
     if (method === "POST" && path.startsWith("/api/public/c/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -103,9 +79,14 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId) {
-               const ip = request.headers.get("cf-connecting-ip") || "unknown";
-               await recordActionD1(env, targetUserId.toString(), ip, 'click');
+           if (targetUserId && env.DB) {
+               try {
+                   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+                   await env.DB.prepare(`
+                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
+                       ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
+                   `).bind(targetUserId.toString()).run();
+               } catch (e) { console.error("D1 Click Error:", e); }
            }
        }
        return json({ success: true });
@@ -252,7 +233,6 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
-    // 🌟 هێنانی ئامارەکان تەنها لە D1 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);

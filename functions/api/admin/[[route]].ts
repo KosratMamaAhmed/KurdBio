@@ -28,7 +28,24 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    // 🌟 هێنانی بەکارهێنەران و ئامارەکانیان تەنها لە D1 🌟
+    // 🌟 زیادکردنی ڕاوتێک بۆ هێنانی کۆی گشتی ئامارەکان ڕاستەوخۆ لە D1 🌟
+    if (method === "GET" && path === "/api/admin/stats") {
+        let totalVisits = 0;
+        let totalClicks = 0;
+        try {
+            if (env.DB) {
+                await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+                const stat: any = await env.DB.prepare("SELECT SUM(visits) as v, SUM(clicks) as c FROM stats").first();
+                if (stat) {
+                    totalVisits = stat.v || 0;
+                    totalClicks = stat.c || 0;
+                }
+            }
+        } catch(e) {}
+        return json({ totalVisits, totalClicks, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
+    }
+
+    // 🌟 هێنانی بەکارهێنەران و ئامارەکانیان (بە چارەسەری کێشەی نەخوێندنەوەی ئایدی) 🌟
     if (method === "GET" && path === "/api/admin/users") {
         let users = [];
         const allUsersStr = await env.KV.get("all_users_list");
@@ -40,8 +57,14 @@ export async function onRequest(context: any) {
         let statsMap: any = {};
         try {
             if (env.DB) {
+                await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
                 const { results } = await env.DB.prepare("SELECT * FROM stats").all();
-                results.forEach((s: any) => { statsMap[s.user_id] = s; });
+                if (results) {
+                    results.forEach((s: any) => { 
+                        // 🌟 چارەسەرەکە لێرەدایە: دڵنیابوون لەوەی ئایدییەکە ستڕینگە نەک ژمارە 🌟
+                        statsMap[String(s.user_id)] = s; 
+                    });
+                }
             }
         } catch(e) {}
 
@@ -49,7 +72,8 @@ export async function onRequest(context: any) {
             const uStr = await env.KV.get(key as string);
             if (uStr) { 
                 const { password, ...safeUser } = JSON.parse(uStr); 
-                const userIdStr = (key as string).replace('user_id:', '');
+                // 🌟 دڵنیابوون لەوەی کە لێرەش ستڕینگە بۆ ئەوەی بەتەواوی یەکبگرنەوە 🌟
+                const userIdStr = String((key as string).replace('user_id:', ''));
                 
                 safeUser.visits = statsMap[userIdStr]?.visits || 0;
                 safeUser.clicks = statsMap[userIdStr]?.clicks || 0;
@@ -134,7 +158,6 @@ export async function onRequest(context: any) {
              try { 
                  if (env.DB) {
                      await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
-                     // سڕینەوەی ئایپییە قفڵکراوەکانیش
                      await env.DB.prepare("DELETE FROM ip_tracking WHERE id LIKE ?").bind(`%_${idToDelete}_%`).run(); 
                  }
              } catch(e) {}

@@ -59,18 +59,23 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
   useEffect(() => {
     if (!slug) return;
+    
+    const cacheKey = `biokurd_cache_${slug}`;
+    const localData = localStorage.getItem(cacheKey);
+    if (localData) { setProfile(JSON.parse(localData)); setLoading(false); }
+
     fetch(`/api/public/profile/${slug}?_t=${Date.now()}`)
       .then(async res => { if (!res.ok) throw new Error((await res.json()).error || 'هەڵە'); return res.json(); })
-      .then(data => { setProfile(data); setLoading(false); })
-      .catch((err) => { setError(err.message); setLoading(false); });
+      .then(data => { if (JSON.stringify(data) !== localData) { setProfile(data); localStorage.setItem(cacheKey, JSON.stringify(data)); } setLoading(false); })
+      .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
   }, [slug]);
 
-  // 🌟 بەهێزترین سیستەمی ناردنی سەردان بۆ باکێند بەبێ ئەوەی Cache ببێت 🌟
+  // 🌟 بەهێزترین سیستەمی ناردنی سەردان بۆ باکێند (کاتی چاوەڕوانی کرا بە ٥٠٠ میللی چرکە بۆ تێست) 🌟
   useEffect(() => {
     if (profile?.id && slug) {
-      const visitKey = `visited_v2_${slug}`;
+      const visitKey = `visited_v3_${slug}`;
       const lastVisit = sessionStorage.getItem(visitKey);
-      if (!lastVisit || Date.now() - parseInt(lastVisit) > 3000) { 
+      if (!lastVisit || Date.now() - parseInt(lastVisit) > 500) { 
         fetch(`/api/public/v/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
         sessionStorage.setItem(visitKey, Date.now().toString());
       }
@@ -80,10 +85,10 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
-    // 🌟 بەهێزترین سیستەمی ناردنی کلیک بەبێ Cache 🌟
-    const clickKey = `clicked_v2_${slug}_${linkId}`;
+    // 🌟 ناردنی کلیک ڕاستەوخۆ 🌟
+    const clickKey = `clicked_v3_${slug}_${linkId}`;
     const lastClick = sessionStorage.getItem(clickKey);
-    if (!lastClick || Date.now() - parseInt(lastClick) > 3000) {
+    if (!lastClick || Date.now() - parseInt(lastClick) > 500) {
       fetch(`/api/public/c/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
       sessionStorage.setItem(clickKey, Date.now().toString());
     }
@@ -443,7 +448,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
        <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
           <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>
-             
              <div className="relative px-6 py-3.5 bg-gray-900 rounded-full flex items-center justify-center gap-2 text-white shadow-2xl border border-gray-700 hover:scale-[1.02] active:scale-95 transition-transform">
                 <Sparkles size={18} className="text-amber-400 animate-pulse" />
                 <span className="font-black text-sm tracking-wide">لینکێکی ئاوا دروست بکە</span>
