@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup
+  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup, Globe
 } from 'lucide-react';
+import * as icons from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
 import Card from '../components/Card';
@@ -12,6 +13,8 @@ import AppManager from '../components/AppManager';
 interface Props {
   user: any;
   onLogout: () => void;
+  settings?: any;
+  theme?: any;
 }
 
 const DEFAULT_SOCIALS = [
@@ -34,7 +37,7 @@ const DEFAULT_SOCIALS = [
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
 ];
 
-export default function Dashboard({ user, onLogout }: Props) {
+export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -364,15 +367,12 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {/* 🌟 پشکنەری هەڵەی داتابەیس 🌟 */}
             {profile?.dbError && (
               <div className="bg-red-50 border-2 border-red-500 text-red-700 p-5 rounded-[2rem] mb-6 font-bold flex flex-col gap-2 shadow-sm text-sm">
                  <div className="flex items-center gap-2 text-red-600 text-lg">
                     <DatabaseBackup /> <span>هەڵە لە بەستنەوەی داتابەیس هەیە!</span>
                  </div>
-                 <p dir="ltr" className="font-mono bg-red-100 p-3 rounded-xl text-xs overflow-x-auto text-left border border-red-200">
-                   {profile.dbError}
-                 </p>
+                 <p dir="ltr" className="font-mono bg-red-100 p-3 rounded-xl text-xs overflow-x-auto text-left border border-red-200">{profile.dbError}</p>
               </div>
             )}
 
@@ -385,36 +385,18 @@ export default function Dashboard({ user, onLogout }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-orange-200 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                    <TrendingUp size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.visits || 0}</h4>
-                    <p className="text-xs font-bold text-neutral-500">سەردانەکان</p>
-                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0"><TrendingUp size={24} /></div>
+                  <div><h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.visits || 0}</h4><p className="text-xs font-bold text-neutral-500">سەردانەکان</p></div>
                 </div>
                 <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-blue-200 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                    <MousePointerClick size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.clicks || 0}</h4>
-                    <p className="text-xs font-bold text-neutral-500">کلیکەکان</p>
-                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><MousePointerClick size={24} /></div>
+                  <div><h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.clicks || 0}</h4><p className="text-xs font-bold text-neutral-500">کلیکەکان</p></div>
                 </div>
               </div>
             </div>
 
             {activeTab === 'profile' && (
-              <ProfileSettings 
-                profile={profile} 
-                setProfile={setProfile} 
-                saving={saving} 
-                handleUpdateProfile={handleUpdateProfile} 
-                handleImageUpload={handleImageUpload} 
-                isUploadingAvatar={isUploadingAvatar} 
-                avatarInputRef={avatarInputRef} 
-              />
+              <ProfileSettings profile={profile} setProfile={setProfile} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
             )}
 
             {activeTab === 'links' && (
@@ -426,6 +408,30 @@ export default function Dashboard({ user, onLogout }: Props) {
                       <Plus size={24} strokeWidth={3}/>
                     </button>
                   </div>
+
+                  {/* 🌟 نیشاندانی بەستەرە گشتییەکانی ئەدمین (Global Links) 🌟 */}
+                  {settings?.globalButtons && settings.globalButtons.length > 0 && (
+                     <div className="mb-8 p-5 bg-blue-50/50 border border-blue-100 rounded-3xl">
+                       <h3 className="text-[13px] font-black text-blue-800 mb-4 flex items-center gap-1.5"><Globe size={16}/> بەستەرە گشتییەکان (لە لایەن ئەدمینەوە دانراوە)</h3>
+                       <div className="space-y-3 pointer-events-none opacity-90">
+                          {settings.globalButtons.map((btn: any, idx: number) => {
+                             const Icon = (icons as any)[btn.icon || 'Globe'] || Globe;
+                             return (
+                               <div key={`global-${idx}`} className="flex items-center gap-3 p-3.5 bg-white border border-blue-200 rounded-2xl shadow-sm">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                                     {btn.imageUrl ? <img src={btn.imageUrl} className="w-6 h-6 object-contain" /> : <Icon size={20} className="text-blue-500" />}
+                                  </div>
+                                  <div>
+                                     <h4 className="font-black text-sm text-neutral-800">{btn.title}</h4>
+                                     <p className="text-[10px] font-bold text-neutral-400 mt-0.5 max-w-[150px] truncate" dir="ltr">{btn.url}</p>
+                                  </div>
+                                  <span className="mr-auto px-2 py-1 bg-blue-100 text-blue-600 rounded-md text-[10px] font-black">گشتی</span>
+                               </div>
+                             );
+                          })}
+                       </div>
+                     </div>
+                  )}
 
                   <AnimatePresence>
                     {(showAddForm || editLink) && (

@@ -71,7 +71,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       const visitKey = `visited_v2_${slug}`;
       const lastVisit = sessionStorage.getItem(visitKey);
       if (!lastVisit || Date.now() - parseInt(lastVisit) > 3000) { 
-        // زیادکردنی _t بۆ ئەوەی بە هیچ جۆرێک Cache نەبێت
         fetch(`/api/public/v/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
         sessionStorage.setItem(visitKey, Date.now().toString());
       }
@@ -279,7 +278,8 @@ export default function PublicProfile({ settings }: { settings?: any }) {
        <FontStyle />
        <AppManager />
 
-       <div className="w-full h-[35vh] sm:h-[40vh] min-h-[250px] relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0">
+       {/* 🌟 باکگراوندی گەورەتر بە لێواری کەوانەیی (Rounded) 🌟 */}
+       <div className="w-full h-[45vh] sm:h-[50vh] min-h-[320px] relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0 rounded-b-[2.5rem] sm:rounded-b-[3.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.1)] overflow-hidden border-b border-neutral-200/50">
           {profile?.bgImage && (
              <img 
                 src={profile.bgImage} 
@@ -288,7 +288,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                 alt="Cover" 
              />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/10 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/5 to-transparent"></div>
           
           <div className="absolute right-4 sm:right-6 flex flex-col items-end z-30" style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
             <button 
@@ -316,8 +316,9 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
        <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-20 sm:-mt-24">
          
-         <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full p-1 bg-white/60 backdrop-blur-md shadow-xl mb-4">
-            <div className="w-full h-full rounded-full overflow-hidden border-[2px] border-white bg-white">
+         {/* 🌟 وێنەی پرۆفایلی جیاکراوە لەگەڵ درۆپ شادۆ 🌟 */}
+         <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full p-[3px] bg-white/40 backdrop-blur-xl shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] mb-4">
+            <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-white bg-white">
                {profile?.avatarUrl ? (
                  <img 
                    src={profile.avatarUrl} 
@@ -333,16 +334,17 @@ export default function PublicProfile({ settings }: { settings?: any }) {
             </div>
             {profile?.isPro && (
                <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md">
-                  <VerifiedBadge className="w-7 h-7 text-blue-500 drop-shadow-sm" />
+                  <VerifiedBadge className="w-8 h-8 text-blue-500 drop-shadow-sm" />
                </div>
             )}
          </div>
 
-         <h1 className="text-2xl font-black text-gray-900 mt-2 text-center">
+         {/* 🌟 ناوی پرۆفایل و بایۆ کە ڕەنگەکانیان بە دڵی بەکارهێنەر دەگۆڕێت 🌟 */}
+         <h1 className="text-2xl font-black mt-2 text-center drop-shadow-sm" style={{ color: profile?.nameColor || '#1f2937' }}>
            {profile.displayName}
          </h1>
          {profile.bio && (
-           <p className="text-gray-600 mt-2 text-center text-sm px-2 leading-relaxed font-bold">
+           <p className="mt-2 text-center text-sm px-2 leading-relaxed font-bold drop-shadow-sm" style={{ color: profile?.bioColor || '#4b5563' }}>
              {profile.bio}
            </p>
          )}

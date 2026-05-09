@@ -28,7 +28,7 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    // 🌟 هێنانی بەکارهێنەران و تێکەڵکردنی D1 و KV 🌟
+    // 🌟 هێنانی بەکارهێنەران و ئامارەکانیان تەنها لە D1 🌟
     if (method === "GET" && path === "/api/admin/users") {
         let users = [];
         const allUsersStr = await env.KV.get("all_users_list");
@@ -37,7 +37,6 @@ export async function onRequest(context: any) {
         const kvKeys = list.keys.map((k: any) => k.name);
         const allKeys = Array.from(new Set([...kvKeys, ...fastKeys]));
 
-        // هێنانی ئاماری D1
         let statsMap: any = {};
         try {
             if (env.DB) {
@@ -46,22 +45,14 @@ export async function onRequest(context: any) {
             }
         } catch(e) {}
 
-        // هێنانە ناوەوەی یوزەرەکان لەگەڵ KV Fallback
         for (const key of allKeys) {
             const uStr = await env.KV.get(key as string);
             if (uStr) { 
                 const { password, ...safeUser } = JSON.parse(uStr); 
-                
                 const userIdStr = (key as string).replace('user_id:', '');
                 
-                let kvVisits = 0, kvClicks = 0;
-                try {
-                    const kvSt = await env.KV.get(`stats_fallback:${userIdStr}`, "json");
-                    if (kvSt) { kvVisits = (kvSt as any).visits || 0; kvClicks = (kvSt as any).clicks || 0; }
-                } catch(e) {}
-
-                safeUser.visits = (statsMap[userIdStr]?.visits || 0) + kvVisits;
-                safeUser.clicks = (statsMap[userIdStr]?.clicks || 0) + kvClicks;
+                safeUser.visits = statsMap[userIdStr]?.visits || 0;
+                safeUser.clicks = statsMap[userIdStr]?.clicks || 0;
                 
                 users.push(safeUser); 
             }
@@ -139,10 +130,13 @@ export async function onRequest(context: any) {
              await env.KV.delete(`user_id:${idToDelete}`);
              await env.KV.delete(`slug:${user.slug || user.username}`);
              await env.KV.delete(`email:${user.email}`);
-             await env.KV.delete(`stats_fallback:${idToDelete}`); // 🌟 سڕینەوە لە KV
              
              try { 
-                 if (env.DB) await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
+                 if (env.DB) {
+                     await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
+                     // سڕینەوەی ئایپییە قفڵکراوەکانیش
+                     await env.DB.prepare("DELETE FROM ip_tracking WHERE id LIKE ?").bind(`%_${idToDelete}_%`).run(); 
+                 }
              } catch(e) {}
 
              const allUsersStr = await env.KV.get("all_users_list");

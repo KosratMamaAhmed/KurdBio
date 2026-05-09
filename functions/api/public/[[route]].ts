@@ -23,32 +23,33 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
-// 🌟 سیستەمی زیرەک بۆ تۆمارکردنی ئامار (ئەگەر D1 کار نەکات، دەچێتە ناو KV) 🌟
-async function incrementStat(env: any, userId: string, type: 'visit' | 'click') {
-  let isD1Success = false;
+// 🌟 تۆمارکردنی ئامارەکان ١٠٠٪ تەنها لەناو D1 بۆ کەمکردنەوەی خەرجی 🌟
+async function recordActionD1(env: any, userId: string, ip: string, type: 'visit' | 'click') {
+  if (!env.DB) return; // ئەگەر D1 نەبوو هیچ مەکە، با KV بەکارنەهێنێت
   
   try {
-      if (env.DB) {
-          await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+      // دروستکردنی خشتەکان گەر بوونیان نەبوو
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ip_tracking (id TEXT PRIMARY KEY, expires_at INTEGER)`).run();
+      
+      const trackId = `${type}_${userId}_${ip}`;
+      const now = Date.now();
+      
+      // پشکنین بزانە ئەم ئایپییە پێشتر تۆمارکراوە لە ٢٤ کاتژمێری ڕابردوودا؟
+      const track: any = await env.DB.prepare("SELECT expires_at FROM ip_tracking WHERE id = ?").bind(trackId).first();
+      
+      if (!track || track.expires_at < now) {
+          // ١. تۆمارکردنی ئایپییەکە بۆ ٢٤ کاتژمێر (86400000 میللی چرکە)
+          await env.DB.prepare("INSERT OR REPLACE INTO ip_tracking (id, expires_at) VALUES (?, ?)").bind(trackId, now + 86400000).run();
+          
+          // ٢. زیادکردنی ئامارەکە
           if (type === 'visit') {
               await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0) ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1`).bind(userId).run();
           } else {
               await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1) ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1`).bind(userId).run();
           }
-          isD1Success = true;
       }
-  } catch (e) { console.error("D1 Error:", e); }
-
-  // ئەگەر D1 شکستی هێنا، ئەوا ئامارەکە لەناو KV پاشەکەوت دەکات! بەمەش هەرگیز ئامار نابێتە سفڕ!
-  if (!isD1Success) {
-      try {
-          let kvStats = await env.KV.get(`stats_fallback:${userId}`, "json");
-          if (!kvStats) kvStats = { visits: 0, clicks: 0 };
-          if (type === 'visit') (kvStats as any).visits += 1;
-          else (kvStats as any).clicks += 1;
-          await env.KV.put(`stats_fallback:${userId}`, JSON.stringify(kvStats));
-      } catch (e) { console.error("KV Stat Error:", e); }
-  }
+  } catch (e) { console.error("D1 Action Error:", e); }
 }
 
 export async function onRequest(context: any) {
@@ -65,16 +66,18 @@ export async function onRequest(context: any) {
     
     if (method === "GET") {
       let response = await cache.match(cacheKey);
-      if (response && !path.includes('/api/admin') && !path.includes('/api/profile')) return response; 
+      if (response && !path.includes("/api/profile") && !path.includes("/api/admin")) return response; 
     }
 
     if (method === "GET" && path === "/api/public/settings") {
        const settingsStr = await env.KV.get("site_settings");
        const data = settingsStr ? { ...DEFAULT_SETTINGS, ...JSON.parse(settingsStr) } : DEFAULT_SETTINGS;
-       return json(data, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
+       const res = json(data, 200, { "Cache-Control": "public, max-age=300, s-maxage=300" });
+       waitUntil(cache.put(cacheKey, res.clone()));
+       return res;
     }
 
-    // 🌟 وەرگرتنی ڕیکوێستی سەردان 🌟
+    // 🌟 وەرگرتنی سەردانەکان بەبێ بەکارهێنانی یەک دێڕی KV 🌟
     if (method === "POST" && path.startsWith("/api/public/v/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -83,12 +86,15 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId) await incrementStat(env, targetUserId.toString(), 'visit');
+           if (targetUserId) {
+               const ip = request.headers.get("cf-connecting-ip") || "unknown";
+               await recordActionD1(env, targetUserId.toString(), ip, 'visit');
+           }
        }
        return json({ success: true });
     }
 
-    // 🌟 وەرگرتنی ڕیکوێستی کلیک 🌟
+    // 🌟 وەرگرتنی کلیکەکان بەبێ بەکارهێنانی یەک دێڕی KV 🌟
     if (method === "POST" && path.startsWith("/api/public/c/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -97,7 +103,10 @@ export async function onRequest(context: any) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           if (targetUserId) await incrementStat(env, targetUserId.toString(), 'click');
+           if (targetUserId) {
+               const ip = request.headers.get("cf-connecting-ip") || "unknown";
+               await recordActionD1(env, targetUserId.toString(), ip, 'click');
+           }
        }
        return json({ success: true });
     }
@@ -217,11 +226,22 @@ export async function onRequest(context: any) {
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
        const profileData = { 
-         id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, 
-         isPro: user.isPro, slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
+         id: user.id, 
+         displayName: escapeHTML(user.displayName || user.username), 
+         bio: escapeHTML(user.bio || ""), 
+         avatarUrl: user.avatarUrl, 
+         links: user.links || [], 
+         theme: user.theme, 
+         bgImage: user.bgImage, 
+         isPro: user.isPro, 
+         slug: user.slug,
+         nameColor: user.nameColor,        
+         bioColor: user.bioColor,          
+         btnTextColor: user.btnTextColor  
        };
-       return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
+       const res = json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
+       waitUntil(cache.put(cacheKey, res.clone()));
+       return res;
     }
 
     const authHeader = request.headers.get("Authorization");
@@ -232,55 +252,23 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
-    // 🌟 بەشی ئەدمین: هێنانی سەرجەم یوزەرەکان لەگەڵ ئامارەکانیان 🌟
-    if (method === "GET" && path === "/api/admin/users") {
-        if (userId !== "admin") return json({ error: "بۆ ئەدمینە" }, 403);
-        const allUsersStr = await env.KV.get("all_users_list");
-        const allUsersList = allUsersStr ? JSON.parse(allUsersStr) : [];
-        let finalUsers = [];
-        
-        for (const uid of allUsersList) {
-            const uStr = await env.KV.get(`user_id:${uid}`);
-            if (uStr) {
-               let u = JSON.parse(uStr);
-               let visits = 0, clicks = 0;
-               try {
-                   if(env.DB) {
-                       const st = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(uid.toString()).first();
-                       if(st) { visits = (st as any).visits; clicks = (st as any).clicks; }
-                   } else throw new Error();
-               } catch(e) {
-                   const kvSt = await env.KV.get(`stats_fallback:${uid}`, "json");
-                   if(kvSt) { visits = (kvSt as any).visits; clicks = (kvSt as any).clicks; }
-               }
-               u.visits = visits; u.clicks = clicks;
-               delete u.password;
-               finalUsers.push(u);
-            }
-        }
-        return json(finalUsers);
-    }
-
-    // 🌟 داشبۆردی بەکارهێنەر: هێنانی ئاماری ڕاستەقینە (Hybrid) 🌟
+    // 🌟 هێنانی ئامارەکان تەنها لە D1 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
        
        const user = JSON.parse(userStr);
-       let visits = 0, clicks = 0;
+       user.visits = 0;
+       user.clicks = 0;
        
        try {
            if(env.DB) {
-               const st = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
-               if(st) { visits = (st as any).visits; clicks = (st as any).clicks; }
-           } else throw new Error();
-       } catch(e) {
-           const kvSt = await env.KV.get(`stats_fallback:${userId}`, "json");
-           if(kvSt) { visits = (kvSt as any).visits; clicks = (kvSt as any).clicks; }
-       }
+               const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
+               if(stat) { user.visits = stat.visits; user.clicks = stat.clicks; }
+           }
+       } catch(e) {}
 
-       user.visits = visits; user.clicks = clicks;
        return json(user);
     }
 
