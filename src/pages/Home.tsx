@@ -31,7 +31,6 @@ export default function Home({ user, settings, theme }: Props) {
   }, [settings]);
 
   return (
-    // 🌟 سکرۆڵ لەسەر تەواوی پەڕەکە کار دەکات 🌟
     <div className="min-h-[100dvh] bg-[#f8fafc] flex flex-col font-sans overflow-y-auto overflow-x-hidden relative selection:bg-orange-200 scrollbar-hide" dir="rtl" style={{ fontFamily: '"Noto Sans Arabic", sans-serif', WebkitOverflowScrolling: 'touch' }}>
       
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
@@ -39,7 +38,6 @@ export default function Home({ user, settings, theme }: Props) {
          <div className="absolute top-[30%] -left-[10%] w-[50%] h-[60%] bg-gradient-to-t from-blue-400/20 to-transparent rounded-full blur-[120px]"></div>
       </div>
 
-      {/* 🌟 هێدەر 🌟 */}
       <nav className="max-w-7xl mx-auto w-full px-6 flex items-center justify-between relative z-20 shrink-0" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)', paddingBottom: '1.5rem' }}>
         <div className="flex items-center gap-2">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg ${theme?.main || 'bg-orange-500'}`}>B</div>
@@ -52,15 +50,15 @@ export default function Home({ user, settings, theme }: Props) {
         </div>
       </nav>
 
-      {/* 🌟 بەشی سەرەکی (مۆکئەپ و نووسینەکان) 🌟 */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 gap-12 lg:gap-24 relative z-10 my-auto py-8 mb-6 lg:mb-12">
+      {/* 🌟 بۆشایی زیاتر دروست کرا بۆ ئەوەی جێگەی مۆکئەپە گەورەکە ببێتەوە 🌟 */}
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto w-full px-6 gap-16 lg:gap-32 relative z-10 my-auto py-10 lg:py-16 mb-8 lg:mb-16">
         
         <div className="flex-1 text-center lg:text-right space-y-8 w-full mt-4">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-md border border-orange-200 text-orange-600 font-bold text-sm shadow-sm mx-auto lg:mx-0 hover:scale-105 transition-transform cursor-default">
             <Sparkles size={18} className="animate-pulse" /> <span>باشترین شێوازی پرۆفایلی دیجیتاڵی</span>
           </div>
           
-          <h1 className="text-[3rem] sm:text-[4rem] lg:text-[4.5rem] font-black text-neutral-900 leading-[1.1] tracking-tight">
+          <h1 className="text-[3rem] sm:text-[4rem] lg:text-[4.5rem] xl:text-[5rem] font-black text-neutral-900 leading-[1.1] tracking-tight">
             کۆتایی بە <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-rose-500 relative inline-block drop-shadow-sm pb-2">
               لینکە زۆرەکان
@@ -85,14 +83,14 @@ export default function Home({ user, settings, theme }: Props) {
           </div>
         </div>
 
-        {/* 🌟 مۆکئەپەکە لێرەدا قەبارەکەی زۆر گەورەتر کرا 🌟 */}
-        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[1.05] sm:scale-[1.15] lg:scale-[1.25] origin-top lg:origin-center mt-12 lg:mt-0 pointer-events-none select-none">
+        {/* 🌟 مۆکئەپ زۆر گەورەتر کرا (scale-[1.05] بۆ مۆبایل و scale-[1.30] بۆ دیسکتۆپ) 🌟 */}
+        <div className="shrink-0 relative z-10 flex justify-center w-full lg:w-auto transform scale-[1.05] sm:scale-[1.15] xl:scale-[1.30] origin-top lg:origin-center mt-16 lg:mt-0 pointer-events-none select-none">
            <PhoneMockup mockup={mockup} mockupLinks={MOCKUP_DATA_SAMPLES} isPublic={false} />
         </div>
         
       </main>
 
-      {/* 🌟 دوگمە بچووکەکان بۆ خوارەوەی پەڕەکە 🌟 */}
+      {/* دوگمەکانی خوارەوە (لەژێر سکرۆڵەکە دەمێننەوە) */}
       <footer className="w-full pb-8 pt-16 flex flex-row items-center justify-center gap-4 z-10 relative mt-auto px-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' }}>
         <a href="https://play.google.com/store/apps/dev?id=6744749568381312149" target="_blank" rel="noopener noreferrer" className="relative px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-black shadow-md hover:-translate-y-1 hover:shadow-lg transition-all flex items-center justify-center gap-2 overflow-hidden group border border-emerald-400/50">
            <div className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>

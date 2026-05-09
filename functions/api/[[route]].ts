@@ -23,6 +23,33 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
+// 🌟 سیستەمی پاراستنی ئامارەکان (Hybrid) 🌟
+async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
+  let savedToD1 = false;
+  try {
+      if (env.DB) {
+          await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
+          if (type === 'visit') {
+              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0) ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1`).bind(userId).run();
+          } else {
+              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1) ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1`).bind(userId).run();
+          }
+          savedToD1 = true;
+      }
+  } catch (e) { console.error("D1 Failed", e); }
+
+  // ئەگەر D1 کێشەی هەبوو، ڕاستەوخۆ دەچێتە ناو KV و هەرگیز ئامارەکانت نابێتە سفڕ
+  if (!savedToD1) {
+      try {
+          let kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
+          if (!kvStats) kvStats = { visits: 0, clicks: 0 };
+          if (type === 'visit') kvStats.visits += 1;
+          else kvStats.clicks += 1;
+          await env.KV.put(`stats_fallback:${userId}`, JSON.stringify(kvStats));
+      } catch (e) {}
+  }
+}
+
 export async function onRequest(context: any) {
   const { request, env, waitUntil } = context;
   const url = new URL(request.url);
@@ -37,7 +64,7 @@ export async function onRequest(context: any) {
     
     if (method === "GET") {
       let response = await cache.match(cacheKey);
-      if (response) return response; 
+      if (response && !path.includes("/api/profile") && !path.includes("/api/admin")) return response; 
     }
 
     if (method === "GET" && path === "/api/public/settings") {
@@ -48,49 +75,30 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 چارەسەری کێشەی سەردان: دۆزینەوەی ئایدی دروست بۆ D1 🌟
-    if (method === "POST" && path.startsWith("/api/public/visit/")) {
+    // 🌟 بەکارهێنانی /v/ لەبری /visit/ بۆ دژە-ئادبلۆک 🌟
+    if (method === "POST" && path.startsWith("/api/public/v/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
-           
-           // گەر بە slug نەدۆزرایەوە، لە JSONەکەی دەردەهێنین نەک هەمووی بنێرین!
            if (!targetUserId) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           
-           if (targetUserId) {
-               try {
-                   await env.DB.prepare(`
-                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0)
-                       ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1
-                   `).bind(targetUserId.toString()).run();
-               } catch (e) { console.error("D1 Error", e); }
-           }
+           if (targetUserId) await saveStat(env, targetUserId.toString(), 'visit');
        }
        return json({ success: true });
     }
 
-    // 🌟 چارەسەری کێشەی کلیک: دۆزینەوەی ئایدی دروست بۆ D1 🌟
-    if (method === "POST" && path.startsWith("/api/public/click/")) {
+    // 🌟 بەکارهێنانی /c/ لەبری /click/ 🌟
+    if (method === "POST" && path.startsWith("/api/public/c/")) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
            let targetUserId = await env.KV.get(`slug:${slug}`);
-           
            if (!targetUserId) {
                const userStr = await env.KV.get(`user:${slug}`);
                if (userStr) targetUserId = JSON.parse(userStr).id;
            }
-           
-           if (targetUserId) {
-               try {
-                   await env.DB.prepare(`
-                       INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1)
-                       ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1
-                   `).bind(targetUserId.toString()).run();
-               } catch (e) { console.error("D1 Error", e); }
-           }
+           if (targetUserId) await saveStat(env, targetUserId.toString(), 'click');
        }
        return json({ success: true });
     }
@@ -223,7 +231,7 @@ export async function onRequest(context: any) {
          bioColor: user.bioColor,          
          btnTextColor: user.btnTextColor  
        };
-       const res = json(profileData, 200, { "Cache-Control": "public, max-age=180, s-maxage=180" });
+       const res = json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
     }
@@ -236,21 +244,32 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
-    // 🌟 هێنانی ئامارەکان لە D1 بۆ داشبۆرد 🌟
+    // 🌟 هێنانی ئامارەکان بە شێوازی Hybrid بۆ داشبۆرد 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        let userStr = await env.KV.get(`user_id:${userId}`);
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
        
        const user = JSON.parse(userStr);
+       let totalVisits = 0;
+       let totalClicks = 0;
        
+       // خوێندنەوەی D1
        try {
-           const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
-           user.visits = stat?.visits || 0;
-           user.clicks = stat?.clicks || 0;
-       } catch(e) {
-           user.visits = 0; user.clicks = 0;
-       }
+           if(env.DB) {
+               const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
+               if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; }
+           }
+       } catch(e) {}
+
+       // خوێندنەوەی KV Fallback و کۆکردنەوەیان
+       try {
+           const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
+           if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); }
+       } catch(e) {}
+
+       user.visits = totalVisits; 
+       user.clicks = totalClicks;
 
        return json(user);
     }

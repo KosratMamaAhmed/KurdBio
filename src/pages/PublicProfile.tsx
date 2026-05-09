@@ -59,23 +59,20 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
   useEffect(() => {
     if (!slug) return;
-    
-    const cacheKey = `biokurd_cache_${slug}`;
-    const localData = localStorage.getItem(cacheKey);
-    if (localData) { setProfile(JSON.parse(localData)); setLoading(false); }
-
-    fetch(`/api/public/profile/${slug}`)
+    fetch(`/api/public/profile/${slug}?_t=${Date.now()}`)
       .then(async res => { if (!res.ok) throw new Error((await res.json()).error || 'هەڵە'); return res.json(); })
-      .then(data => { if (JSON.stringify(data) !== localData) { setProfile(data); localStorage.setItem(cacheKey, JSON.stringify(data)); } setLoading(false); })
-      .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
+      .then(data => { setProfile(data); setLoading(false); })
+      .catch((err) => { setError(err.message); setLoading(false); });
   }, [slug]);
 
+  // 🌟 بەهێزترین سیستەمی ناردنی سەردان بۆ باکێند بەبێ ئەوەی Cache ببێت 🌟
   useEffect(() => {
     if (profile?.id && slug) {
-      const visitKey = `visited_profile_${slug}`;
+      const visitKey = `visited_v2_${slug}`;
       const lastVisit = sessionStorage.getItem(visitKey);
-      if (!lastVisit || Date.now() - parseInt(lastVisit) > 5000) { 
-        fetch(`/api/public/visit/${slug}`, { method: 'POST', keepalive: true }).catch(() => {});
+      if (!lastVisit || Date.now() - parseInt(lastVisit) > 3000) { 
+        // زیادکردنی _t بۆ ئەوەی بە هیچ جۆرێک Cache نەبێت
+        fetch(`/api/public/v/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
         sessionStorage.setItem(visitKey, Date.now().toString());
       }
     }
@@ -84,10 +81,11 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
-    const clickKey = `clicked_link_${slug}_${linkId}`;
+    // 🌟 بەهێزترین سیستەمی ناردنی کلیک بەبێ Cache 🌟
+    const clickKey = `clicked_v2_${slug}_${linkId}`;
     const lastClick = sessionStorage.getItem(clickKey);
-    if (!lastClick || Date.now() - parseInt(lastClick) > 5000) {
-      fetch(`/api/public/click/${slug}`, { method: 'POST', keepalive: true }).catch(() => {});
+    if (!lastClick || Date.now() - parseInt(lastClick) > 3000) {
+      fetch(`/api/public/c/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
       sessionStorage.setItem(clickKey, Date.now().toString());
     }
 
@@ -224,7 +222,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       const dataUrl = canvas.toDataURL('image/png');
       const filename = `BioKurd_Card_${slug}.png`;
 
-      // 🌟 چارەسەری داگرتن بۆ ئایفۆن (iOS) 🌟
       const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
       const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
 
@@ -241,7 +238,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
            }
         } catch (err) { console.error("Share failed", err); }
         
-        // ئەگەر شەیرەکە ئیشی نەکرد، لە پەنجەرەیەکی نوێدا دەیکاتەوە بۆ ئەوەی سەیڤی بکات
         const newWindow = window.open();
         if (newWindow) {
            newWindow.document.write(`
@@ -257,7 +253,6 @@ export default function PublicProfile({ settings }: { settings?: any }) {
            const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
         }
       } else {
-        // بۆ ئەندرۆید و کۆمپیوتەر بە شێوەی ئاسایی
         const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
       }
 

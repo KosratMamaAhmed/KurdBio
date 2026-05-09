@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw
+  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup
 } from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
 import ProfileSettings from '../components/ProfileSettings';
@@ -63,12 +63,6 @@ export default function Dashboard({ user, onLogout }: Props) {
 
     if (isRefresh) setRefreshingStats(true);
 
-    const cachedProfile = localStorage.getItem('dashboard_profile_cache');
-    if (cachedProfile && !isRefresh) {
-        setProfile(JSON.parse(cachedProfile));
-        setLoading(false);
-    }
-
     try {
       const res = await fetch(`/api/profile?_t=${Date.now()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -79,10 +73,9 @@ export default function Dashboard({ user, onLogout }: Props) {
         localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
       } else {
         if (res.status === 401) onLogout();
-        if (!cachedProfile) showNotif('هەڵە لە هێنانی زانیارییەکان', 'error');
       }
     } catch (err) {
-      if (!cachedProfile) showNotif('کێشەی هێڵ هەیە', 'error');
+      showNotif('کێشەی هێڵ هەیە', 'error');
     } finally {
       setLoading(false);
       setRefreshingStats(false);
@@ -103,7 +96,6 @@ export default function Dashboard({ user, onLogout }: Props) {
     
     const updatedProfile = { ...profile, ...updates };
     setProfile(updatedProfile);
-    localStorage.setItem('dashboard_profile_cache', JSON.stringify(updatedProfile));
 
     try {
       const res = await fetch('/api/profile', {
@@ -178,7 +170,6 @@ export default function Dashboard({ user, onLogout }: Props) {
     
     const updatedProfile = { ...profile, links: newLinks };
     setProfile(updatedProfile);
-    localStorage.setItem('dashboard_profile_cache', JSON.stringify(updatedProfile));
 
     try {
       await fetch('/api/profile', {
@@ -373,7 +364,18 @@ export default function Dashboard({ user, onLogout }: Props) {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {/* 🌟 ئامارەکانی ڕاستەقینەی بەکارهێنەر لەگەڵ دوگمەی ڕیفرێش 🌟 */}
+            {/* 🌟 پشکنەری هەڵەی داتابەیس 🌟 */}
+            {profile?.dbError && (
+              <div className="bg-red-50 border-2 border-red-500 text-red-700 p-5 rounded-[2rem] mb-6 font-bold flex flex-col gap-2 shadow-sm text-sm">
+                 <div className="flex items-center gap-2 text-red-600 text-lg">
+                    <DatabaseBackup /> <span>هەڵە لە بەستنەوەی داتابەیس هەیە!</span>
+                 </div>
+                 <p dir="ltr" className="font-mono bg-red-100 p-3 rounded-xl text-xs overflow-x-auto text-left border border-red-200">
+                   {profile.dbError}
+                 </p>
+              </div>
+            )}
+
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3 px-1">
                  <h3 className="text-lg font-black text-neutral-800">ئامارەکانی پرۆفایلەکەت</h3>
