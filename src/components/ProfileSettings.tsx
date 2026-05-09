@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, User, FileText, Save, Image as ImageIcon, Lock, Palette, Star, UploadCloud } from 'lucide-react';
+import { Camera, User, FileText, Save, Image as ImageIcon, Lock, Palette, Star, UploadCloud, CheckCircle } from 'lucide-react';
 
 export default function ProfileSettings({ profile, setProfile, saving, handleUpdateProfile, handleImageUpload, isUploadingAvatar, avatarInputRef }: any) {
   const navigate = useNavigate();
