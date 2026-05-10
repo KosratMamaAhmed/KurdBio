@@ -6,7 +6,6 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
   const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
 
-  // لۆجیکی ڕاکێشان و بەردانی وێنە (Drag & Drop)
   const handleDrag = (e: any) => {
     e.preventDefault(); e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") { setDragActive(true); } 
@@ -16,7 +15,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
   const handleDrop = (e: any) => {
     e.preventDefault(); e.stopPropagation();
     setDragActive(false);
-    if (!profile?.isPro) return; // ئەگەر VIP نەبوو با نەتوانێت درۆپی بکات
+    if (!profile?.isPro) return; 
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
@@ -32,7 +31,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         <User className="text-orange-500" size={24} /> ڕێکخستنی پرۆفایل
       </h2>
 
-      {/* 🌟 باکگراوندی گەورە (VIP و Drag & Drop) 🌟 */}
+      {/* 🌟 باکگراوندەکە زۆر فراوانکرا و Drag & Drop جێبەجێکرا 🌟 */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
            <label className="text-sm font-black text-neutral-700 flex items-center gap-2">
@@ -46,7 +45,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         {profile?.isPro ? (
            <div 
              onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-             className={`relative w-full h-64 sm:h-80 rounded-3xl bg-neutral-900 overflow-hidden border-2 transition-all shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] group ${dragActive ? 'border-orange-500 scale-[1.02]' : 'border-neutral-200'}`}
+             className={`relative w-full h-80 sm:h-[450px] rounded-3xl bg-neutral-900 overflow-hidden border-2 transition-all shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] group ${dragActive ? 'border-orange-500 scale-[1.02]' : 'border-neutral-200'}`}
            >
              {profile?.bgImage ? (
                <img src={profile.bgImage} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt="Background" />
@@ -71,7 +70,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
              </div>
            </div>
         ) : (
-           <div className="relative w-full h-64 sm:h-80 rounded-3xl bg-neutral-100 overflow-hidden border-2 border-dashed border-neutral-300 flex flex-col items-center justify-center text-center p-6 group">
+           <div className="relative w-full h-80 sm:h-[450px] rounded-3xl bg-neutral-100 overflow-hidden border-2 border-dashed border-neutral-300 flex flex-col items-center justify-center text-center p-6 group">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-neutral-200 text-amber-500">
                  <Lock size={28} />
               </div>
@@ -84,7 +83,6 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         )}
       </div>
 
-      {/* 🌟 وێنەی پرۆفایل (بە خۆڕایی بۆ هەمووان) 🌟 */}
       <div className="mb-10 pb-8 border-b border-neutral-100">
         <label className="text-sm font-black text-neutral-700 mb-3 flex items-center gap-2">
            <User size={18} className="text-blue-500" /> وێنەی پرۆفایل (Avatar)
@@ -138,20 +136,20 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
           </div>
         </div>
 
-        {/* گۆڕینی ڕەنگەکان */}
+        {/* 🌟 ڕەنگی ڕەش و سەوز کرا بە بنەڕەتی 🌟 */}
         <div className="md:col-span-2 grid grid-cols-2 gap-4 bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
            <div>
               <label className="text-xs font-black text-neutral-600 mb-2 flex items-center gap-1"><Palette size={14}/> ڕەنگی ناو</label>
               <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-neutral-200">
-                <input type="color" value={profile?.nameColor || '#1f2937'} onChange={e => setProfile({...profile, nameColor: e.target.value})} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
-                <span className="text-xs font-mono font-bold text-neutral-500" dir="ltr">{profile?.nameColor || '#1f2937'}</span>
+                <input type="color" value={profile?.nameColor || '#000000'} onChange={e => setProfile({...profile, nameColor: e.target.value})} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
+                <span className="text-xs font-mono font-bold text-neutral-500" dir="ltr">{profile?.nameColor || '#000000'}</span>
               </div>
            </div>
            <div>
               <label className="text-xs font-black text-neutral-600 mb-2 flex items-center gap-1"><Palette size={14}/> ڕەنگی بایۆ</label>
               <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-neutral-200">
-                <input type="color" value={profile?.bioColor || '#4b5563'} onChange={e => setProfile({...profile, bioColor: e.target.value})} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
-                <span className="text-xs font-mono font-bold text-neutral-500" dir="ltr">{profile?.bioColor || '#4b5563'}</span>
+                <input type="color" value={profile?.bioColor || '#10b981'} onChange={e => setProfile({...profile, bioColor: e.target.value})} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
+                <span className="text-xs font-mono font-bold text-neutral-500" dir="ltr">{profile?.bioColor || '#10b981'}</span>
               </div>
            </div>
         </div>
