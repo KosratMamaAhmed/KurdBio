@@ -6,6 +6,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
   const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
 
+  // لۆجیکی ڕاکێشان و بەردانی وێنە (Drag & Drop) بەبێ سەیڤکردنی ڕاستەوخۆ
   const handleDrag = (e: any) => {
     e.preventDefault(); e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") { setDragActive(true); } 
@@ -20,7 +21,8 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       const reader = new FileReader(); reader.readAsDataURL(file);
-      reader.onload = (ev) => handleUpdateProfile({ bgImage: ev.target?.result as string });
+      // تەنها لەسەر شاشەکە دەیگۆڕێت، نایخاتە داتابەیس تا پاشەکەوت نەکەیت
+      reader.onload = (ev) => setProfile({...profile, bgImage: ev.target?.result as string});
     }
   };
 
@@ -45,14 +47,15 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         {profile?.isPro ? (
            <div 
              onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-             className={`relative w-full h-80 sm:h-[450px] rounded-3xl bg-neutral-900 overflow-hidden border-2 transition-all shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] group ${dragActive ? 'border-orange-500 scale-[1.02]' : 'border-neutral-200'}`}
+             className={`relative w-full h-[280px] sm:h-[400px] rounded-[2rem] bg-neutral-900 overflow-hidden border-2 border-dashed transition-all shadow-sm group ${dragActive ? 'border-orange-500 scale-[1.02] bg-orange-50' : 'border-neutral-300 hover:border-orange-400'}`}
            >
              {profile?.bgImage ? (
                <img src={profile.bgImage} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt="Background" />
              ) : (
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400 bg-neutral-100/50">
-                 <UploadCloud size={48} className={`mb-3 transition-colors ${dragActive ? 'text-orange-500' : 'opacity-50'}`} />
-                 <span className="text-sm font-bold">وێنەیەک ڕابکێشە ئێرە (Drag & Drop)</span>
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                 <UploadCloud size={56} className={`mb-4 transition-colors ${dragActive ? 'text-orange-500' : 'opacity-60'}`} />
+                 <span className="text-base font-black text-neutral-700 mb-1">وێنەیەک ڕابکێشە ئێرە</span>
+                 <span className="text-xs font-bold opacity-70">(Drag & Drop) یان کلیک بکە</span>
                </div>
              )}
              
@@ -62,7 +65,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
                     const file = e.target.files?.[0];
                     if (file) {
                        const reader = new FileReader(); reader.readAsDataURL(file);
-                       reader.onload = (ev) => handleUpdateProfile({ bgImage: ev.target?.result as string });
+                       reader.onload = (ev) => setProfile({...profile, bgImage: ev.target?.result as string});
                     }
                  }} />
                  <Camera size={18} /> هەڵبژاردنی وێنە
@@ -70,7 +73,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
              </div>
            </div>
         ) : (
-           <div className="relative w-full h-80 sm:h-[450px] rounded-3xl bg-neutral-100 overflow-hidden border-2 border-dashed border-neutral-300 flex flex-col items-center justify-center text-center p-6 group">
+           <div className="relative w-full h-[280px] sm:h-[400px] rounded-[2rem] bg-neutral-100 overflow-hidden border-2 border-dashed border-neutral-300 flex flex-col items-center justify-center text-center p-6 group">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-neutral-200 text-amber-500">
                  <Lock size={28} />
               </div>
@@ -103,7 +106,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
            </div>
            <div className="text-xs font-bold text-neutral-500 leading-relaxed bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex-1">
              <span className="text-blue-600 block mb-1.5 font-black flex items-center gap-1.5"><CheckCircle size={14}/> تێبینی:</span>
-             گۆڕینی وێنەی پرۆفایل بۆ هەموو بەکارهێنەران **بە خۆڕاییە**. تکایە با قەبارەی وێنەکەت لە 2MB کەمتر بێت.
+             گۆڕینی وێنەی پرۆفایل بۆ هەموو بەکارهێنەران بە خۆڕاییە. تکایە با قەبارەی وێنەکەت لە 2MB کەمتر بێت.
            </div>
         </div>
       </div>
@@ -136,7 +139,6 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
           </div>
         </div>
 
-        {/* 🌟 ڕەنگی ڕەش و سەوز کرا بە بنەڕەتی 🌟 */}
         <div className="md:col-span-2 grid grid-cols-2 gap-4 bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
            <div>
               <label className="text-xs font-black text-neutral-600 mb-2 flex items-center gap-1"><Palette size={14}/> ڕەنگی ناو</label>
@@ -166,8 +168,16 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
       </div>
 
       <div className="mt-8 pt-6 border-t border-neutral-100 flex justify-end">
+         {/* 🌟 لێرەدا هەموو شتەکان پێکەوە دەنێردرێن بۆ داتابەیس 🌟 */}
          <button 
-            onClick={() => handleUpdateProfile({ displayName: profile.displayName, bio: profile.bio, nameColor: profile.nameColor, bioColor: profile.bioColor })} 
+            onClick={() => handleUpdateProfile({ 
+               displayName: profile.displayName, 
+               bio: profile.bio, 
+               nameColor: profile.nameColor, 
+               bioColor: profile.bioColor,
+               bgImage: profile.bgImage,
+               avatarUrl: profile.avatarUrl
+            })} 
             disabled={saving}
             className="w-full sm:w-auto px-12 py-4 bg-neutral-900 hover:bg-black text-white rounded-2xl font-black text-lg shadow-[0_8px_20px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70"
          >

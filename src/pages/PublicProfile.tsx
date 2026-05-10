@@ -57,20 +57,17 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   
   const profileUrl = `${window.location.origin}/${slug}`;
 
-  // 🌟 چارەسەری خێرایی لێرەدایە 🌟
   useEffect(() => {
     if (!slug) return;
     
     const cacheKey = `biokurd_cache_${slug}`;
     const localData = localStorage.getItem(cacheKey);
     
-    // ئەگەر کاشی هەبوو، لە ٠.١ چرکەدا دەیکاتەوە
     if (localData) { 
       setProfile(JSON.parse(localData)); 
       setLoading(false); 
     }
 
-    // لێرەدا ?_t=.. لابرا بۆ ئەوەی Cloudflare بتوانێت کاشی بکات و پەڕەکە خێرا لۆد بێت
     fetch(`/api/public/profile/${slug}`)
       .then(async res => { if (!res.ok) throw new Error((await res.json()).error || 'هەڵە'); return res.json(); })
       .then(data => { 
@@ -102,6 +99,20 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     if (!lastClick || Date.now() - parseInt(lastClick) > 500) {
       fetch(`/api/public/c/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
       sessionStorage.setItem(clickKey, Date.now().toString());
+    }
+
+    if (url.startsWith('copy:')) {
+        const textToCopy = url.replace('copy:', '');
+        navigator.clipboard.writeText(textToCopy);
+        alert(`ژمارەکە (${textToCopy}) کۆپی کرا! ئێستا ئەپەکە دەکرێتەوە...`);
+        const ua = navigator.userAgent.toLowerCase();
+        const isAndroid = /android/.test(ua);
+        if (isAndroid) {
+            window.location.href = `intent://#Intent;scheme=fastpay;package=com.korek.fastpay;end`;
+        } else {
+            window.location.href = `fastpay://`;
+        }
+        return; 
     }
 
     if(url.endsWith('.apk')) { 
@@ -301,7 +312,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                 className="w-full h-full object-cover" 
                 style={{ objectPosition: bgPosStyle }} 
                 alt="Cover" 
-                decoding="async" // 🌟 خێراکردنی لۆدینگ
+                decoding="async" 
                 loading="lazy"
              />
           )}
@@ -352,16 +363,17 @@ export default function PublicProfile({ settings }: { settings?: any }) {
             </div>
             {profile?.isPro && (
                <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md">
-                  <VerifiedBadge className="w-8 h-8 text-blue-500 drop-shadow-sm" />
+                  <VerifiedBadge className="w-8 h-8 text-blue-500" />
                </div>
             )}
          </div>
 
-         <h1 className="text-2xl font-black mt-2 text-center drop-shadow-sm" style={{ color: profile?.nameColor || '#1f2937' }}>
+         {/* 🌟 لێرەدا سیبەر و سێبەری دەق بەتەواوی سڕایەوە بۆ ئەوەی ڕوون و ساف بن 🌟 */}
+         <h1 className="text-2xl font-black mt-2 text-center" style={{ color: profile?.nameColor || '#1f2937' }}>
            {profile.displayName}
          </h1>
          {profile.bio && (
-           <p className="mt-2 text-center text-sm px-2 leading-relaxed font-bold drop-shadow-sm" style={{ color: profile?.bioColor || '#4b5563' }}>
+           <p className="mt-2 text-center text-sm px-2 leading-relaxed font-bold" style={{ color: profile?.bioColor || '#4b5563' }}>
              {profile.bio}
            </p>
          )}
@@ -374,10 +386,10 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                  key={link.id || index}
                  onClick={() => handleLinkClick(link.url, link.id)}
                  style={{ background: brandStyle.bg, color: brandStyle.text, border: brandStyle.border || 'none' }}
-                 className="w-full py-3.5 px-4 rounded-xl shadow-sm font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group"
+                 className="w-full py-3.5 px-4 rounded-xl font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group shadow-sm"
                >
                  <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner p-1.5" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                   {link.imageUrl ? <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" loading="lazy" decoding="async" /> : <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>}
+                   {link.imageUrl ? <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain" loading="lazy" decoding="async" /> : <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>}
                  </div>
                  <span className="flex-grow text-center px-2 z-10">{link.title}</span>
                  <div className="w-9 h-9 flex-shrink-0"></div>
@@ -436,7 +448,7 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white p-1 rounded-full shadow-lg mb-2 border-2 border-[#fbbf24] overflow-hidden relative group-hover:scale-105 transition-transform duration-300">
                      {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover rounded-full" style={{ objectPosition: avatarPosStyle }} /> : <User className="w-full h-full p-2 text-neutral-300" />}
                   </div>
-                  <h3 className="text-[14px] sm:text-[18px] font-black drop-shadow-md text-[#fbbf24] line-clamp-1 w-full text-center px-1">{profile?.displayName || 'کۆسرەت مامە'}</h3>
+                  <h3 className="text-[14px] sm:text-[18px] font-black text-[#fbbf24] line-clamp-1 w-full text-center px-1">{profile?.displayName || 'کۆسرەت مامە'}</h3>
                   <p className="text-[8px] sm:text-[10px] font-bold text-white mt-1.5 line-clamp-2 leading-relaxed text-center px-2 w-full opacity-90">{profile?.bio || 'باشترین بەستەرەکانم لێرە ببینە'}</p>
                   <span className="absolute bottom-0 right-1 text-[7px] sm:text-[9px] font-bold text-white opacity-60">https://biokurd.com</span>
                </div>

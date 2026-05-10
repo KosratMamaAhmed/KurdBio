@@ -12,6 +12,7 @@ import Card from '../components/Card';
 import AppManager from '../components/AppManager';
 
 interface Props { user: any; onLogout: () => void; settings?: any; theme?: any; }
+
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -23,29 +24,17 @@ const DEFAULT_SOCIALS = [
   { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
   { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
   { id: 'playstore', name: 'پلەی ستۆر', iconName: 'Play', imageUrl: '/social/playstore.png', baseUrl: 'https://play.google.com/store/apps/details?id=', color: '#00D859' },
-
   { id: 'appstore', name: 'ئەپ ستۆر', iconName: 'Apple', imageUrl: '/social/appstore.png', baseUrl: 'https://apps.apple.com/app/', color: '#0070F5' },
-
   { id: 'discord', name: 'دیسکۆرد', iconName: 'Gamepad', imageUrl: '/social/discord.png', baseUrl: 'https://discord.gg/', color: '#5865F2' },
-
   { id: 'github', name: 'گیتھەب', iconName: 'Github', imageUrl: '/social/github.png', baseUrl: 'https://github.com/', color: '#181717' },
-
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
-
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
-
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
-
   { id: 'korek', name: 'کۆڕەك تلیکۆم', iconName: 'Phone', imageUrl: '/social/korek.png', baseUrl: 'tel:075', color: '#1059b9' },
-
   { id: 'asia', name: 'ئاسیا سێڵ', iconName: 'Phone', imageUrl: '/social/asia.png', baseUrl: 'tel:077', color: '#b91010' },
-
   { id: 'fastpay', name: 'فاستپەی - FastPay', iconName: 'Copy', imageUrl: '/social/fastpay.png', baseUrl: 'copy:', color: '#f54576' },
-
   { id: 'Fib', name: 'Fib- بانکی یەکەمی عیراق', iconName: 'Copy', imageUrl: '/social/fib.png', baseUrl: 'copy:', color: '#00a69c' },
-
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
-
 ];
 
 export default function Dashboard({ user, onLogout, settings, theme }: Props) {
@@ -57,7 +46,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  // 🌟 لێرەدا فەیسبووک کرایە بنەڕەتی لە دروستکردنی بەستەردا 🌟
   const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Facebook', platformId: 'facebook', imageUrl: '', color: '#1877F2' });
   const [editLink, setEditLink] = useState<any>(null);
   
@@ -110,6 +98,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     finally { setSaving(false); }
   };
 
+  // 🌟 گۆڕینی لۆجیکی وێنە بۆ ئەوەی ڕاستەوخۆ سەیڤ نەبێت 🌟
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
     const file = e.target.files?.[0]; if (!file) return;
     if (file.size > 2 * 1024 * 1024) return showNotif('قەبارەی وێنە دەبێت لە 2MB کەمتر بێت', 'error');
@@ -128,7 +117,9 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         const base64String = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.8);
         
         if (type === 'avatar') {
-          handleUpdateProfile({ avatarUrl: base64String }); setIsUploadingAvatar(false);
+          // تەنها دەیخاتە ستەیت نەک بیکاتە داتابەیس
+          setProfile((prev: any) => ({ ...prev, avatarUrl: base64String }));
+          setIsUploadingAvatar(false);
         } else {
           if (editLink) setEditLink({ ...editLink, imageUrl: base64String }); else setNewLink({ ...newLink, imageUrl: base64String });
           setIsUploadingIcon(false);
@@ -160,7 +151,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     setSaving(true);
     try {
       const res = await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(newLink) });
-      // گێڕانەوەی سەرەتا بۆ فەیسبووک دوای سەیڤکردن
       if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Facebook', platformId: 'facebook', imageUrl: '', color: '#1877F2' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
     } catch (err) { showNotif('کێشە لە زیادکردن', 'error'); } finally { setSaving(false); }
   };
@@ -193,7 +183,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
       }
   };
 
-  // 🌟 لۆجیکی جیاکردنەوەی BaseUrl و یوزەرنەیم 🌟
   const getUrlInputDetails = (linkObj: any) => {
       const platform = DEFAULT_SOCIALS.find(s => s.id === linkObj.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
       const baseUrl = platform?.baseUrl || '';
@@ -373,10 +362,9 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           <div className="grid grid-cols-1 gap-4 mb-4">
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
-                              <input type="text" placeholder="بۆ نمونە: فەیسبووکەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
+                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
                             </div>
                             
-                            {/* 🌟 شێوازی نوێی قفڵکردنی لینک 🌟 */}
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">
                                 {getUrlInputDetails(editLink || newLink).isCustom ? 'بەستەر (URL)' : 'یوزەرنەیم یان ژمارە مۆبایل'}
