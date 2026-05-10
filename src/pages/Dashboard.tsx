@@ -12,7 +12,6 @@ import Card from '../components/Card';
 import AppManager from '../components/AppManager';
 
 interface Props { user: any; onLogout: () => void; settings?: any; theme?: any; }
-
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', baseUrl: 'https://www.facebook.com/', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', baseUrl: 'https://www.instagram.com/', color: '#E4405F' },
@@ -24,17 +23,29 @@ const DEFAULT_SOCIALS = [
   { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' },
   { id: 'whatsapp', name: 'واتسئاپ', iconName: 'MessageCircle', imageUrl: '/social/whatsapp.png', baseUrl: 'https://wa.me/', color: '#25D366' },
   { id: 'playstore', name: 'پلەی ستۆر', iconName: 'Play', imageUrl: '/social/playstore.png', baseUrl: 'https://play.google.com/store/apps/details?id=', color: '#00D859' },
+
   { id: 'appstore', name: 'ئەپ ستۆر', iconName: 'Apple', imageUrl: '/social/appstore.png', baseUrl: 'https://apps.apple.com/app/', color: '#0070F5' },
+
   { id: 'discord', name: 'دیسکۆرد', iconName: 'Gamepad', imageUrl: '/social/discord.png', baseUrl: 'https://discord.gg/', color: '#5865F2' },
+
   { id: 'github', name: 'گیتھەب', iconName: 'Github', imageUrl: '/social/github.png', baseUrl: 'https://github.com/', color: '#181717' },
+
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
+
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
+
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
+
   { id: 'korek', name: 'کۆڕەك تلیکۆم', iconName: 'Phone', imageUrl: '/social/korek.png', baseUrl: 'tel:075', color: '#1059b9' },
+
   { id: 'asia', name: 'ئاسیا سێڵ', iconName: 'Phone', imageUrl: '/social/asia.png', baseUrl: 'tel:077', color: '#b91010' },
+
   { id: 'fastpay', name: 'فاستپەی - FastPay', iconName: 'Copy', imageUrl: '/social/fastpay.png', baseUrl: 'copy:', color: '#f54576' },
+
   { id: 'Fib', name: 'Fib- بانکی یەکەمی عیراق', iconName: 'Copy', imageUrl: '/social/fib.png', baseUrl: 'copy:', color: '#00a69c' },
+
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
+
 ];
 
 export default function Dashboard({ user, onLogout, settings, theme }: Props) {
@@ -46,7 +57,8 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'instagram', imageUrl: '', color: '#E4405F' });
+  // 🌟 لێرەدا فەیسبووک کرایە بنەڕەتی لە دروستکردنی بەستەردا 🌟
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Facebook', platformId: 'facebook', imageUrl: '', color: '#1877F2' });
   const [editLink, setEditLink] = useState<any>(null);
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -148,7 +160,8 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     setSaving(true);
     try {
       const res = await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(newLink) });
-      if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'instagram', imageUrl: '', color: '#E4405F' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
+      // گێڕانەوەی سەرەتا بۆ فەیسبووک دوای سەیڤکردن
+      if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Facebook', platformId: 'facebook', imageUrl: '', color: '#1877F2' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
     } catch (err) { showNotif('کێشە لە زیادکردن', 'error'); } finally { setSaving(false); }
   };
 
@@ -180,16 +193,17 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
       }
   };
 
-  // 🌟 لۆجیکی جیاکردنەوەی BaseUrl لەگەڵ UserInput بۆ ئەوەی بەکارهێنەر هەڵە نەکات 🌟
+  // 🌟 لۆجیکی جیاکردنەوەی BaseUrl و یوزەرنەیم 🌟
   const getUrlInputDetails = (linkObj: any) => {
       const platform = DEFAULT_SOCIALS.find(s => s.id === linkObj.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
       const baseUrl = platform?.baseUrl || '';
+      const isCustom = platform?.id === 'custom';
       
       let userTypedValue = linkObj.url;
       if (baseUrl && userTypedValue.startsWith(baseUrl)) {
           userTypedValue = userTypedValue.substring(baseUrl.length);
       }
-      return { baseUrl, userTypedValue, isfacebook: platform?.id === 'facebook' };
+      return { baseUrl, userTypedValue, isCustom };
   };
 
   const handleUrlInputChange = (isEdit: boolean, e: any) => {
@@ -198,7 +212,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
       const platform = DEFAULT_SOCIALS.find(s => s.id === targetObj.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
       const baseUrl = platform?.baseUrl || '';
 
-      // زیرەکی: ئەگەر بەکارهێنەر هەموو لینکەکەی پەیست کرد، بەشە زیادەکە دەبڕین
       if (baseUrl && val.startsWith(baseUrl)) val = val.substring(baseUrl.length);
       
       const finalUrl = baseUrl + val;
@@ -209,7 +222,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   if (loading) return <div className="min-h-[100dvh] bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
+    <div className="h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
       
       <AppManager />
 
@@ -352,7 +365,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
-                            <select value={editLink ? editLink.platformId || 'instagram' : newLink.platformId || 'instagram'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
+                            <select value={editLink ? editLink.platformId || 'facebook' : newLink.platformId || 'facebook'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
                                 {DEFAULT_SOCIALS.map(social => (<option key={social.id} value={social.id}>{social.name}</option>))}
                             </select>
                           </div>
@@ -360,10 +373,10 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           <div className="grid grid-cols-1 gap-4 mb-4">
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
-                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
+                              <input type="text" placeholder="بۆ نمونە: فەیسبووکەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
                             </div>
                             
-                            {/* 🌟 شێوازی نوێی داخڵکردنی لینک (قفڵکردنی پێشگر) 🌟 */}
+                            {/* 🌟 شێوازی نوێی قفڵکردنی لینک 🌟 */}
                             <div>
                               <label className="text-xs font-bold text-neutral-500 block mb-2">
                                 {getUrlInputDetails(editLink || newLink).isCustom ? 'بەستەر (URL)' : 'یوزەرنەیم یان ژمارە مۆبایل'}
@@ -379,7 +392,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                                     placeholder={getUrlInputDetails(editLink || newLink).isCustom ? "https://..." : "بینووسە لێرە..."} 
                                     value={getUrlInputDetails(editLink || newLink).userTypedValue} 
                                     onChange={(e) => handleUrlInputChange(!!editLink, e)} 
-                                    className={`w-full p-3.5 bg-white border border-neutral-200 outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left ${!getUrlInputDetails(editLink || newLink).isfacebook && getUrlInputDetails(editLink || newLink).baseUrl ? 'rounded-r-xl' : 'rounded-xl'}`} 
+                                    className={`w-full p-3.5 bg-white border border-neutral-200 outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left ${!getUrlInputDetails(editLink || newLink).isCustom && getUrlInputDetails(editLink || newLink).baseUrl ? 'rounded-r-xl' : 'rounded-xl'}`} 
                                  />
                               </div>
                             </div>
