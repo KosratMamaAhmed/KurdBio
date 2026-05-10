@@ -30,6 +30,10 @@ const DEFAULT_SOCIALS = [
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
+  { id: 'korek', name: 'کۆڕەك تلیکۆم', iconName: 'Phone', imageUrl: '/social/korek.png', baseUrl: 'tel:075', color: '#1059b9' },
+  { id: 'asia', name: 'ئاسیا سێڵ', iconName: 'Phone', imageUrl: '/social/asia.png', baseUrl: 'tel:077', color: '#b91010' },
+  { id: 'fastpay', name: 'فاستپەی - FastPay', iconName: 'Copy', imageUrl: '/social/fastpay.png', baseUrl: 'copy:', color: '#f54576' },
+  { id: 'Fib', name: 'Fib- بانکی یەکەمی عیراق', iconName: 'Copy', imageUrl: '/social/fib.png', baseUrl: 'copy:', color: '#00a69c' },
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
 ];
 
@@ -42,7 +46,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
-  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' });
+  const [newLink, setNewLink] = useState({ title: '', url: '', icon: 'Globe', platformId: 'instagram', imageUrl: '', color: '#E4405F' });
   const [editLink, setEditLink] = useState<any>(null);
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -57,14 +61,21 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const fetchProfile = async (isRefresh = false) => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) { onLogout(); return; }
-    if (isRefresh) setRefreshingStats(true);
+    
+    if (!isRefresh) {
+        const cached = localStorage.getItem('dashboard_profile_cache');
+        if (cached) { setProfile(JSON.parse(cached)); setLoading(false); }
+    } else {
+        setRefreshingStats(true);
+    }
+
     try {
-      const res = await fetch(`/api/profile?_t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`/api/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
         setProfile(data); localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
       } else if (res.status === 401) onLogout();
-    } catch (err) { showNotif('کێشەی هێڵ هەیە', 'error'); } 
+    } catch (err) { if(!profile) showNotif('کێشەی هێڵ هەیە', 'error'); } 
     finally { setLoading(false); setRefreshingStats(false); }
   };
 
@@ -137,7 +148,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     setSaving(true);
     try {
       const res = await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(newLink) });
-      if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'custom', imageUrl: '', color: '#333333' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
+      if (res.ok) { showNotif('بەستەری نوێ زیادکرا'); setNewLink({ title: '', url: '', icon: 'Globe', platformId: 'instagram', imageUrl: '', color: '#E4405F' }); setShowAddForm(false); fetchProfile(); } else throw new Error();
     } catch (err) { showNotif('کێشە لە زیادکردن', 'error'); } finally { setSaving(false); }
   };
 
@@ -162,20 +173,49 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
   const handlePlatformChange = (isEdit: boolean, platformId: string) => {
       const selected = DEFAULT_SOCIALS.find(s => s.id === platformId); if (!selected) return;
-      if (isEdit && editLink) { setEditLink({ ...editLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl !== '' ? selected.baseUrl : editLink.url }); } 
-      else { setNewLink({ ...newLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl }); }
+      if (isEdit && editLink) { 
+          setEditLink({ ...editLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl }); 
+      } else { 
+          setNewLink({ ...newLink, platformId, title: selected.name, icon: selected.iconName, imageUrl: selected.imageUrl, color: selected.color, url: selected.baseUrl }); 
+      }
+  };
+
+  // 🌟 لۆجیکی جیاکردنەوەی BaseUrl لەگەڵ UserInput بۆ ئەوەی بەکارهێنەر هەڵە نەکات 🌟
+  const getUrlInputDetails = (linkObj: any) => {
+      const platform = DEFAULT_SOCIALS.find(s => s.id === linkObj.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
+      const baseUrl = platform?.baseUrl || '';
+      
+      let userTypedValue = linkObj.url;
+      if (baseUrl && userTypedValue.startsWith(baseUrl)) {
+          userTypedValue = userTypedValue.substring(baseUrl.length);
+      }
+      return { baseUrl, userTypedValue, isfacebook: platform?.id === 'facebook' };
+  };
+
+  const handleUrlInputChange = (isEdit: boolean, e: any) => {
+      let val = e.target.value;
+      const targetObj = isEdit ? editLink : newLink;
+      const platform = DEFAULT_SOCIALS.find(s => s.id === targetObj.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
+      const baseUrl = platform?.baseUrl || '';
+
+      // زیرەکی: ئەگەر بەکارهێنەر هەموو لینکەکەی پەیست کرد، بەشە زیادەکە دەبڕین
+      if (baseUrl && val.startsWith(baseUrl)) val = val.substring(baseUrl.length);
+      
+      const finalUrl = baseUrl + val;
+      if (isEdit) setEditLink({ ...editLink, url: finalUrl });
+      else setNewLink({ ...newLink, url: finalUrl });
   };
 
   if (loading) return <div className="min-h-[100dvh] bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
+    <div className="min-h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
       
       <AppManager />
 
       <AnimatePresence>
         {notification.show && (
-          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }} className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} style={{ top: 'max(env(safe-area-inset-top), 1.5rem)' }} className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
             {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle size={20}/>} {notification.message}
           </motion.div>
         )}
@@ -217,8 +257,8 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
       {mobileMenuOpen && <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>}
 
-      <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 z-20 shrink-0 sticky top-0 pt-[env(safe-area-inset-top)]">
+      <div className="flex-1 flex flex-col h-[100dvh] overflow-y-auto relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 z-20 shrink-0 sticky top-0">
           <div className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
             <div className="flex items-center gap-4">
                <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
@@ -238,7 +278,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+        <main className="flex-1 p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-20">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
             {profile?.dbError && (
@@ -312,14 +352,37 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           
                           <div className="mb-4">
                             <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
-                            <select value={editLink ? editLink.platformId || 'custom' : newLink.platformId || 'custom'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
+                            <select value={editLink ? editLink.platformId || 'instagram' : newLink.platformId || 'instagram'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
                                 {DEFAULT_SOCIALS.map(social => (<option key={social.id} value={social.id}>{social.name}</option>))}
                             </select>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label><input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" /></div>
-                            <div><label className="text-xs font-bold text-neutral-500 block mb-2">لینک (URL)</label><input type="url" placeholder="https://..." value={editLink ? editLink.url : newLink.url} onChange={e => editLink ? setEditLink({...editLink, url: e.target.value}) : setNewLink({...newLink, url: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left" dir="ltr" /></div>
+                          <div className="grid grid-cols-1 gap-4 mb-4">
+                            <div>
+                              <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
+                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
+                            </div>
+                            
+                            {/* 🌟 شێوازی نوێی داخڵکردنی لینک (قفڵکردنی پێشگر) 🌟 */}
+                            <div>
+                              <label className="text-xs font-bold text-neutral-500 block mb-2">
+                                {getUrlInputDetails(editLink || newLink).isCustom ? 'بەستەر (URL)' : 'یوزەرنەیم یان ژمارە مۆبایل'}
+                              </label>
+                              <div className="flex items-center" dir="ltr">
+                                 {!getUrlInputDetails(editLink || newLink).isCustom && getUrlInputDetails(editLink || newLink).baseUrl && (
+                                    <span className="bg-neutral-100 px-3 py-3.5 border border-r-0 border-neutral-200 rounded-l-xl text-neutral-500 font-mono text-xs md:text-sm font-bold opacity-80 whitespace-nowrap overflow-hidden max-w-[120px] md:max-w-none text-ellipsis">
+                                       {getUrlInputDetails(editLink || newLink).baseUrl}
+                                    </span>
+                                 )}
+                                 <input 
+                                    type="text" 
+                                    placeholder={getUrlInputDetails(editLink || newLink).isCustom ? "https://..." : "بینووسە لێرە..."} 
+                                    value={getUrlInputDetails(editLink || newLink).userTypedValue} 
+                                    onChange={(e) => handleUrlInputChange(!!editLink, e)} 
+                                    className={`w-full p-3.5 bg-white border border-neutral-200 outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left ${!getUrlInputDetails(editLink || newLink).isfacebook && getUrlInputDetails(editLink || newLink).baseUrl ? 'rounded-r-xl' : 'rounded-xl'}`} 
+                                 />
+                              </div>
+                            </div>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

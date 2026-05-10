@@ -19,6 +19,7 @@ const FontStyle = () => (
 
 const getBrandStyle = (url: string, dbColor?: string) => {
   const lowerUrl = (url || '').toLowerCase();
+  
   if (lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp')) return { bg: '#25D366', text: '#fff' };
   if (lowerUrl.includes('instagram')) return { bg: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', text: '#fff' };
   if (lowerUrl.includes('snapchat')) return { bg: '#FFFC00', text: '#000' };
@@ -31,7 +32,11 @@ const getBrandStyle = (url: string, dbColor?: string) => {
   if (lowerUrl.includes('viber')) return { bg: '#7360F2', text: '#fff' };
   if (lowerUrl.includes('discord')) return { bg: '#5865F2', text: '#fff' };
   if (lowerUrl.includes('tel:')) return { bg: '#10B981', text: '#fff' };
-  if (dbColor && dbColor !== '#333333' && dbColor !== '') return { bg: dbColor, text: '#fff', border: 'none' };
+  
+  if (dbColor && dbColor !== '#333333' && dbColor !== '') {
+     return { bg: dbColor, text: '#fff', border: 'none' };
+  }
+  
   return { bg: '#ffffff', text: '#1f2937', border: '1px solid #e5e7eb' };
 };
 
@@ -52,34 +57,64 @@ export default function PublicProfile({ settings }: { settings?: any }) {
   
   const profileUrl = `${window.location.origin}/${slug}`;
 
+  // 🌟 چارەسەری خێرایی لێرەدایە 🌟
   useEffect(() => {
     if (!slug) return;
-    fetch(`/api/public/profile/${slug}?_t=${Date.now()}`)
+    
+    const cacheKey = `biokurd_cache_${slug}`;
+    const localData = localStorage.getItem(cacheKey);
+    
+    // ئەگەر کاشی هەبوو، لە ٠.١ چرکەدا دەیکاتەوە
+    if (localData) { 
+      setProfile(JSON.parse(localData)); 
+      setLoading(false); 
+    }
+
+    // لێرەدا ?_t=.. لابرا بۆ ئەوەی Cloudflare بتوانێت کاشی بکات و پەڕەکە خێرا لۆد بێت
+    fetch(`/api/public/profile/${slug}`)
       .then(async res => { if (!res.ok) throw new Error((await res.json()).error || 'هەڵە'); return res.json(); })
-      .then(data => { setProfile(data); setLoading(false); })
-      .catch((err) => { setError(err.message); setLoading(false); });
+      .then(data => { 
+         if (JSON.stringify(data) !== localData) { 
+            setProfile(data); 
+            localStorage.setItem(cacheKey, JSON.stringify(data)); 
+         } 
+         setLoading(false); 
+      })
+      .catch((err) => { if (!localData) setError(err.message); setLoading(false); });
   }, [slug]);
 
-  // 🌟 سەردان (بەبێ بلۆککردن، هەر ڕیفرێشێک حیسابە) 🌟
   useEffect(() => {
     if (profile?.id && slug) {
-        fetch(`/api/public/visit/${slug}?_t=${Date.now()}`, { method: 'POST' }).catch(() => {});
+      const visitKey = `visited_v3_${slug}`;
+      const lastVisit = sessionStorage.getItem(visitKey);
+      if (!lastVisit || Date.now() - parseInt(lastVisit) > 500) { 
+        fetch(`/api/public/v/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
+        sessionStorage.setItem(visitKey, Date.now().toString());
+      }
     }
   }, [profile?.id, slug]);
 
-  // 🌟 کلیک (بەبێ بلۆککردن، هەر کلیکێک حیسابە) 🌟
   const handleLinkClick = (url: string, linkId: number) => {
     if(!url) return;
     
-    fetch(`/api/public/click/${slug}?_t=${Date.now()}`, { method: 'POST' }).catch(() => {});
+    const clickKey = `clicked_v3_${slug}_${linkId}`;
+    const lastClick = sessionStorage.getItem(clickKey);
+    if (!lastClick || Date.now() - parseInt(lastClick) > 500) {
+      fetch(`/api/public/c/${slug}?_t=${Date.now()}`, { method: 'POST', headers: {'Content-Type': 'application/json'} }).catch(() => {});
+      sessionStorage.setItem(clickKey, Date.now().toString());
+    }
 
-    if(url.endsWith('.apk')) { window.location.href = url; return; }
+    if(url.endsWith('.apk')) { 
+      window.location.href = url; 
+      return;
+    }
 
     const ua = navigator.userAgent.toLowerCase();
     const isAndroid = /android/.test(ua);
     const isInAppBrowser = /tiktok|bytedance|instagram|fban|fbav|snapchat/.test(ua);
 
     let finalUrl = url;
+
     try {
       if (url.includes('wa.me/') || url.includes('api.whatsapp.com/')) {
         const phone = url.split('wa.me/')[1]?.split('?')[0]?.replace(/[^0-9+]/g, '') || url.split('phone=')[1]?.split('&')[0]?.replace(/[^0-9+]/g, '');
@@ -99,18 +134,26 @@ export default function PublicProfile({ settings }: { settings?: any }) {
       } 
       else if (url.includes('facebook.com/')) {
         const pageId = url.split('facebook.com/')[1]?.split('/')[0]?.split('?')[0];
-        if (pageId && pageId !== 'profile.php') finalUrl = isAndroid ? `intent://page/${pageId}#Intent;scheme=fb;package=com.facebook.katana;end` : `fb://profile/${pageId}`;
+        if (pageId && pageId !== 'profile.php') {
+            finalUrl = isAndroid ? `intent://page/${pageId}#Intent;scheme=fb;package=com.facebook.katana;end` : `fb://profile/${pageId}`;
+        }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Deep link error", e);
+    }
 
     if (isInAppBrowser) {
         try { window.top!.location.href = finalUrl; } catch(e) { window.location.href = finalUrl; }
         if (finalUrl !== url) { setTimeout(() => { window.location.href = url; }, 2000); }
-    } else { window.open(url, '_blank', 'noopener,noreferrer'); }
+    } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(profileUrl); setCopied(true); setTimeout(() => setCopied(false), 3000);
+    navigator.clipboard.writeText(profileUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   const handleDownloadCard = async () => {
@@ -118,24 +161,121 @@ export default function PublicProfile({ settings }: { settings?: any }) {
     setDownloadingCard(true);
     try {
       try { await document.fonts.load('48px "Kosrat"'); } catch (e) {}
-      const canvas = document.createElement('canvas'); canvas.width = 1050; canvas.height = 600; const ctx = canvas.getContext('2d'); if(!ctx) return;
-      ctx.fillStyle = '#111111'; ctx.fillRect(0,0,1050,600);
-      const goldGrad = ctx.createLinearGradient(0,0, 600, 600); goldGrad.addColorStop(0, '#fbbf24'); goldGrad.addColorStop(1, '#d97706');
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(450, 0); ctx.bezierCurveTo(600, 200, 350, 400, 500, 600); ctx.lineTo(0, 600); ctx.closePath(); ctx.fillStyle = goldGrad; ctx.fill();
-      const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve) => { const img = new window.Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = () => resolve(img); img.src = src; });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1050; canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+      if(!ctx) return;
+
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(0,0,1050,600);
+
+      const goldGrad = ctx.createLinearGradient(0,0, 600, 600);
+      goldGrad.addColorStop(0, '#fbbf24');
+      goldGrad.addColorStop(1, '#d97706');
+      
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(450, 0); ctx.bezierCurveTo(600, 200, 350, 400, 500, 600); ctx.lineTo(0, 600); ctx.closePath();
+      ctx.fillStyle = goldGrad; ctx.fill();
+
+      const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve) => {
+        const img = new window.Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = () => resolve(img); img.src = src;
+      });
+
       const rightCenterX = 775; const avatarY = 200; const avatarR = 85;
+
       ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR + 6, 0, Math.PI * 2); ctx.fillStyle = '#fbbf24'; ctx.fill();
-      if (profile?.avatarUrl) { try { const avatarImg = await loadImage(profile.avatarUrl); ctx.save(); ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(avatarImg, rightCenterX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2); ctx.restore(); } catch { ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI*2); ctx.fillStyle = '#27272a'; ctx.fill(); } } else { ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI*2); ctx.fillStyle = '#27272a'; ctx.fill(); }
-      ctx.fillStyle = '#fbbf24'; ctx.font = '900 48px "Kosrat", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(profile?.displayName || 'کۆسرەت مامە', rightCenterX, 310, 450);
-      ctx.fillStyle = '#ffffff'; ctx.font = '500 24px "Kosrat", sans-serif'; const wrapText = (context: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => { const words = text.split(' '); let line = ''; for(let n = 0; n < words.length; n++) { const testLine = line + words[n] + ' '; if (context.measureText(testLine).width > maxWidth && n > 0) { context.fillText(line.trim(), x, y); line = words[n] + ' '; y += lineHeight; } else { line = testLine; } } context.fillText(line.trim(), x, y); }; wrapText(ctx, profile?.bio || 'باشترین بەستەرەکانم لێرە ببینە', rightCenterX, 380, 450, 36);
-      const leftCenterX = 240; const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&margin=1&color=d97706`; const qrRes = await fetch(qrUrl); const qrBlob = await qrRes.blob(); const qrImg = new window.Image(); qrImg.src = URL.createObjectURL(qrBlob); await new Promise(r => qrImg.onload = r);
-      ctx.fillStyle = '#ffffff'; if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(80, 100, 320, 320, 24); ctx.fill(); } else { ctx.fillRect(80, 100, 320, 320); } ctx.drawImage(qrImg, 90, 110, 300, 300);
-      ctx.fillStyle = '#000000'; ctx.font = '900 22px "Kosrat", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم', leftCenterX, 450);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px "Kosrat", sans-serif'; ctx.textAlign = 'right'; ctx.fillText('https://biokurd.com', 1020, 560);
-      const dataUrl = canvas.toDataURL('image/png'); const filename = `BioKurd_Card_${slug}.png`;
-      const ua = navigator.userAgent || navigator.vendor || (window as any).opera; const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
-      if (isIOS) { try { const blob = await (await fetch(dataUrl)).blob(); const file = new File([blob], filename, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'کارتەکەم لە BioKurd', }); return; } } catch (err) {} const newWindow = window.open(); if (newWindow) { newWindow.document.write(`<html><body style="margin:0; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:white; font-family:sans-serif;"><img src="${dataUrl}" style="max-width:90%; border-radius:12px; box-shadow:0 10px 20px rgba(0,0,0,0.5);" /><p style="margin-top:20px; font-weight:bold;">پەنجە بنێ بە وێنەکەدا بۆ داگرتن (Save Image)</p></body></html>`); newWindow.document.title = "کارتەکەم"; } else { const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click(); } } else { const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click(); }
-    } catch (e) { alert("کێشەیەک هەیە لە داگرتنی کارتەکە."); } finally { setDownloadingCard(false); }
+
+      if (profile?.avatarUrl) {
+        try {
+          const avatarImg = await loadImage(profile.avatarUrl);
+          ctx.save(); ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(avatarImg, rightCenterX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2); ctx.restore();
+        } catch { ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI*2); ctx.fillStyle = '#27272a'; ctx.fill(); }
+      } else {
+        ctx.beginPath(); ctx.arc(rightCenterX, avatarY, avatarR, 0, Math.PI*2); ctx.fillStyle = '#27272a'; ctx.fill();
+      }
+
+      ctx.fillStyle = '#fbbf24'; 
+      ctx.font = '900 48px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(profile?.displayName || 'کۆسرەت مامە', rightCenterX, 310, 450);
+
+      ctx.fillStyle = '#ffffff'; 
+      ctx.font = '500 24px "Kosrat", sans-serif';
+      const wrapText = (context: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+          const words = text.split(' '); let line = '';
+          for(let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            if (context.measureText(testLine).width > maxWidth && n > 0) { context.fillText(line.trim(), x, y); line = words[n] + ' '; y += lineHeight; } else { line = testLine; }
+          }
+          context.fillText(line.trim(), x, y);
+      };
+      wrapText(ctx, profile?.bio || 'باشترین بەستەرەکانم لێرە ببینە', rightCenterX, 380, 450, 36);
+
+      const leftCenterX = 240;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&margin=1&color=d97706`;
+      const qrRes = await fetch(qrUrl); const qrBlob = await qrRes.blob();
+      const qrImg = new window.Image(); qrImg.src = URL.createObjectURL(qrBlob);
+      
+      await new Promise(r => qrImg.onload = r);
+      
+      ctx.fillStyle = '#ffffff';
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(80, 100, 320, 320, 24); ctx.fill(); } else { ctx.fillRect(80, 100, 320, 320); }
+      ctx.drawImage(qrImg, 90, 110, 300, 300);
+
+      ctx.fillStyle = '#000000'; 
+      ctx.font = '900 22px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم', leftCenterX, 450);
+
+      ctx.fillStyle = '#ffffff'; 
+      ctx.font = 'bold 18px "Kosrat", sans-serif'; 
+      ctx.textAlign = 'right';
+      ctx.fillText('https://biokurd.com', 1020, 560);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const filename = `BioKurd_Card_${slug}.png`;
+
+      const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+
+      if (isIOS) {
+        try {
+           const blob = await (await fetch(dataUrl)).blob();
+           const file = new File([blob], filename, { type: 'image/png' });
+           if (navigator.canShare && navigator.canShare({ files: [file] })) {
+               await navigator.share({
+                   files: [file],
+                   title: 'کارتەکەم لە BioKurd',
+               });
+               return; 
+           }
+        } catch (err) { console.error("Share failed", err); }
+        
+        const newWindow = window.open();
+        if (newWindow) {
+           newWindow.document.write(`
+             <html>
+             <body style="margin:0; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:white; font-family:sans-serif;">
+                <img src="${dataUrl}" style="max-width:90%; border-radius:12px; box-shadow:0 10px 20px rgba(0,0,0,0.5);" />
+                <p style="margin-top:20px; font-weight:bold;">پەنجە بنێ بە وێنەکەدا بۆ داگرتن (Save Image)</p>
+             </body>
+             </html>
+           `);
+           newWindow.document.title = "کارتەکەم";
+        } else {
+           const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
+        }
+      } else {
+        const a = document.createElement('a'); a.href = dataUrl; a.download = filename; a.click();
+      }
+
+    } catch (e) {
+      alert("کێشەیەک هەیە لە داگرتنی کارتەکە.");
+    } finally {
+      setDownloadingCard(false);
+    }
   };
 
   if (loading) return <div className="min-h-[100dvh] bg-white flex items-center justify-center font-kosrat"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
@@ -150,20 +290,40 @@ export default function PublicProfile({ settings }: { settings?: any }) {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start bg-slate-50 overflow-x-hidden relative touch-manipulation pb-[calc(env(safe-area-inset-bottom)+8rem)] font-kosrat" dir="rtl">
+       
        <FontStyle />
        <AppManager />
 
        <div className="w-full h-[45vh] sm:h-[50vh] min-h-[320px] relative bg-gradient-to-r from-gray-200 to-gray-300 shrink-0 z-0 rounded-b-[2.5rem] sm:rounded-b-[3.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.1)] overflow-hidden border-b border-neutral-200/50">
-          {profile?.bgImage && <img src={profile.bgImage} className="w-full h-full object-cover" style={{ objectPosition: bgPosStyle }} alt="Cover" />}
+          {profile?.bgImage && (
+             <img 
+                src={profile.bgImage} 
+                className="w-full h-full object-cover" 
+                style={{ objectPosition: bgPosStyle }} 
+                alt="Cover" 
+                decoding="async" // 🌟 خێراکردنی لۆدینگ
+                loading="lazy"
+             />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/5 to-transparent"></div>
           
           <div className="absolute right-4 sm:right-6 flex flex-col items-end z-30" style={{ top: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
-            <button onClick={handleCopyLink} className="p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-white transition-all shadow-sm flex items-center justify-center">
+            <button 
+               onClick={handleCopyLink}
+               className="p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-white transition-all shadow-sm flex items-center justify-center"
+               title="کۆپیکردنی لینک"
+            >
                {copied ? <Check size={20} className="text-green-400" /> : <Share2 size={20} />}
             </button>
             <AnimatePresence>
                {copied && (
-                 <motion.div initial={{ opacity: 0, y: 5, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="mt-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] sm:text-xs font-bold shadow-lg whitespace-nowrap" dir="ltr">
+                 <motion.div 
+                   initial={{ opacity: 0, y: 5, scale: 0.9 }} 
+                   animate={{ opacity: 1, y: 0, scale: 1 }} 
+                   exit={{ opacity: 0, scale: 0.9 }} 
+                   className="mt-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] sm:text-xs font-bold shadow-lg whitespace-nowrap" 
+                   dir="ltr"
+                 >
                     {profileUrl} کۆپیکرا
                  </motion.div>
                )}
@@ -172,23 +332,52 @@ export default function PublicProfile({ settings }: { settings?: any }) {
        </div>
 
        <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center animate-[fadeIn_0.5s_ease-out] px-4 -mt-20 sm:-mt-24">
+         
          <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full p-[3px] bg-white/40 backdrop-blur-xl shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] mb-4">
             <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-white bg-white">
-               {profile?.avatarUrl ? <img src={profile.avatarUrl} alt={profile.displayName} className="w-full h-full object-cover scale-105" style={{ objectPosition: avatarPosStyle }} /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">بەتاڵ</div>}
+               {profile?.avatarUrl ? (
+                 <img 
+                   src={profile.avatarUrl} 
+                   alt={profile.displayName} 
+                   className="w-full h-full object-cover scale-105"
+                   style={{ objectPosition: avatarPosStyle }}
+                   decoding="async"
+                   loading="lazy"
+                 />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xl">
+                   بەتاڵ
+                 </div>
+               )}
             </div>
-            {profile?.isPro && <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md"><VerifiedBadge className="w-8 h-8 text-blue-500 drop-shadow-sm" /></div>}
+            {profile?.isPro && (
+               <div className="absolute bottom-1.5 right-1.5 z-30 bg-white rounded-full p-[2px] shadow-md">
+                  <VerifiedBadge className="w-8 h-8 text-blue-500 drop-shadow-sm" />
+               </div>
+            )}
          </div>
 
-         <h1 className="text-2xl font-black mt-2 text-center drop-shadow-sm" style={{ color: profile?.nameColor || '#1f2937' }}>{profile.displayName}</h1>
-         {profile.bio && <p className="mt-2 text-center text-sm px-2 leading-relaxed font-bold drop-shadow-sm" style={{ color: profile?.bioColor || '#4b5563' }}>{profile.bio}</p>}
+         <h1 className="text-2xl font-black mt-2 text-center drop-shadow-sm" style={{ color: profile?.nameColor || '#1f2937' }}>
+           {profile.displayName}
+         </h1>
+         {profile.bio && (
+           <p className="mt-2 text-center text-sm px-2 leading-relaxed font-bold drop-shadow-sm" style={{ color: profile?.bioColor || '#4b5563' }}>
+             {profile.bio}
+           </p>
+         )}
 
          <div className="w-full mt-8 flex flex-col gap-3">
            {normalLinks.map((link: any, index: number) => {
              const brandStyle = getBrandStyle(link.url, link.color);
              return (
-               <button key={link.id || index} onClick={() => handleLinkClick(link.url, link.id)} style={{ background: brandStyle.bg, color: brandStyle.text, border: brandStyle.border || 'none' }} className="w-full py-3.5 px-4 rounded-xl shadow-sm font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group">
+               <button
+                 key={link.id || index}
+                 onClick={() => handleLinkClick(link.url, link.id)}
+                 style={{ background: brandStyle.bg, color: brandStyle.text, border: brandStyle.border || 'none' }}
+                 className="w-full py-3.5 px-4 rounded-xl shadow-sm font-bold text-sm hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center justify-between overflow-hidden relative group"
+               >
                  <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner p-1.5" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                   {link.imageUrl ? <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" /> : <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>}
+                   {link.imageUrl ? <img src={link.imageUrl} alt="icon" className="w-full h-full object-contain drop-shadow-sm" loading="lazy" decoding="async" /> : <span className="text-lg opacity-80">{link.title?.charAt(0) || '🔗'}</span>}
                  </div>
                  <span className="flex-grow text-center px-2 z-10">{link.title}</span>
                  <div className="w-9 h-9 flex-shrink-0"></div>
@@ -200,15 +389,19 @@ export default function PublicProfile({ settings }: { settings?: any }) {
          {activeAds.length > 0 && (
            <div className="w-full mt-8 mb-6 flex flex-col gap-3">
               <div className="flex items-center justify-center gap-3 mb-2 opacity-60">
-                <div className="h-[1px] flex-1 bg-gray-300"></div><span className="text-[10px] font-black px-2 py-1 rounded-md border border-gray-200 text-gray-500 tracking-widest bg-gray-100/50">سپۆنسەرکراو</span><div className="h-[1px] flex-1 bg-gray-300"></div>
+                <div className="h-[1px] flex-1 bg-gray-300"></div>
+                <span className="text-[10px] font-black px-2 py-1 rounded-md border border-gray-200 text-gray-500 tracking-widest bg-gray-100/50">سپۆنسەرکراو</span>
+                <div className="h-[1px] flex-1 bg-gray-300"></div>
               </div>
+
               {activeAds.map((ad: any, idx: number) => (
                  <a key={idx} href={ad.url} target="_blank" rel="noopener noreferrer" className="relative w-full group transition-transform hover:scale-[1.02] active:scale-95 shadow-sm block">
                     <div className="absolute -top-2 -left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-md shadow-lg z-20 rotate-[-10deg] border border-orange-200/50">VIP</div>
+                    
                     <div className="relative z-10 w-full bg-white rounded-2xl p-3 sm:p-4 flex items-center justify-between border-2 border-orange-100 shadow-[0_4px_20px_rgba(249,115,22,0.1)] overflow-hidden">
                        <div className="flex items-center gap-3 sm:gap-4 w-full pr-1 relative z-10">
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gray-50 p-1 flex items-center justify-center shrink-0 border border-gray-100">
-                             {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-lg" /> : <Star size={24} className="text-orange-500" />}
+                             {ad.imageUrl ? <img src={ad.imageUrl} className="w-full h-full object-cover rounded-lg" loading="lazy" decoding="async" /> : <Star size={24} className="text-orange-500" />}
                           </div>
                           <div className="flex-1 text-right min-w-0">
                              <h4 className="font-black text-sm sm:text-base text-gray-900 line-clamp-1">{ad.title}</h4>
@@ -222,10 +415,22 @@ export default function PublicProfile({ settings }: { settings?: any }) {
            </div>
          )}
 
-         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] group cursor-pointer border border-neutral-800 bg-[#111111] mt-8`} onClick={handleDownloadCard}>
+         <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            className={`relative w-full max-w-[24rem] sm:max-w-[26rem] aspect-[1.75/1] mx-auto mb-6 rounded-[1.5rem] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] group cursor-pointer border border-neutral-800 bg-[#111111] ${activeAds.length === 0 ? 'mt-8' : ''}`}
+            onClick={handleDownloadCard}
+         >
             <div className="absolute inset-0 pointer-events-none">
-               <svg viewBox="0 0 1050 600" preserveAspectRatio="none" className="absolute top-0 left-0 w-full h-full"><defs><linearGradient id="goldGradCard" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" /></linearGradient></defs><path d="M 0,0 L 450,0 C 600,200 350,400 500,600 L 0,600 Z" fill="url(#goldGradCard)" /></svg>
+               <svg viewBox="0 0 1050 600" preserveAspectRatio="none" className="absolute top-0 left-0 w-full h-full">
+                  <defs>
+                     <linearGradient id="goldGradCard" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#fbbf24" /><stop offset="100%" stopColor="#d97706" />
+                     </linearGradient>
+                  </defs>
+                  <path d="M 0,0 L 450,0 C 600,200 350,400 500,600 L 0,600 Z" fill="url(#goldGradCard)" />
+               </svg>
             </div>
+            
             <div className="relative z-10 w-full h-full flex p-3 sm:p-4">
                <div className="w-[55%] flex flex-col items-center justify-center h-full relative order-1">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white p-1 rounded-full shadow-lg mb-2 border-2 border-[#fbbf24] overflow-hidden relative group-hover:scale-105 transition-transform duration-300">
@@ -237,24 +442,32 @@ export default function PublicProfile({ settings }: { settings?: any }) {
                </div>
                <div className="w-[45%] flex flex-col items-center justify-center h-full order-2 pt-2">
                   <div className="w-[70%] aspect-square bg-white p-1.5 rounded-2xl shadow-xl relative group-hover:scale-105 transition-transform duration-300">
-                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + '/' + slug)}&margin=1&color=d97706`} className="w-full h-full rounded-xl" />
+                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + '/' + slug)}&margin=1&color=d97706`} className="w-full h-full rounded-xl" loading="lazy" decoding="async" />
                   </div>
                   <span className="text-[8px] sm:text-[10px] font-black text-white/90 mt-3 sm:mt-4 text-center w-full px-1 leading-tight">سکانم بکە بۆ بینینی سەرجەم بەستەرەکانم</span>
                </div>
             </div>
-            {downloadingCard && <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div></div>}
+            
+            {downloadingCard && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                 <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
          </motion.div>
+
        </div>
 
        <div className="fixed left-0 w-full flex justify-center z-40 pointer-events-none px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}>
           <a href="https://biokurd.com" className="pointer-events-auto relative group w-full max-w-[280px]">
              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse"></div>
+             
              <div className="relative px-6 py-3.5 bg-gray-900 rounded-full flex items-center justify-center gap-2 text-white shadow-2xl border border-gray-700 hover:scale-[1.02] active:scale-95 transition-transform">
                 <Sparkles size={18} className="text-amber-400 animate-pulse" />
                 <span className="font-black text-sm tracking-wide">لینکێکی ئاوا دروست بکە</span>
              </div>
           </a>
        </div>
+
     </div>
   );
 }
