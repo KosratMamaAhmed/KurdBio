@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هەژماری پڕۆ - ئەپی دەرمانزانی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+        }
+
+        .step-number {
+            box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.1);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 antialiased pb-20">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                    <i data-lucide="crown" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-lg font-black text-slate-800">هەژماری پڕۆ</h1>
+            </div>
+            <a href="/dashboard"
+                class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors active:scale-95">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 pt-8 pb-12">
+
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-black text-slate-800 mb-4 leading-snug">
+                سنوورەکانی فێربوون بشکێنە!
+            </h2>
+            <div class="inline-block bg-indigo-50 border border-indigo-100 text-indigo-700 px-6 py-2 rounded-2xl mb-6">
+                <span class="text-sm font-bold">بڕی پارەدان:</span>
+                <span class="text-xl font-black mx-1">٥,٠٠٠</span>
+                <span class="text-sm font-bold">دینار / بۆ هەمیشە</span>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3 text-sm font-bold text-slate-600">
+                <span
+                    class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> هەموو دەرمانەکان
+                </span>
+                <span
+                    class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> کۆرسە ڤیدیۆییەکان
+                </span>
+                <span
+                    class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> تاقیکردنەوەکان
+                </span>
+            </div>
+        </div>
+
+        <div class="space-y-12">
+            <div class="relative">
+                <div class="flex items-center gap-4 mb-6">
+                    <div
+                        class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-xl step-number shrink-0">
+                        ١</div>
+                    <h3 class="text-xl font-black text-slate-800">شێوازی پارەدان هەڵبژێرە</h3>
+                </div>
+
+                <p class="text-slate-500 font-bold text-sm mb-6 pl-14">
+                    بڕی ٥٠٠٠ دینار بنێرە لە ڕێگەی یەکێک لەم هەژمارانەی خوارەوە. بۆ ئاسانکاری، دەتوانیت ژمارەکان کۆپی
+                    بکەیت یان تەنها وێنەی کارتی پڕکردنەوە بنێریت.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-4 pl-0 md:pl-14" id="payment-list">
+                </div>
+            </div>
+
+            <div class="w-full h-px bg-slate-200"></div>
+
+            <div class="relative">
+                <div class="flex items-center gap-4 mb-6">
+                    <div
+                        class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-xl step-number shrink-0">
+                        ٢</div>
+                    <h3 class="text-xl font-black text-slate-800">وێنەی پسوڵەکە بنێرە</h3>
+                </div>
+
+                <p class="text-slate-500 font-bold text-sm mb-6 pl-14 leading-relaxed">
+                    دوای ئەوەی پارەکەت نارد، سکرین شۆت (وێنەی شاشە) بگرە، یان وێنەی کارتەکە بگرە و بۆمان بنێرە لە ڕێگەی
+                    واتساپ یان تەلەگرام بۆ ئەوەی یەکسەر هەژمارەکەت بۆ چالاک بکەین.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 pl-0 md:pl-14">
+                    <a href="https://wa.me/9647700132913?text=سڵاو،%20دەستم%20بە%20پارەدان%20کردووە%20و%20ئەمەش%20وێنەی%20پسوڵە/کارتەکەیە%20بۆ%20چالاککردنی%20هەژماری%20پڕۆ%20لە%20ئەپی%20دەرمانزانی."
+                        target="_blank"
+                        class="flex-1 flex items-center justify-center gap-3 py-4 px-6 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black rounded-xl transition-all active:scale-95 shadow-sm">
+                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                            <path
+                                d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-5.824 4.74-10.563 10.573-10.564 5.824.001 10.566 4.746 10.566 10.564 0 5.825-4.745 10.563-10.566 10.563z" />
+                        </svg>
+                        ناردن لە واتساپ
+                    </a>
+
+                    <a href="https://t.me/+9647700132913" target="_blank"
+                        class="flex-1 flex items-center justify-center gap-3 py-4 px-6 bg-[#2AABEE] hover:bg-[#229ED9] text-white font-black rounded-xl transition-all active:scale-95 shadow-sm">
+                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z" />
+                        </svg>
+                        ناردن لە تەلەگرام
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="flex justify-center pb-12">
+        <a href="/"
+            class="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 rounded-2xl transition-all active:scale-95 text-sm font-bold border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 group">
+            <i data-lucide="home" class="w-4 h-4 group-hover:text-indigo-600 transition-colors"></i>
+            سەرەتا
+        </a>
+    </div>
+
+    <script>
+        const PAYMENT_METHODS = [
+            {
+                id: 'fastpay',
+                name: 'FastPay',
+                type: 'wallet',
+                number: '7503221456',
+                color: 'text-rose-600', bg: 'bg-white', border: 'border-slate-200', icon: 'wallet',
+                instructions: `پارەکە بنێرە بۆ ئەم ژمارەیە`
+            },
+            {
+                id: 'fib',
+                name: 'FIB بانك',
+                type: 'wallet',
+                number: '7503420910',
+                color: 'text-emerald-600', bg: 'bg-white', border: 'border-slate-200', icon: 'landmark',
+                instructions: `پارەکە بنێرە بۆ ئەم ژمارەیە`
+            },
+            {
+                id: 'korek',
+                name: 'کۆڕەک',
+                type: 'card',
+                color: 'text-blue-600', bg: 'bg-white', border: 'border-slate-200', icon: 'credit-card',
+                instructions: `تەنها وێنەی کارتی ٥٠٠٠ ی بنێرە.`
+            },
+            {
+                id: 'asiacell',
+                name: 'ئاسیاسێڵ',
+                type: 'card',
+                color: 'text-red-600', bg: 'bg-white', border: 'border-slate-200', icon: 'credit-card',
+                instructions: `تەنها وێنەی کارتی ٥٠٠٠ ی بنێرە.`
+            },
+            {
+                id: 'qicard',
+                name: 'QiCard',
+                type: 'wallet',
+                number: '4156019301',
+                color: 'text-amber-600', bg: 'bg-white', border: 'border-slate-200', icon: 'credit-card',
+                instructions: `حەواڵەی بکە بۆ ئەم ژمارە کارتە`
+            },
+        ];
+
+        const listContainer = document.getElementById('payment-list');
+
+        PAYMENT_METHODS.forEach(method => {
+            const div = document.createElement('div');
+            div.className = `${method.bg} p-5 rounded-2xl border ${method.border} flex flex-col justify-between transition-all hover:border-indigo-300 hover:shadow-md group`;
+
+            let actionContent = '';
+
+            if (method.type === 'wallet') {
+                actionContent = `
+                    <div class="mt-4">
+                        <p class="text-xs font-bold text-slate-400 mb-2">${method.instructions}</p>
+                        <div class="bg-slate-50 rounded-xl p-1.5 flex items-center justify-between border border-slate-100 group-hover:border-indigo-100 transition-colors">
+                            <div class="text-base font-black text-slate-700 tracking-wider pl-3 font-mono" dir="ltr">${method.number}</div>
+                            <button onclick="copyNumber('${method.number}', this)" class="p-2 bg-white text-slate-500 hover:text-indigo-600 border border-slate-200 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-1">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold px-1">کۆپی</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                actionContent = `
+                    <div class="mt-4 bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-start gap-2 h-full">
+                        <i data-lucide="info" class="${method.color} w-5 h-5 shrink-0"></i>
+                        <p class="text-xs font-bold text-slate-600 leading-relaxed">${method.instructions}</p>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                        <i data-lucide="${method.icon}" class="${method.color} w-5 h-5"></i>
+                    </div>
+                    <div class="font-black text-lg text-slate-700">${method.name}</div>
+                </div>
+                ${actionContent}
+            `;
+            listContainer.appendChild(div);
+        });
+
+        function copyNumber(num, btn) {
+            navigator.clipboard.writeText(num);
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="text-emerald-500 w-4 h-4"></i> <span class="text-xs font-bold text-emerald-600 px-1">کۆپیکرا</span>';
+            btn.classList.add('!border-emerald-200', '!bg-emerald-50');
+            lucide.createIcons();
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('!border-emerald-200', '!bg-emerald-50');
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
