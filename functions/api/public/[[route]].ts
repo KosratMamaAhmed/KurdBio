@@ -1,5 +1,5 @@
+import bcrypt from "bcryptjs";
 import jwt from "@tsndr/cloudflare-worker-jwt";
-import bcrypt from "bcryptjs"; 
 
 const escapeHTML = (str: string) => str.replace(/[&<>'"]/g, 
   tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
-// 🌟 سیستەمی Hybrid ـەکەی خۆت کە کار دەکات 🌟
+// 🌟 سیستەمی Hybrid بۆ دڵنیایی ئامارەکان 🌟
 async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
   let savedToD1 = false;
   try {
@@ -40,7 +40,6 @@ async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
       }
   } catch (e) { console.error("D1 Failed", e); }
 
-  // ئەگەر D1 کێشەی هەبوو، ڕاستەوخۆ دەچێتە ناو KV و هەرگیز ئامارەکانت نابێتە سفڕ
   if (!savedToD1) {
       try {
           let kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
@@ -77,7 +76,6 @@ export async function onRequest(context: any) {
        return res;
     }
 
-    // 🌟 بەکارهێنانی /v/ و /visit/ هەردووکی بۆ دڵنیایی 🌟
     if (method === "POST" && (path.startsWith("/api/public/v/") || path.startsWith("/api/public/visit/"))) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -91,7 +89,6 @@ export async function onRequest(context: any) {
        return json({ success: true });
     }
 
-    // 🌟 بەکارهێنانی /c/ و /click/ هەردووکی 🌟
     if (method === "POST" && (path.startsWith("/api/public/c/") || path.startsWith("/api/public/click/"))) {
        const slug = escapeHTML(path.split("/").pop() || "");
        if (slug) {
@@ -159,11 +156,16 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // 🌟 گۆڕانکارییەکە لێرەدایە: پشکنینی Environment Variable 🌟
+        const isFreeMode = env.BILLING_MODE === 'free';
+
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
           theme: 'gold', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
-          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, isPro: false, createdAt: new Date().toISOString()
+          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, 
+          isPro: isFreeMode, // 👈 ئەگەر سیستەم free بێت، ڕاستەوخۆ دەبێتە VIP
+          createdAt: new Date().toISOString()
         };
 
         await Promise.all([
@@ -180,7 +182,7 @@ export async function onRequest(context: any) {
         await env.KV.put("all_users_list", JSON.stringify(allUsersList));
 
         const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
-        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: false } });
+        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode } });
     }
 
     if (method === "POST" && path === "/api/public/reset-password") {
@@ -234,7 +236,6 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     const userId = payload.id;
 
-    // 🌟 خێراکردنی داشبۆرد بە Promise.all 🌟
     if (method === "GET" && path === "/api/profile") {
        if (userId === "admin") return json({ id: "admin", username: "admin", displayName: "بەڕێوەبەر", isAdmin: true, isPro: true, links: [] });
        
