@@ -139,7 +139,7 @@ export async function onRequest(context: any) {
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
         const { name, username, identifier, password } = await request.json();
         
-        // 🌟 گۆڕانکاری: تەنها Identifier وەردەگرێت، پاشان جیا دەکرێتەوە 🌟
+        // 🌟 گۆڕانکاری: تەنها Identifier وەردەگرێت و لەوێوە جیای دەکاتەوە 🌟
         if (!name || !username || !identifier || !password) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
         if (password.length < 6) return json({ error: "پاسوۆرد دەبێت لانی کەم ٦ پیت یان ژمارە بێت" }, 400);
 
