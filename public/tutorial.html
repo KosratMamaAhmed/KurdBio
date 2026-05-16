@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl" translate="no" class="notranslate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>فێرکاری دابەزاندن</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'NRT';
+            src: url('/fonts/nrt.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'NRT', sans-serif;
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+  </head>
+  <body class="min-h-[100dvh] flex flex-col items-center p-4 sm:p-6 relative pb-10">
+
+    <div class="w-full max-w-md mx-auto">
+        
+        <div class="text-center mb-8 animate-[fadeIn_0.5s_ease-out]">
+            <h2 class="text-2xl font-black text-slate-800 mb-2">چۆنیەتی دابەزاندن</h2>
+            <p class="text-slate-500 text-sm font-bold">تکایە ئەم ٤ هەنگاوەی خوارەوە جێبەجێ بکە</p>
+        </div>
+
+        <div class="space-y-8 relative">
+            
+            <div class="absolute right-8 top-8 bottom-32 w-0.5 bg-indigo-100 z-0"></div>
+
+            <div class="relative z-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 animate-[slideInUp_0.6s_ease-out]" style="animation-delay: 0ms; animation-fill-mode: both;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 w-10 h-10 flex items-center justify-center rounded-[1rem] font-black text-lg shrink-0">١</span>
+                    <h3 class="font-black text-slate-800 text-lg">هەنگاوی یەکەم</h3>
+                </div>
+                <p class="text-slate-600 font-bold text-sm mb-4 leading-relaxed pr-1">سێ خاڵەکەی (<span class="font-black text-lg">...</span>) بەشی خوارەوەی لای ڕاست دابگرە.</p>
+                <div class="rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative aspect-[9/16] flex items-center justify-center shadow-inner">
+                    <img src="1.png" alt="هەنگاوی ١" class="w-full h-full object-contain relative z-10" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="hidden flex-col items-center justify-center text-slate-400 absolute inset-0">
+                        <span class="text-xs font-bold mb-1">وێنەی 1.png نەدۆزرایەوە</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 animate-[slideInUp_0.6s_ease-out]" style="animation-delay: 150ms; animation-fill-mode: both;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 w-10 h-10 flex items-center justify-center rounded-[1rem] font-black text-lg shrink-0">٢</span>
+                    <h3 class="font-black text-slate-800 text-lg">هەنگاوی دووەم</h3>
+                </div>
+                <p class="text-slate-600 font-bold text-sm mb-4 leading-relaxed pr-1">لەناو لیستەکەدا دوگمەی <span class="text-blue-600 font-black px-1 dir-ltr inline-block">Share</span> دابگرە.</p>
+                <div class="rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative aspect-[9/16] flex items-center justify-center shadow-inner">
+                    <img src="2.png" alt="هەنگاوی ٢" class="w-full h-full object-contain relative z-10" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="hidden flex-col items-center justify-center text-slate-400 absolute inset-0">
+                        <span class="text-xs font-bold mb-1">وێنەی 2.png نەدۆزرایەوە</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 animate-[slideInUp_0.6s_ease-out]" style="animation-delay: 300ms; animation-fill-mode: both;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 w-10 h-10 flex items-center justify-center rounded-[1rem] font-black text-lg shrink-0">٣</span>
+                    <h3 class="font-black text-slate-800 text-lg">هەنگاوی سێیەم</h3>
+                </div>
+                <p class="text-slate-600 font-bold text-sm mb-4 leading-relaxed pr-1">دوگمەی <span class="text-slate-800 font-black px-1 dir-ltr inline-block">Add to Home Screen</span> دابگرە.</p>
+                <div class="rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative aspect-[9/16] flex items-center justify-center shadow-inner">
+                    <img src="3.png" alt="هەنگاوی ٣" class="w-full h-full object-contain relative z-10" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="hidden flex-col items-center justify-center text-slate-400 absolute inset-0">
+                        <span class="text-xs font-bold mb-1">وێنەی 3.png نەدۆزرایەوە</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 animate-[slideInUp_0.6s_ease-out]" style="animation-delay: 450ms; animation-fill-mode: both;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-emerald-50 text-emerald-600 border border-emerald-100 w-10 h-10 flex items-center justify-center rounded-[1rem] font-black text-lg shrink-0">٤</span>
+                    <h3 class="font-black text-slate-800 text-lg">هەنگاوی چوارەم</h3>
+                </div>
+                <p class="text-slate-600 font-bold text-sm mb-4 leading-relaxed pr-1">لە بەشی سەرەوەی لای ڕاست وشەی <span class="text-emerald-600 font-black px-1 dir-ltr inline-block">Add</span> دابگرە.</p>
+                <div class="rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative aspect-[9/16] flex items-center justify-center shadow-inner">
+                    <img src="4.png" alt="هەنگاوی ٤" class="w-full h-full object-contain relative z-10" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="hidden flex-col items-center justify-center text-slate-400 absolute inset-0">
+                        <span class="text-xs font-bold mb-1">وێنەی 4.png نەدۆزرایەوە</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 bg-emerald-50 p-6 rounded-3xl border border-emerald-200 text-center shadow-sm animate-[slideInUp_0.6s_ease-out]" style="animation-delay: 600ms; animation-fill-mode: both;">
+                <span class="text-4xl block mb-3 drop-shadow-sm">🎉</span>
+                <h3 class="font-black text-emerald-700 text-xl mb-1">پیرۆزە!</h3>
+                <p class="text-emerald-600 font-bold text-sm">ئێستا تۆ خاوەنی ئەپی دەرمانزانی</p>
+            </div>
+
+        </div>
+    </div>
+
+  </body>
+</html>
