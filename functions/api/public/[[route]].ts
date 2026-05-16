@@ -137,55 +137,60 @@ export async function onRequest(context: any) {
     }
 
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
-        const { name, username, email, phone, password, dob } = await request.json();
-        if (!name || !username || !email || !phone || !password || !dob) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
+        const { name, username, identifier, password } = await request.json();
+        
+        // 🌟 گۆڕانکاری: تەنها Identifier وەردەگرێت، پاشان جیا دەکرێتەوە 🌟
+        if (!name || !username || !identifier || !password) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
+        if (password.length < 6) return json({ error: "پاسوۆرد دەبێت لانی کەم ٦ پیت یان ژمارە بێت" }, 400);
 
         const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
-        const normalizedEmail = email.toLowerCase().trim();
-        const normalizedPhone = phone.trim().replace(/\s+/g, '');
+        const isEmail = identifier.includes('@');
+        
+        const normalizedEmail = isEmail ? identifier.toLowerCase().trim() : `${normalizedUsername}@biokurd.com`;
+        const normalizedPhone = !isEmail ? identifier.trim().replace(/\s+/g, '') : '00000000000';
 
         const [existingUser, existingEmail, existingPhone] = await Promise.all([
-          env.KV.get(`user:${normalizedUsername}`), env.KV.get(`email:${normalizedEmail}`), env.KV.get(`phone:${normalizedPhone}`)
+          env.KV.get(`user:${normalizedUsername}`), 
+          isEmail ? env.KV.get(`email:${normalizedEmail}`) : Promise.resolve(null), 
+          !isEmail ? env.KV.get(`phone:${normalizedPhone}`) : Promise.resolve(null)
         ]);
 
         if (existingUser) return json({ error: "ئەم یوزەرنەیمە پێشتر بەکارهاتووە" }, 409);
-        if (existingEmail) return json({ error: "ئەم ئیمێڵە پێشتر بەکارهاتووە" }, 409);
-        if (existingPhone) return json({ error: "ئەم ژمارە مۆبایلە پێشتر بەکارهاتووە" }, 409);
+        if (isEmail && existingEmail) return json({ error: "ئەم ئیمێڵە پێشتر بەکارهاتووە" }, 409);
+        if (!isEmail && existingPhone) return json({ error: "ئەم ژمارە مۆبایلە پێشتر بەکارهاتووە" }, 409);
 
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
-
         const isFreeMode = env.BILLING_MODE === 'free';
 
-        // 🌟 دیزاینی ئۆتۆماتیکی بۆ بەکارهێنەری نوێ 🌟
         const defaultBackgrounds = [
           'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
           'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
-          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
-          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
-          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
+          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80'
         ];
         const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
         const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=256&bold=true`;
 
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
-          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
+          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: '2000-01-01', slug: normalizedUsername,
           theme: 'gold', bio: 'بەخێربێیت بۆ پرۆفایلەکەم', links: [], 
           avatarUrl: defaultAvatar, avatarPos: { x: 50, y: 50 },
           bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
-          nameColor: '#000000', bioColor: '#10b981', // ڕەش و سەوزی بنەڕەتی
+          nameColor: '#000000', bioColor: '#10b981', 
           isActive: true, isAdmin: false, isPro: isFreeMode, 
           createdAt: new Date().toISOString()
         };
 
-        await Promise.all([
+        const putPromises = [
           env.KV.put(`user_id:${userId}`, JSON.stringify(newUser)),
           env.KV.put(`user:${normalizedUsername}`, JSON.stringify(newUser)),
-          env.KV.put(`email:${normalizedEmail}`, userId),
-          env.KV.put(`phone:${normalizedPhone}`, userId),
           env.KV.put(`slug:${normalizedUsername}`, userId)
-        ]);
+        ];
+        if (isEmail) putPromises.push(env.KV.put(`email:${normalizedEmail}`, userId));
+        else putPromises.push(env.KV.put(`phone:${normalizedPhone}`, userId));
+
+        await Promise.all(putPromises);
 
         const allUsersStr = await env.KV.get("all_users_list");
         const allUsersList = allUsersStr ? JSON.parse(allUsersStr) : [];
@@ -194,32 +199,6 @@ export async function onRequest(context: any) {
 
         const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
         return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode } });
-    }
-
-    if (method === "POST" && path === "/api/public/reset-password") {
-       const { identifier, dob, newPassword } = await request.json();
-       if (!identifier || !dob || !newPassword) return json({ error: "زانیارییەکان ناتەواون" }, 400);
-
-       const normalizedId = identifier.toLowerCase().trim();
-       let targetUserId = await env.KV.get(`user:${normalizedId}`); 
-       if (!targetUserId && normalizedId.includes('@')) {
-          const idFromEmail = await env.KV.get(`email:${normalizedId}`);
-          if (idFromEmail) targetUserId = await env.KV.get(`user_id:${idFromEmail}`);
-       }
-       if (!targetUserId && /^\d+$/.test(normalizedId)) {
-          const idFromPhone = await env.KV.get(`phone:${normalizedId}`);
-          if (idFromPhone) targetUserId = await env.KV.get(`user_id:${idFromPhone}`);
-       }
-
-       if (!targetUserId) return json({ error: "هیچ هەژمارێک بوونی نییە" }, 404);
-       
-       let user = JSON.parse(targetUserId);
-       if (user.dob !== dob) return json({ error: "ڕۆژی لەدایکبوونەکە هەڵەیە!" }, 403);
-
-       user.password = await bcrypt.hash(newPassword, 10);
-       await env.KV.put(`user_id:${user.id}`, JSON.stringify(user));
-       await env.KV.put(`user:${user.username}`, JSON.stringify(user));
-       return json({ success: true });
     }
 
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
@@ -252,25 +231,13 @@ export async function onRequest(context: any) {
        
        let userStr = await env.KV.get(`user_id:${userId}`);
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
-       
        const user = JSON.parse(userStr);
-       let totalVisits = 0; let totalClicks = 0;
        
-       try {
-           if(env.DB) {
-               const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first();
-               if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; }
-           }
-       } catch(e) {}
+       let totalVisits = 0; let totalClicks = 0;
+       try { if(env.DB) { const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first(); if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; } } } catch(e) {}
+       try { const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json"); if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); } } catch(e) {}
 
-       try {
-           const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
-           if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); }
-       } catch(e) {}
-
-       user.visits = totalVisits; 
-       user.clicks = totalClicks;
-
+       user.visits = totalVisits; user.clicks = totalClicks;
        return json(user);
     }
 
@@ -278,36 +245,16 @@ export async function onRequest(context: any) {
        const updates = await request.json();
        const userStr = await env.KV.get(`user_id:${userId}`);
        const user = JSON.parse(userStr);
-       
        const oldUsername = user.username;
        const oldSlug = user.slug || user.username;
-       
        let newUsername = updates.username ? updates.username.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldUsername;
        let newSlug = updates.slug ? updates.slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldSlug;
        
-       if (newUsername !== oldUsername) {
-           const checkTaken = await env.KV.get(`user:${newUsername}`);
-           if(checkTaken) return json({error: "ئەم یوزەرنەیمە گیراوە"}, 400);
-           await env.KV.delete(`user:${oldUsername}`);
-       }
-
-       if (newSlug !== oldSlug) {
-           const checkTakenSlug = await env.KV.get(`slug:${newSlug}`);
-           if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400);
-           await env.KV.delete(`slug:${oldSlug}`);
-           await env.KV.put(`slug:${newSlug}`, userId.toString());
-       }
+       if (newUsername !== oldUsername) { const checkTaken = await env.KV.get(`user:${newUsername}`); if(checkTaken) return json({error: "ئەم یوزەرنەیمە گیراوە"}, 400); await env.KV.delete(`user:${oldUsername}`); }
+       if (newSlug !== oldSlug) { const checkTakenSlug = await env.KV.get(`slug:${newSlug}`); if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400); await env.KV.delete(`slug:${oldSlug}`); await env.KV.put(`slug:${newSlug}`, userId.toString()); }
        
-       const updatedUser = { 
-           ...user, ...updates, username: newUsername, slug: newSlug,
-           displayName: escapeHTML(updates.displayName || user.displayName), 
-           bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio)
-       };
-       
-       await Promise.all([
-          env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)),
-          env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser))
-       ]);
+       const updatedUser = { ...user, ...updates, username: newUsername, slug: newSlug, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio) };
+       await Promise.all([ env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser)) ]);
        return json(updatedUser);
     }
 
