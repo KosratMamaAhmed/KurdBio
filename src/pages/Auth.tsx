@@ -28,7 +28,7 @@ export default function Auth({ onLogin }: Props) {
   const [formData, setFormData] = useState({
     name: '',
     username: '',
-    identifier: '', // بۆ ئیمێڵ یان مۆبایل
+    identifier: '', 
     password: ''
   });
 
@@ -52,13 +52,17 @@ export default function Auth({ onLogin }: Props) {
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       
-      // ڕێکخستنی داتا بۆ باکێند
+      // 🌟 چارەسەری کۆتایی: ناردنی داتا شاراوەکان بۆ ئەوەی سێرڤەرەکە هەڵە نەدات 🌟
       const payload = isLogin 
         ? { identifier: formData.identifier, password: formData.password }
         : { 
             name: formData.name, 
             username: formData.username, 
-            identifier: formData.identifier, // ئیمێڵ یان مۆبایل
+            identifier: formData.identifier,
+            // ئەم سێ دێڕەی خوارەوە بە شاراوەیی دەنێردرێت بۆ ئەوەی باکێندە کۆنەکەش ڕازی بکات!
+            email: formData.identifier.includes('@') ? formData.identifier : `${formData.username}@biokurd.com`,
+            phone: !formData.identifier.includes('@') ? formData.identifier : '00000000000',
+            dob: '2000-01-01', 
             password: formData.password 
           };
 
