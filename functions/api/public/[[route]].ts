@@ -56,6 +56,9 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
+  // 🌟 پشکنینی داینامیکی ئایا سیستەمەکە کراوەتە خۆڕایی یان بە پارەیە 🌟
+  const isFreeMode = env.BILLING_MODE === 'free';
+
   if (method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -133,13 +136,16 @@ export async function onRequest(context: any) {
 
        const token = await jwt.sign({ id: user.id, username: user.username, role: user.isAdmin ? "admin" : "user" }, env.JWT_SECRET);
        delete user.password;
+       
+       // داینامیک کردنی VIP لە کاتی چوونە ژوورەوە
+       user.isPro = isFreeMode ? true : user.isPro;
+       
        return json({ success: true, token, user });
     }
 
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
         const { name, username, identifier, password } = await request.json();
         
-        // 🌟 گۆڕانکاری: تەنها Identifier وەردەگرێت و لەوێوە جیای دەکاتەوە 🌟
         if (!name || !username || !identifier || !password) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
         if (password.length < 6) return json({ error: "پاسوۆرد دەبێت لانی کەم ٦ پیت یان ژمارە بێت" }, 400);
 
@@ -161,12 +167,14 @@ export async function onRequest(context: any) {
 
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
-        const isFreeMode = env.BILLING_MODE === 'free';
 
+        // 🌟 دروستکردنی ئاڤاتار و باکگراوندی ئۆتۆماتیک 🌟
         const defaultBackgrounds = [
           'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
           'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
-          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80'
+          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
+          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
+          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
         ];
         const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
         const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=256&bold=true`;
@@ -178,7 +186,8 @@ export async function onRequest(context: any) {
           avatarUrl: defaultAvatar, avatarPos: { x: 50, y: 50 },
           bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
           nameColor: '#000000', bioColor: '#10b981', 
-          isActive: true, isAdmin: false, isPro: isFreeMode, 
+          isActive: true, isAdmin: false, 
+          isPro: false, // لە داتابەیس بە ئاسایی خەزن دەبێت، بەڵام داینامیک دەگۆڕێت
           createdAt: new Date().toISOString()
         };
 
@@ -198,7 +207,7 @@ export async function onRequest(context: any) {
         await env.KV.put("all_users_list", JSON.stringify(allUsersList));
 
         const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
-        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode } });
+        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode ? true : false } });
     }
 
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
@@ -213,7 +222,8 @@ export async function onRequest(context: any) {
        const profileData = { 
          id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
          avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, 
-         isPro: user.isPro, slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
+         isPro: isFreeMode ? true : user.isPro, // 🌟 داینامیک بۆ پرۆفایلی گشتی 🌟
+         slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
        return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
     }
@@ -238,6 +248,8 @@ export async function onRequest(context: any) {
        try { const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json"); if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); } } catch(e) {}
 
        user.visits = totalVisits; user.clicks = totalClicks;
+       user.isPro = isFreeMode ? true : user.isPro; // 🌟 داینامیک بۆ داشبۆرد 🌟
+
        return json(user);
     }
 
@@ -254,7 +266,14 @@ export async function onRequest(context: any) {
        if (newSlug !== oldSlug) { const checkTakenSlug = await env.KV.get(`slug:${newSlug}`); if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400); await env.KV.delete(`slug:${oldSlug}`); await env.KV.put(`slug:${newSlug}`, userId.toString()); }
        
        const updatedUser = { ...user, ...updates, username: newUsername, slug: newSlug, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio) };
+       
+       // پاراستنی دۆخی بنەڕەتی لەکاتی سەیڤکردن
+       updatedUser.isPro = user.isPro; 
+
        await Promise.all([ env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser)) ]);
+       
+       // بۆ فرۆنتێند داینامیکەکەی دەنێرینەوە
+       updatedUser.isPro = isFreeMode ? true : user.isPro;
        return json(updatedUser);
     }
 
