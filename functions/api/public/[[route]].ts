@@ -25,7 +25,6 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
-// 🌟 سیستەمی Hybrid بۆ دڵنیایی ئامارەکان 🌟
 async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
   let savedToD1 = false;
   try {
@@ -156,15 +155,27 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 🌟 گۆڕانکارییەکە لێرەدایە: پشکنینی Environment Variable 🌟
         const isFreeMode = env.BILLING_MODE === 'free';
+
+        // 🌟 دیزاینی ئۆتۆماتیکی بۆ بەکارهێنەری نوێ 🌟
+        const defaultBackgrounds = [
+          'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
+          'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
+          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
+          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
+          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
+        ];
+        const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
+        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=256&bold=true`;
 
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob, slug: normalizedUsername,
-          theme: 'gold', bio: 'شارەزا لە تەکنەلۆژیا', links: [], avatarUrl: '', avatarPos: { x: 50, y: 50 },
-          bgImage: '', bgPos: { x: 50, y: 50 }, isActive: true, isAdmin: false, 
-          isPro: isFreeMode, // 👈 ئەگەر سیستەم free بێت، ڕاستەوخۆ دەبێتە VIP
+          theme: 'gold', bio: 'بەخێربێیت بۆ پرۆفایلەکەم', links: [], 
+          avatarUrl: defaultAvatar, avatarPos: { x: 50, y: 50 },
+          bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
+          nameColor: '#000000', bioColor: '#10b981', // ڕەش و سەوزی بنەڕەتی
+          isActive: true, isAdmin: false, isPro: isFreeMode, 
           createdAt: new Date().toISOString()
         };
 

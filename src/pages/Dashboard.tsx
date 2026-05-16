@@ -98,14 +98,13 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     finally { setSaving(false); }
   };
 
-  // 🌟 گۆڕینی لۆجیکی وێنە بۆ ئەوەی ڕاستەوخۆ سەیڤ نەبێت 🌟
+  // 🌟 لێرەدا لیمیتی قەبارەی وێنە لابردرا و سیستەم خۆی بەباشی بچووکی دەکاتەوە 🌟
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
     const file = e.target.files?.[0]; if (!file) return;
-    if (file.size > 2 * 1024 * 1024) return showNotif('قەبارەی وێنە دەبێت لە 2MB کەمتر بێت', 'error');
     
     if (type === 'avatar') setIsUploadingAvatar(true); else setIsUploadingIcon(true);
     
-    const reader = new FileReader(); reader.readAsDataURL(file);
+    const reader = new FileReader();
     reader.onload = (event) => {
       const img = new window.Image(); img.src = event.target?.result as string;
       img.onload = () => {
@@ -114,10 +113,11 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         let w = img.width, h = img.height;
         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
         canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, w, h);
-        const base64String = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.8);
+        
+        // دروستکردنی کۆتایی بە کوالێتییەکی گونجاو بێ کێشەی سایز
+        const base64String = canvas.toDataURL('image/jpeg', 0.8);
         
         if (type === 'avatar') {
-          // تەنها دەیخاتە ستەیت نەک بیکاتە داتابەیس
           setProfile((prev: any) => ({ ...prev, avatarUrl: base64String }));
           setIsUploadingAvatar(false);
         } else {
@@ -126,6 +126,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         }
       };
     };
+    reader.readAsDataURL(file);
   };
 
   const saveLinksOrder = async (newLinks: any[]) => {

@@ -13,16 +13,34 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
     else if (e.type === "dragleave") { setDragActive(false); }
   };
 
+  // 🌟 زیرەکی بچووککردنەوەی وێنەی باکگراوند 🌟
+  const compressAndSetBg = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new window.Image();
+      img.src = ev.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200; // زۆرترین پانی بۆ باکگراوند تا کێشەی نەبێت
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; } } 
+        else { if (h > MAX_WIDTH) { w *= MAX_WIDTH / h; h = MAX_WIDTH; } }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, w, h);
+        setProfile({...profile, bgImage: canvas.toDataURL('image/jpeg', 0.8)});
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDrop = (e: any) => {
     e.preventDefault(); e.stopPropagation();
     setDragActive(false);
     if (!profile?.isPro) return; 
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      const reader = new FileReader(); reader.readAsDataURL(file);
-      // تەنها لەسەر شاشەکە دەیگۆڕێت، نایخاتە داتابەیس تا پاشەکەوت نەکەیت
-      reader.onload = (ev) => setProfile({...profile, bgImage: ev.target?.result as string});
+      compressAndSetBg(e.dataTransfer.files[0]);
     }
   };
 
@@ -33,7 +51,6 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         <User className="text-orange-500" size={24} /> ڕێکخستنی پرۆفایل
       </h2>
 
-      {/* 🌟 باکگراوندەکە زۆر فراوانکرا و Drag & Drop جێبەجێکرا 🌟 */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
            <label className="text-sm font-black text-neutral-700 flex items-center gap-2">
@@ -63,10 +80,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
                <label className="px-6 py-3 bg-white/20 backdrop-blur-md rounded-2xl text-white font-black text-sm cursor-pointer hover:bg-white/30 transition shadow-xl flex items-center gap-2 border border-white/20">
                  <input type="file" accept="image/*" className="hidden" onChange={(e:any) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                       const reader = new FileReader(); reader.readAsDataURL(file);
-                       reader.onload = (ev) => setProfile({...profile, bgImage: ev.target?.result as string});
-                    }
+                    if (file) compressAndSetBg(file);
                  }} />
                  <Camera size={18} /> هەڵبژاردنی وێنە
                </label>
@@ -106,7 +120,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
            </div>
            <div className="text-xs font-bold text-neutral-500 leading-relaxed bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex-1">
              <span className="text-blue-600 block mb-1.5 font-black flex items-center gap-1.5"><CheckCircle size={14}/> تێبینی:</span>
-             گۆڕینی وێنەی پرۆفایل بۆ هەموو بەکارهێنەران بە خۆڕاییە. تکایە با قەبارەی وێنەکەت لە 2MB کەمتر بێت.
+             گۆڕینی وێنەی پرۆفایل بۆ هەموو بەکارهێنەران بە خۆڕاییە. <strong>هەر وێنەیەک بە هەر قەبارەیەک بێت بێ کێشەیە، سیستەمەکە خۆی قەبارەکەی ڕێکدەخاتەوە.</strong>
            </div>
         </div>
       </div>
@@ -168,7 +182,6 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
       </div>
 
       <div className="mt-8 pt-6 border-t border-neutral-100 flex justify-end">
-         {/* 🌟 لێرەدا هەموو شتەکان پێکەوە دەنێردرێن بۆ داتابەیس 🌟 */}
          <button 
             onClick={() => handleUpdateProfile({ 
                displayName: profile.displayName, 
