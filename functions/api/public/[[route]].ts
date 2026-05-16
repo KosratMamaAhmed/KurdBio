@@ -56,8 +56,13 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
-  // 🌟 پشکنینی داینامیکی ئایا سیستەمەکە کراوەتە خۆڕایی یان بە پارەیە 🌟
-  const isFreeMode = env.BILLING_MODE === 'free';
+  // 🌟 زیرەکی لە خوێندنەوەی BILLING_MODE بێ کێشەی سپەیس و پیت 🌟
+  const rawBilling = (env.BILLING_MODE || '').toString().trim().toLowerCase();
+  const isFreeMode = rawBilling === 'free';
+
+  // فەنکشن بۆ دروستکردنی ئاڤاتار و باکگراوندی داینامیک بۆ هەمووان (کۆن و نوێ)
+  const getDefaultAvatar = (name: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=random&color=fff&size=256&bold=true`;
+  const getDefaultBg = () => 'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80';
 
   if (method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -136,15 +141,17 @@ export async function onRequest(context: any) {
 
        const token = await jwt.sign({ id: user.id, username: user.username, role: user.isAdmin ? "admin" : "user" }, env.JWT_SECRET);
        delete user.password;
-       
-       // داینامیک کردنی VIP لە کاتی چوونە ژوورەوە
-       user.isPro = isFreeMode ? true : user.isPro;
-       
+
+       // 🌟 چالاککردنی ئاڤاتار و VIP بۆ ئەو هەژمارانەی پێشتر دروستکرابوون 🌟
+       if (isFreeMode) user.isPro = true;
+       if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
+       if (!user.bgImage) user.bgImage = getDefaultBg();
+
        return json({ success: true, token, user });
     }
 
     if (method === "POST" && (path === "/api/auth/register" || path === "/api/register")) {
-        const { name, username, identifier, password } = await request.json();
+        const { name, username, identifier, password, email, phone, dob } = await request.json();
         
         if (!name || !username || !identifier || !password) return json({ error: "تکایە هەموو خانەکان پڕبکەرەوە" }, 400);
         if (password.length < 6) return json({ error: "پاسوۆرد دەبێت لانی کەم ٦ پیت یان ژمارە بێت" }, 400);
@@ -152,8 +159,8 @@ export async function onRequest(context: any) {
         const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
         const isEmail = identifier.includes('@');
         
-        const normalizedEmail = isEmail ? identifier.toLowerCase().trim() : `${normalizedUsername}@biokurd.com`;
-        const normalizedPhone = !isEmail ? identifier.trim().replace(/\s+/g, '') : '00000000000';
+        const normalizedEmail = email || (isEmail ? identifier.toLowerCase().trim() : `${normalizedUsername}@biokurd.com`);
+        const normalizedPhone = phone || (!isEmail ? identifier.trim().replace(/\s+/g, '') : '00000000000');
 
         const [existingUser, existingEmail, existingPhone] = await Promise.all([
           env.KV.get(`user:${normalizedUsername}`), 
@@ -168,26 +175,14 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 🌟 دروستکردنی ئاڤاتار و باکگراوندی ئۆتۆماتیک 🌟
-        const defaultBackgrounds = [
-          'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
-          'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
-          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
-          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
-          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
-        ];
-        const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
-        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=256&bold=true`;
-
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
-          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: '2000-01-01', slug: normalizedUsername,
+          email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob || '2000-01-01', slug: normalizedUsername,
           theme: 'gold', bio: 'بەخێربێیت بۆ پرۆفایلەکەم', links: [], 
-          avatarUrl: defaultAvatar, avatarPos: { x: 50, y: 50 },
-          bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
+          avatarUrl: getDefaultAvatar(name), avatarPos: { x: 50, y: 50 },
+          bgImage: getDefaultBg(), bgPos: { x: 50, y: 50 }, 
           nameColor: '#000000', bioColor: '#10b981', 
-          isActive: true, isAdmin: false, 
-          isPro: false, // لە داتابەیس بە ئاسایی خەزن دەبێت، بەڵام داینامیک دەگۆڕێت
+          isActive: true, isAdmin: false, isPro: isFreeMode, 
           createdAt: new Date().toISOString()
         };
 
@@ -207,7 +202,7 @@ export async function onRequest(context: any) {
         await env.KV.put("all_users_list", JSON.stringify(allUsersList));
 
         const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
-        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode ? true : false } });
+        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode } });
     }
 
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
@@ -221,8 +216,10 @@ export async function onRequest(context: any) {
 
        const profileData = { 
          id: user.id, displayName: escapeHTML(user.displayName || user.username), bio: escapeHTML(user.bio || ""), 
-         avatarUrl: user.avatarUrl, links: user.links || [], theme: user.theme, bgImage: user.bgImage, 
-         isPro: isFreeMode ? true : user.isPro, // 🌟 داینامیک بۆ پرۆفایلی گشتی 🌟
+         avatarUrl: user.avatarUrl || getDefaultAvatar(user.displayName || user.username), 
+         links: user.links || [], theme: user.theme, 
+         bgImage: user.bgImage || getDefaultBg(), 
+         isPro: isFreeMode ? true : user.isPro, // 🌟 VIP بۆ پەڕەی گشتی 🌟
          slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
        return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
@@ -248,7 +245,11 @@ export async function onRequest(context: any) {
        try { const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json"); if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); } } catch(e) {}
 
        user.visits = totalVisits; user.clicks = totalClicks;
-       user.isPro = isFreeMode ? true : user.isPro; // 🌟 داینامیک بۆ داشبۆرد 🌟
+       
+       // 🌟 VIP و ئاڤاتار بۆ داشبۆرد 🌟
+       user.isPro = isFreeMode ? true : user.isPro;
+       if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
+       if (!user.bgImage) user.bgImage = getDefaultBg();
 
        return json(user);
     }
@@ -267,13 +268,14 @@ export async function onRequest(context: any) {
        
        const updatedUser = { ...user, ...updates, username: newUsername, slug: newSlug, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio) };
        
-       // پاراستنی دۆخی بنەڕەتی لەکاتی سەیڤکردن
-       updatedUser.isPro = user.isPro; 
+       updatedUser.isPro = user.isPro; // با لە داتابەیس تێک نەچێت لەکاتی free mode
 
        await Promise.all([ env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser)) ]);
        
-       // بۆ فرۆنتێند داینامیکەکەی دەنێرینەوە
        updatedUser.isPro = isFreeMode ? true : user.isPro;
+       if (!updatedUser.avatarUrl) updatedUser.avatarUrl = getDefaultAvatar(updatedUser.displayName || updatedUser.username);
+       if (!updatedUser.bgImage) updatedUser.bgImage = getDefaultBg();
+
        return json(updatedUser);
     }
 
