@@ -1,9 +1,11 @@
 import bcrypt from "bcryptjs";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 
-const escapeHTML = (str: string) => str.replace(/[&<>'"]/g, 
-  tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-);
+// 🌟 چارەسەری کراشبوونی سێرڤەر 🌟
+const escapeHTML = (str: any) => {
+  if (!str || typeof str !== 'string') return '';
+  return str.replace(/[&<>'"]/g, (tag: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+};
 
 const corsHeaders = {
   "Content-Type": "application/json", "Access-Control-Allow-Origin": "*",
@@ -56,7 +58,6 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
-  // 🌟 دەرهێنانی دۆخی پارەدان بەشێوەیەکی خاوێن 🌟
   const rawBilling = (env.BILLING_MODE || '').toString().trim().toLowerCase();
   const isFreeMode = rawBilling === 'free';
 
@@ -133,7 +134,9 @@ export async function onRequest(context: any) {
        }
 
        if (!userStr) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
-       let user = JSON.parse(userStr);
+       let user;
+       try { user = JSON.parse(userStr); } catch(e) { return json({ error: "کێشە لە داتاکانت هەیە" }, 500); }
+       
        if (user.isActive === false) return json({ error: "هەژمارەکەت ڕاگیراوە" }, 403);
        const isValid = await bcrypt.compare(password, user.password);
        if (!isValid) return json({ error: "ناو، ئیمێڵ، مۆبایل یان تێپەڕەوشە هەڵەیە" }, 401);
@@ -141,10 +144,11 @@ export async function onRequest(context: any) {
        const token = await jwt.sign({ id: user.id, username: user.username, role: user.isAdmin ? "admin" : "user" }, env.JWT_SECRET);
        delete user.password;
 
-       // 🌟 داینامیک کردنی VIP لە کاتی چوونە ژوورەوە بۆ ئەکاونتە کۆنەکان 🌟
        if (isFreeMode) user.isPro = true;
        if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
        if (!user.bgImage) user.bgImage = getDefaultBg();
+       // 🌟 چارەسەری کێشەی undefined بۆ هەژمارە کۆنەکان 🌟
+       if (!user.slug) user.slug = user.username;
 
        return json({ success: true, token, user });
     }
@@ -174,7 +178,6 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 🌟 دروستکردنی ئاڤاتار و باکگراوندی ئۆتۆماتیک 🌟
         const defaultBackgrounds = [
           'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
           'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
@@ -192,7 +195,7 @@ export async function onRequest(context: any) {
           bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
           nameColor: '#000000', bioColor: '#10b981', 
           isActive: true, isAdmin: false, 
-          isPro: isFreeMode ? true : false, // 🌟 ئەگەر free بوو، ڕاستەوخۆ دەبنە VIP هەمیشەیی لە داتابەیس 🌟
+          isPro: isFreeMode ? true : false, 
           createdAt: new Date().toISOString()
         };
 
@@ -221,7 +224,9 @@ export async function onRequest(context: any) {
        let userStr = targetUserId ? await env.KV.get(`user_id:${targetUserId}`) : null;
        
        if(!userStr) return json({error: "ئەم پرۆفایلە نەدۆزرایەوە"}, 404);
-       const user = JSON.parse(userStr);
+       let user;
+       try { user = JSON.parse(userStr); } catch(e) { return json({error: "کێشە لە داتاکان هەیە"}, 500); }
+       
        if (user.isActive === false) return json({error: "ئەم پرۆفایلە ڕاگیراوە"}, 403);
 
        const profileData = { 
@@ -229,8 +234,9 @@ export async function onRequest(context: any) {
          avatarUrl: user.avatarUrl || getDefaultAvatar(user.displayName || user.username), 
          links: user.links || [], theme: user.theme, 
          bgImage: user.bgImage || getDefaultBg(), 
-         isPro: isFreeMode ? true : user.isPro, // 🌟 داینامیک کردنی VIP بۆ پەڕەی گشتی 🌟
-         slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
+         isPro: isFreeMode ? true : user.isPro, 
+         slug: user.slug || user.username, // 🌟 چارەسەری کێشەی undefined 🌟
+         nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
        return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
     }
@@ -248,7 +254,8 @@ export async function onRequest(context: any) {
        
        let userStr = await env.KV.get(`user_id:${userId}`);
        if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" });
-       const user = JSON.parse(userStr);
+       let user;
+       try { user = JSON.parse(userStr); } catch(e) { return json({error: "کێشە هەیە"}, 500); }
        
        let totalVisits = 0; let totalClicks = 0;
        try { if(env.DB) { const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first(); if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; } } } catch(e) {}
@@ -256,29 +263,41 @@ export async function onRequest(context: any) {
 
        user.visits = totalVisits; user.clicks = totalClicks;
        
-       // 🌟 VIP و ئاڤاتار بۆ داشبۆرد 🌟
        user.isPro = isFreeMode ? true : user.isPro;
        if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
        if (!user.bgImage) user.bgImage = getDefaultBg();
+       if (!user.slug) user.slug = user.username; // 🌟 چارەسەری undefined 🌟
 
        return json(user);
     }
 
+    // 🌟 چارەسەری هەڵەی سێرڤەر 500 لە کاتی سەیڤکردن 🌟
     if (method === "PUT" && path === "/api/profile") {
-       const updates = await request.json();
+       const updates = await request.json().catch(() => ({}));
        const userStr = await env.KV.get(`user_id:${userId}`);
-       const user = JSON.parse(userStr);
-       const oldUsername = user.username;
-       const oldSlug = user.slug || user.username;
+       if (!userStr) return json({ error: "بەکارهێنەر نەدۆزرایەوە" }, 404);
+       
+       let user;
+       try { user = JSON.parse(userStr); } catch(e) { return json({error: "کێشە هەیە"}, 500); }
+
+       const oldUsername = user.username || '';
+       const oldSlug = user.slug || oldUsername;
        let newUsername = updates.username ? updates.username.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldUsername;
        let newSlug = updates.slug ? updates.slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') : oldSlug;
        
        if (newUsername !== oldUsername) { const checkTaken = await env.KV.get(`user:${newUsername}`); if(checkTaken) return json({error: "ئەم یوزەرنەیمە گیراوە"}, 400); await env.KV.delete(`user:${oldUsername}`); }
        if (newSlug !== oldSlug) { const checkTakenSlug = await env.KV.get(`slug:${newSlug}`); if(checkTakenSlug && checkTakenSlug !== userId.toString()) return json({error: "ئەم ناوە گیراوە"}, 400); await env.KV.delete(`slug:${oldSlug}`); await env.KV.put(`slug:${newSlug}`, userId.toString()); }
        
-       const updatedUser = { ...user, ...updates, username: newUsername, slug: newSlug, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio) };
+       const updatedUser = { 
+          ...user, 
+          ...updates, 
+          username: newUsername, 
+          slug: newSlug, 
+          displayName: escapeHTML(updates.displayName || user.displayName || ''), 
+          bio: escapeHTML(updates.bio !== undefined ? updates.bio : (user.bio || '')) 
+       };
        
-       updatedUser.isPro = user.isPro; // پاراستنی دۆخی بنەڕەتی لەکاتی سەیڤکردن
+       updatedUser.isPro = user.isPro; 
 
        await Promise.all([ env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser)) ]);
        
