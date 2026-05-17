@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, User, FileText, Save, Image as ImageIcon, Lock, Palette, Star, UploadCloud, CheckCircle } from 'lucide-react';
 
-export default function ProfileSettings({ profile, setProfile, saving, handleUpdateProfile, handleImageUpload, isUploadingAvatar, avatarInputRef }: any) {
+export default function ProfileSettings({ profile, setProfile, saving, handleUpdateProfile }: any) {
   const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
-  // لۆجیکی ڕاکێشان و بەردانی وێنە (Drag & Drop) بەبێ سەیڤکردنی ڕاستەوخۆ
+  // 🌟 لۆجیکی ڕاکێشان و بەردانی وێنە بۆ باکگراوند 🌟
   const handleDrag = (e: any) => {
     e.preventDefault(); e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") { setDragActive(true); } 
@@ -21,7 +22,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
       img.src = ev.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200; // زۆرترین پانی بۆ باکگراوند تا کێشەی نەبێت
+        const MAX_WIDTH = 1200; 
         let w = img.width, h = img.height;
         if (w > h) { if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; } } 
         else { if (h > MAX_WIDTH) { w *= MAX_WIDTH / h; h = MAX_WIDTH; } }
@@ -29,6 +30,29 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, w, h);
         setProfile({...profile, bgImage: canvas.toDataURL('image/jpeg', 0.8)});
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // 🌟 زیرەکی بچووککردنەوەی وێنەی پرۆفایل (ئاڤاتار) زۆر بە پوختی 🌟
+  const compressAndSetAvatar = (file: File) => {
+    setAvatarLoading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new window.Image();
+      img.src = ev.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400; // بۆ پرۆفایل قەبارەی 400 زۆر گونجاوە
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; } } 
+        else { if (h > MAX_WIDTH) { w *= MAX_WIDTH / h; h = MAX_WIDTH; } }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, w, h);
+        setProfile({...profile, avatarUrl: canvas.toDataURL('image/jpeg', 0.8)});
+        setAvatarLoading(false);
       };
     };
     reader.readAsDataURL(file);
@@ -81,6 +105,7 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
                  <input type="file" accept="image/*" className="hidden" onChange={(e:any) => {
                     const file = e.target.files?.[0];
                     if (file) compressAndSetBg(file);
+                    e.target.value = ''; // بۆ ئەوەی ڕێگە بدات هەمان وێنە دووبارە هەڵبژێریتەوە
                  }} />
                  <Camera size={18} /> هەڵبژاردنی وێنە
                </label>
@@ -105,19 +130,25 @@ export default function ProfileSettings({ profile, setProfile, saving, handleUpd
            <User size={18} className="text-blue-500" /> وێنەی پرۆفایل (Avatar)
         </label>
         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-           <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-neutral-50 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] overflow-hidden flex items-center justify-center group/avatar shrink-0">
-             {isUploadingAvatar ? (
+           {/* 🌟 بەشی هەڵبژاردنی وێنەی پرۆفایل 🌟 */}
+           <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-neutral-50 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] overflow-hidden flex items-center justify-center group shrink-0 cursor-pointer">
+             {avatarLoading ? (
                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
              ) : profile?.avatarUrl ? (
                <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
              ) : (
                <User size={40} className="text-neutral-300" />
              )}
-             <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity">
-               <input type="file" accept="image/*" className="hidden" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} />
+             <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity z-10 w-full h-full">
+               <input type="file" accept="image/*" className="hidden" onChange={(e:any) => {
+                  const file = e.target.files?.[0];
+                  if (file) compressAndSetAvatar(file);
+                  e.target.value = ''; // بۆ ئەوەی ڕێگە بدات هەمان وێنە دووبارە هەڵبژێریتەوە
+               }} />
                <Camera size={32} />
              </label>
            </div>
+           
            <div className="text-xs font-bold text-neutral-500 leading-relaxed bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex-1">
              <span className="text-blue-600 block mb-1.5 font-black flex items-center gap-1.5"><CheckCircle size={14}/> تێبینی:</span>
              گۆڕینی وێنەی پرۆفایل بۆ هەموو بەکارهێنەران بە خۆڕاییە. <strong>هەر وێنەیەک بە هەر قەبارەیەک بێت بێ کێشەیە، سیستەمەکە خۆی قەبارەکەی ڕێکدەخاتەوە.</strong>

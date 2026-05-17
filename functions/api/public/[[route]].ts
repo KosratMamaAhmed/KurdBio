@@ -56,11 +56,10 @@ export async function onRequest(context: any) {
   const path = url.pathname;
   const method = request.method;
 
-  // 🌟 زیرەکی لە خوێندنەوەی BILLING_MODE بێ کێشەی سپەیس و پیت 🌟
+  // 🌟 دەرهێنانی دۆخی پارەدان بەشێوەیەکی خاوێن 🌟
   const rawBilling = (env.BILLING_MODE || '').toString().trim().toLowerCase();
   const isFreeMode = rawBilling === 'free';
 
-  // فەنکشن بۆ دروستکردنی ئاڤاتار و باکگراوندی داینامیک بۆ هەمووان (کۆن و نوێ)
   const getDefaultAvatar = (name: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=random&color=fff&size=256&bold=true`;
   const getDefaultBg = () => 'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80';
 
@@ -142,7 +141,7 @@ export async function onRequest(context: any) {
        const token = await jwt.sign({ id: user.id, username: user.username, role: user.isAdmin ? "admin" : "user" }, env.JWT_SECRET);
        delete user.password;
 
-       // 🌟 چالاککردنی ئاڤاتار و VIP بۆ ئەو هەژمارانەی پێشتر دروستکرابوون 🌟
+       // 🌟 داینامیک کردنی VIP لە کاتی چوونە ژوورەوە بۆ ئەکاونتە کۆنەکان 🌟
        if (isFreeMode) user.isPro = true;
        if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
        if (!user.bgImage) user.bgImage = getDefaultBg();
@@ -175,14 +174,25 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // 🌟 دروستکردنی ئاڤاتار و باکگراوندی ئۆتۆماتیک 🌟
+        const defaultBackgrounds = [
+          'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
+          'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
+          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
+          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
+          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
+        ];
+        const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
+
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
           email: normalizedEmail, phone: normalizedPhone, password: hashedPassword, dob: dob || '2000-01-01', slug: normalizedUsername,
           theme: 'gold', bio: 'بەخێربێیت بۆ پرۆفایلەکەم', links: [], 
           avatarUrl: getDefaultAvatar(name), avatarPos: { x: 50, y: 50 },
-          bgImage: getDefaultBg(), bgPos: { x: 50, y: 50 }, 
+          bgImage: randomBg, bgPos: { x: 50, y: 50 }, 
           nameColor: '#000000', bioColor: '#10b981', 
-          isActive: true, isAdmin: false, isPro: isFreeMode, 
+          isActive: true, isAdmin: false, 
+          isPro: isFreeMode ? true : false, // 🌟 ئەگەر free بوو، ڕاستەوخۆ دەبنە VIP هەمیشەیی لە داتابەیس 🌟
           createdAt: new Date().toISOString()
         };
 
@@ -202,7 +212,7 @@ export async function onRequest(context: any) {
         await env.KV.put("all_users_list", JSON.stringify(allUsersList));
 
         const token = await jwt.sign({ id: userId, exp: Math.floor(Date.now() / 1000) + (7 * 86400) }, env.JWT_SECRET);
-        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: isFreeMode } });
+        return json({ success: true, token, user: { id: newUser.id, username: newUser.username, isAdmin: false, isPro: newUser.isPro } });
     }
 
     if (method === "GET" && path.startsWith("/api/public/profile/")) {
@@ -219,7 +229,7 @@ export async function onRequest(context: any) {
          avatarUrl: user.avatarUrl || getDefaultAvatar(user.displayName || user.username), 
          links: user.links || [], theme: user.theme, 
          bgImage: user.bgImage || getDefaultBg(), 
-         isPro: isFreeMode ? true : user.isPro, // 🌟 VIP بۆ پەڕەی گشتی 🌟
+         isPro: isFreeMode ? true : user.isPro, // 🌟 داینامیک کردنی VIP بۆ پەڕەی گشتی 🌟
          slug: user.slug, nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
        return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
@@ -268,7 +278,7 @@ export async function onRequest(context: any) {
        
        const updatedUser = { ...user, ...updates, username: newUsername, slug: newSlug, displayName: escapeHTML(updates.displayName || user.displayName), bio: escapeHTML(updates.bio !== undefined ? updates.bio : user.bio) };
        
-       updatedUser.isPro = user.isPro; // با لە داتابەیس تێک نەچێت لەکاتی free mode
+       updatedUser.isPro = user.isPro; // پاراستنی دۆخی بنەڕەتی لەکاتی سەیڤکردن
 
        await Promise.all([ env.KV.put(`user:${newUsername}`, JSON.stringify(updatedUser)), env.KV.put(`user_id:${userId}`, JSON.stringify(updatedUser)) ]);
        
