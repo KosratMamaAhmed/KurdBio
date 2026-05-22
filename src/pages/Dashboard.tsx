@@ -30,6 +30,11 @@ const DEFAULT_SOCIALS = [
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
+  { id: 'asia', name: 'ئاسیا سێڵ', iconName: 'Phone', imageUrl: '/social/asia.png', baseUrl: 'tel:', color: '#ED1C24' },
+  { id: 'korek', name: 'کۆڕەک تلیکۆم', iconName: 'Phone', imageUrl: '/social/korek.png', baseUrl: 'tel:', color: '#0054A6' },
+  { id: 'fastpay', name: 'FastPay - فاستپەی', iconName: 'Copy', imageUrl: '/social/fastpay.png', baseUrl: 'copy:', color: '#E1137B' },
+  { id: 'fib', name: 'FIB - بانکی یەکەمی عێراق', iconName: 'Copy', imageUrl: '/social/fib.png', baseUrl: 'copy:', color: '#8DC63F' },
+  { id: 'qicard', name: 'Qi Card', iconName: 'Copy', imageUrl: '/social/qicard.png', baseUrl: 'copy:', color: '#231F20' },
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
 ];
 
