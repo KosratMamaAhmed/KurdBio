@@ -28,7 +28,6 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    // Fetching users efficiently by only looking at the master list to save KV reads
     if (method === "GET" && path === "/api/admin/users") {
         const allUsersStr = await env.KV.get("all_users_list");
         let userIds = [];
@@ -39,7 +38,6 @@ export async function onRequest(context: any) {
             userIds = list.keys.map((k: any) => k.name.replace('user_id:', ''));
         }
 
-        // Limit the parallel reads to avoid subrequest limits (Batched promises)
         const users = [];
         const chunkSize = 20;
         
@@ -115,18 +113,26 @@ export async function onRequest(context: any) {
         return json({success: true});
     }
 
+    // 🌟 سڕینەوەی یەکجارەکی هەموو داتاکانی بەکارهێنەر لە KV بۆ خاوێنکردنەوەی تەواو 🌟
     if (method === "DELETE" && path.match(/^\/api\/admin\/users\/\d+$/)) {
          const idToDelete = path.split("/").pop();
          const userStr = await env.KV.get(`user_id:${idToDelete}`);
+         
          if(userStr) {
              const user = JSON.parse(userStr);
-             await Promise.all([
+             const deletePromises = [
                  env.KV.delete(`user:${user.username}`),
                  env.KV.delete(`user_id:${idToDelete}`),
                  env.KV.delete(`slug:${user.slug || user.username}`),
-                 env.KV.delete(`email:${user.email}`)
-             ]);
+                 env.KV.delete(`stats_fallback:${idToDelete}`) // لابردنی ئامارە کۆنەکان ئەگەر مابن
+             ];
 
+             if (user.email) deletePromises.push(env.KV.delete(`email:${user.email}`));
+             if (user.phone) deletePromises.push(env.KV.delete(`phone:${user.phone}`));
+
+             await Promise.all(deletePromises);
+
+             // سڕینەوە لە لیستی سەرەکی
              const allUsersStr = await env.KV.get("all_users_list");
              if (allUsersStr) {
                  let allUsers = JSON.parse(allUsersStr);

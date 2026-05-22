@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { AlertCircle, Share2, Check, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// لیستی تۆڕەکان بۆ هێنانەوەی وێنە و ڕەنگی بنەڕەتی لە کاتی پێویستدا
 const DEFAULT_SOCIALS = [
   { id: 'facebook', name: 'فەیسبووک', iconName: 'Facebook', imageUrl: '/social/facebook.png', color: '#1877F2' },
   { id: 'instagram', name: 'ئینستاگرام', iconName: 'Instagram', imageUrl: '/social/instagram.png', color: '#E4405F' },
@@ -22,7 +21,6 @@ const DEFAULT_SOCIALS = [
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', color: '#333333' }
 ];
 
-// 🌟 فەنکشنی دۆزینەوەی جۆری مۆبایل بۆ ڕیکلامی زیرەک 🌟
 const getOS = () => {
   const userAgent = window.navigator.userAgent || window.navigator.vendor || (window as any).opera;
   if (/android/i.test(userAgent)) return 'android';
@@ -58,10 +56,6 @@ export default function PublicProfile() {
 
         setProfile(profileData);
         setSettings(settingsData);
-        
-        // 🚀 ڕیکوێستەکانی هەژمارکردنی ڤیووم لادا بۆ ئەوەی خەرجی سێرڤەر (KV) ببێتە سفر
-        // fetch(`/api/public/visit/${slug}`, { method: 'POST' }).catch(() => {});
-
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -90,10 +84,6 @@ export default function PublicProfile() {
   };
 
   const handleLinkClick = (e: React.MouseEvent, url: string) => {
-    // 🚀 ڕیکوێستەکانی کلیکم لادا بۆ سفرکردنەوەی خەرجی (KV)
-    // fetch(`/api/public/click/${slug}`, { method: 'POST' }).catch(() => {});
-    
-    // 🌟 سیستەمی کۆپیکردنی ڕاستەوخۆ 🌟
     if (url.startsWith('copy:')) {
       e.preventDefault();
       const textToCopy = url.replace('copy:', '');
@@ -127,7 +117,6 @@ export default function PublicProfile() {
     );
   }
 
-  // 🌟 فلتەرکردنی ڕیکلامەکان بەپێی ئامێر (Smart Ads) 🌟
   const visibleAds = settings?.ads?.filter((ad: any) => 
     ad.isActive && (ad.targetOS === 'all' || ad.targetOS === currentOS)
   ) || [];
@@ -137,7 +126,6 @@ export default function PublicProfile() {
   return (
     <div className="min-h-[100dvh] relative overflow-hidden font-sans" dir="rtl">
       
-      {/* Toast Notification بۆ کۆپیکردن */}
       <AnimatePresence>
          {showNotif.show && (
             <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-full bg-slate-900 text-white font-black text-sm shadow-2xl backdrop-blur-xl flex items-center gap-3 border border-white/20 whitespace-nowrap">
@@ -149,7 +137,6 @@ export default function PublicProfile() {
          )}
       </AnimatePresence>
 
-      {/* باکگراوند */}
       <div className="fixed inset-0 z-0">
         <img src={profile.bgImage} alt="Background" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]"></div>
@@ -162,7 +149,6 @@ export default function PublicProfile() {
             {copied ? <Check size={18} /> : <Share2 size={18} />}
           </button>
 
-          {/* وێنەی پرۆفایل */}
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-slate-100 mb-4 sm:mb-5 relative">
             <img src={profile.avatarUrl} alt={profile.displayName} className="w-full h-full object-cover" />
             {profile.isPro && (
@@ -182,10 +168,10 @@ export default function PublicProfile() {
             </p>
           )}
 
-          {/* بەستەرەکان */}
           <div className="w-full space-y-3 sm:space-y-4 mb-10">
             {profile.links?.map((link: any, index: number) => {
                const platform = DEFAULT_SOCIALS.find(s => s.id === link.platformId) || DEFAULT_SOCIALS.find(s => s.id === 'facebook');
+               // 🌟 ڕەنگی دوگمەکە لە ڕەنگی تۆڕەکە وەردەگرێت 🌟
                const linkColor = link.color || platform?.color || '#333333';
                
                return (
@@ -193,7 +179,9 @@ export default function PublicProfile() {
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
                     key={link.id} href={link.url.startsWith('copy:') ? '#' : link.url} target={link.url.startsWith('copy:') ? '_self' : '_blank'} rel="noopener noreferrer"
                     onClick={(e) => handleLinkClick(e, link.url)}
-                    className="group relative w-full flex items-center p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-[1.25rem] backdrop-blur-md transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg overflow-hidden"
+                    // 🌟 جێگیرکردنی ڕەنگەکە وەک باکگراوند 🌟
+                    style={{ backgroundColor: linkColor }}
+                    className="group relative w-full flex items-center p-1.5 sm:p-2 border border-white/20 rounded-[1.25rem] transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg overflow-hidden"
                   >
                      <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl bg-white flex items-center justify-center p-2.5 shadow-sm z-10 relative overflow-hidden">
                         {link.imageUrl ? (
@@ -203,18 +191,17 @@ export default function PublicProfile() {
                         ) : null}
                      </div>
                      <div className="flex-1 text-center pr-2 pl-14 sm:pl-16 z-10">
+                        {/* 🌟 ڕەنگی تێکست کراوە بە سپی بۆ ئەوەی لەسەر هەموو ڕەنگەکان بەڕوونی دەربکەوێت 🌟 */}
                         <span className="font-black text-sm sm:text-base text-white drop-shadow-md truncate block px-2">
                            {link.title}
                         </span>
                      </div>
-                     {/* ڕەنگی سێبەری لینکەکە بەپێی جۆری تۆڕەکە دەگۆڕێت */}
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${linkColor}, transparent)` }}></div>
+                     <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"></div>
                   </motion.a>
                );
             })}
           </div>
 
-          {/* 🌟 ڕیکلامی زیرەک (Smart Ads) 🌟 */}
           {visibleAds.length > 0 && (
             <div className="w-full mt-2 space-y-4">
                {visibleAds.map((ad: any, index: number) => (
@@ -240,7 +227,6 @@ export default function PublicProfile() {
         </motion.div>
       </div>
 
-      {/* دوگمەی دروستکردنی پرۆفایل لە خوارەوە */}
       <div className="fixed bottom-6 left-0 w-full flex justify-center z-30 pointer-events-none px-4">
         <a href="https://biokurd.com" className="pointer-events-auto bg-black/40 hover:bg-black/60 backdrop-blur-2xl border border-white/20 px-5 py-3 rounded-full flex items-center gap-3 text-white/90 shadow-2xl transition-all hover:scale-105 active:scale-95 group">
           <span className="font-black text-sm tracking-tight">BioKurd</span>

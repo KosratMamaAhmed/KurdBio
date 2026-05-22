@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, ShieldCheck, Crown, Copy, Check, Star } from 
 
 const PAYMENT_METHODS = [
   { id: 'fastpay', name: 'FastPay', number: '07503221456', logo: '/payment/fastpay.png', color: 'from-[#00a859] to-[#008f4c]', shadow: 'shadow-[#00a859]/20' },
-  { id: 'fib', name: 'FIB', number: '07503221456', logo: '/payment/fib.png', color: 'from-[#ED1C24] to-[#C41219]', shadow: 'shadow-[#ED1C24]/20' },
+  { id: 'fib', name: 'FIB', number: '7503420910', logo: '/payment/fib.png', color: 'from-[#ED1C24] to-[#C41219]', shadow: 'shadow-[#ED1C24]/20' },
   { id: 'korek', name: 'Korek Telecom', number: '07503221456', logo: '/payment/korek.png', color: 'from-[#F26522] to-[#d95316]', shadow: 'shadow-[#F26522]/20' },
   { id: 'asiacell', name: 'Asiacell', number: '07706448043', logo: '/payment/asia.png', color: 'from-[#E3000F] to-[#b3000c]', shadow: 'shadow-[#E3000F]/20' },
   { id: 'qicard', name: 'QiCard', number: '4156019301', logo: '/payment/qicard.png', color: 'from-[#00529b] to-[#003d73]', shadow: 'shadow-[#00529b]/20' },
