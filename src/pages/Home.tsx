@@ -8,7 +8,7 @@ interface Props { user: any; settings: any; theme: any; }
 const MOCKUP_DATA_SAMPLES = [
   { title: 'ئینستاگرام', imageUrl: '/social/instagram.png', url: 'instagram.com', color: '#E4405F', textColor: '#FFFFFF' },
   { title: 'تیکتۆک', imageUrl: '/social/tiktok.png', url: 'tiktok.com', color: '#000000', textColor: '#FFFFFF' },
-  { title: 'سناپچات', imageUrl: '/social/snapchat.png', url: 'snapchat.com', color: '#FFFC00', textColor: '#000000' },
+  { title: 'سناپچات', imageUrl: '/social/snapchat.png', url: 'snapchat.com', color: '#FFFC00', textColor: '#FFFFFF' },
   { title: 'واتسئاپ', imageUrl: '/social/whatsapp.png', url: 'wa.me', color: '#25D366', textColor: '#FFFFFF' },
   { title: 'تێلیگرام', imageUrl: '/social/telegram.png', url: 't.me', color: '#26A5E4', textColor: '#FFFFFF' },
   { title: 'فەیسبووک', imageUrl: '/social/facebook.png', url: 'facebook.com', color: '#1877F2', textColor: '#FFFFFF' },
