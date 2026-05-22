@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LogOut, Plus, Link as LinkIcon, Edit3, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
-  Trash2, X, AlertCircle, Copy, Menu, TrendingUp, MousePointerClick, RefreshCw, DatabaseBackup, Globe, Star
+  LogOut, Plus, Link as LinkIcon, Save, Share2, Eye, User, Image as ImageIcon, CheckCircle, 
+  X, AlertCircle, Copy, Menu, Globe, Star
 } from 'lucide-react';
 import * as icons from 'lucide-react';
 import DraggableLinkList from '../components/DraggableLinkList';
@@ -30,10 +30,6 @@ const DEFAULT_SOCIALS = [
   { id: 'viber', name: 'ڤایبەر', iconName: 'Phone', imageUrl: '/social/viber.png', baseUrl: 'viber://chat?number=', color: '#7360F2' },
   { id: 'messenger', name: 'مێسنجەر', iconName: 'MessageSquare', imageUrl: '/social/messenger.png', baseUrl: 'https://m.me/', color: '#00B2FF' },
   { id: 'call', name: 'پەیوەندیکردن (Call)', iconName: 'Phone', imageUrl: '/social/call.png', baseUrl: 'tel:', color: '#10B981' },
-  { id: 'korek', name: 'کۆڕەك تلیکۆم', iconName: 'Phone', imageUrl: '/social/korek.png', baseUrl: 'tel:075', color: '#1059b9' },
-  { id: 'asia', name: 'ئاسیا سێڵ', iconName: 'Phone', imageUrl: '/social/asia.png', baseUrl: 'tel:077', color: '#b91010' },
-  { id: 'fastpay', name: 'فاستپەی - FastPay', iconName: 'Copy', imageUrl: '/social/fastpay.png', baseUrl: 'copy:', color: '#f54576' },
-  { id: 'Fib', name: 'Fib- بانکی یەکەمی عیراق', iconName: 'Copy', imageUrl: '/social/fib.png', baseUrl: 'copy:', color: '#00a69c' },
   { id: 'custom', name: 'لینکێکی تایبەت (Custom)', iconName: 'Globe', imageUrl: '', baseUrl: '', color: '#333333' }
 ];
 
@@ -42,7 +38,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const [activeTab, setActiveTab] = useState('links');
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshingStats, setRefreshingStats] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCard, setShowCard] = useState(false);
   
@@ -58,16 +53,12 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchProfile = async (isRefresh = false) => {
+  const fetchProfile = async () => {
     const token = localStorage.getItem('biokurd_token') || user?.token;
     if (!token) { onLogout(); return; }
     
-    if (!isRefresh) {
-        const cached = localStorage.getItem('dashboard_profile_cache');
-        if (cached) { setProfile(JSON.parse(cached)); setLoading(false); }
-    } else {
-        setRefreshingStats(true);
-    }
+    const cached = localStorage.getItem('dashboard_profile_cache');
+    if (cached) { setProfile(JSON.parse(cached)); setLoading(false); }
 
     try {
       const res = await fetch(`/api/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -76,7 +67,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         setProfile(data); localStorage.setItem('dashboard_profile_cache', JSON.stringify(data));
       } else if (res.status === 401) onLogout();
     } catch (err) { if(!profile) showNotif('کێشەی هێڵ هەیە', 'error'); } 
-    finally { setLoading(false); setRefreshingStats(false); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchProfile(); }, []);
@@ -98,7 +89,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
     finally { setSaving(false); }
   };
 
-  // 🌟 لێرەدا لیمیتی قەبارەی وێنە لابردرا و سیستەم خۆی بەباشی بچووکی دەکاتەوە 🌟
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'icon') => {
     const file = e.target.files?.[0]; if (!file) return;
     
@@ -113,8 +103,6 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
         let w = img.width, h = img.height;
         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
         canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0, w, h);
-        
-        // دروستکردنی کۆتایی بە کوالێتییەکی گونجاو بێ کێشەی سایز
         const base64String = canvas.toDataURL('image/jpeg', 0.8);
         
         if (type === 'avatar') {
@@ -136,7 +124,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
   };
 
   const handleAddLinkClick = () => {
-     if (!profile?.isPro && profile?.links?.length >= 1) {
+     if (!profile?.isPro && profile?.links?.length >= 3) {
          showNotif('بۆ دانانی لینکی زیاتر، پێویستە VIP بیت!', 'error');
          setTimeout(() => navigate('/payment'), 2000);
          return;
@@ -146,7 +134,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
   const handleAddLink = async () => {
     if (!newLink.title || !newLink.url) return showNotif('ناو و لینک پێویستە', 'error');
-    if (!profile?.isPro && profile?.links?.length >= 1) { navigate('/payment'); return; }
+    if (!profile?.isPro && profile?.links?.length >= 3) { navigate('/payment'); return; }
     
     const token = localStorage.getItem('biokurd_token') || user?.token; if (!token) return;
     setSaving(true);
@@ -209,34 +197,34 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
       else setNewLink({ ...newLink, url: finalUrl });
   };
 
-  if (loading) return <div className="min-h-[100dvh] bg-[#f8fafc] flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-[100dvh] bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="h-[100dvh] w-full flex bg-[#f8fafc] text-neutral-900 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
+    <div className="h-[100dvh] w-full flex bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 font-sans selection:bg-orange-200 overflow-hidden" dir="rtl">
       
       <AppManager />
 
       <AnimatePresence>
         {notification.show && (
-          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} style={{ top: 'max(env(safe-area-inset-top), 1.5rem)' }} className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full font-black text-sm shadow-xl flex items-center gap-3 backdrop-blur-md border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-green-500/90 text-white border-green-400'}`}>
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} style={{ top: 'max(env(safe-area-inset-top), 1.5rem)' }} className={`fixed left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 backdrop-blur-xl border ${notification.type === 'error' ? 'bg-red-500/90 text-white border-red-400' : 'bg-white/80 text-emerald-600 border-emerald-100'}`}>
             {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle size={20}/>} {notification.message}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className={`fixed inset-y-0 right-0 w-[280px] bg-white border-l border-neutral-200 z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 lg:static lg:block shadow-2xl lg:shadow-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}>
+      <div className={`fixed inset-y-0 right-0 w-[280px] bg-white/60 backdrop-blur-3xl border-l border-white/50 z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 lg:static lg:block shadow-2xl lg:shadow-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}>
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-10">
              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-500 rounded-[14px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-orange-500/30">B</div>
-                <h1 className="text-2xl font-black tracking-tight text-neutral-800">BioKurd</h1>
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-[16px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-orange-500/30">B</div>
+                <h1 className="text-2xl font-black tracking-tight text-slate-800">BioKurd</h1>
              </div>
-             <button className="lg:hidden p-2 bg-neutral-100 rounded-full text-neutral-500 hover:text-neutral-900" onClick={() => setMobileMenuOpen(false)}><X size={20} /></button>
+             <button className="lg:hidden p-2 bg-slate-100/50 rounded-full text-slate-500 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}><X size={20} /></button>
           </div>
 
           <div className="flex-1 space-y-2">
             {[ { id: 'links', icon: LinkIcon, label: 'بەستەرەکان' }, { id: 'profile', icon: User, label: 'پرۆفایل' } ].map(tab => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all ${activeTab === tab.id ? 'bg-orange-50 text-orange-600 shadow-sm border border-orange-100' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'}`}>
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-bold transition-all duration-300 ${activeTab === tab.id ? 'bg-white text-orange-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white' : 'text-slate-500 hover:bg-white/40 hover:text-slate-900'}`}>
                 <tab.icon size={22} className={activeTab === tab.id ? 'text-orange-500' : ''} /> {tab.label}
               </button>
             ))}
@@ -244,100 +232,73 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
           <div className="mt-auto space-y-2">
             {!profile?.isPro && (
-               <button onClick={() => navigate('/payment')} className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 rounded-2xl font-black shadow-lg transition-transform active:scale-95 mb-4 animate-pulse">
-                 <Star size={20} /> ببە بە VIP
+               <button onClick={() => navigate('/payment')} className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 rounded-2xl font-black shadow-lg shadow-orange-500/20 transition-transform active:scale-95 mb-4">
+                 <Star size={20} className="fill-white" /> ببە بە VIP
                </button>
             )}
-            <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-neutral-900 text-white hover:bg-black rounded-2xl font-black shadow-lg transition-transform active:scale-95">
+            <button onClick={() => setShowCard(true)} className="w-full flex items-center gap-3 p-4 bg-slate-900 text-white hover:bg-black rounded-2xl font-black shadow-xl transition-transform active:scale-95">
               <Eye size={22} /> بینینی کارت
             </button>
-            <button onClick={() => { localStorage.removeItem('biokurd_token'); localStorage.removeItem('dashboard_profile_cache'); onLogout(); }} className="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-colors">
+            <button onClick={() => { localStorage.removeItem('biokurd_token'); localStorage.removeItem('dashboard_profile_cache'); onLogout(); }} className="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50/50 rounded-2xl font-bold transition-colors">
               <LogOut size={22} /> چوونەدەرەوە
             </button>
           </div>
         </div>
       </div>
 
-      {mobileMenuOpen && <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>}
+      {mobileMenuOpen && <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>}
 
       <div className="flex-1 flex flex-col h-[100dvh] overflow-y-auto relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200 z-20 shrink-0 sticky top-0">
-          <div className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
+        <header className="bg-white/40 backdrop-blur-2xl border-b border-white/50 z-20 shrink-0 sticky top-0">
+          <div className="px-4 sm:px-8 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-               <button className="lg:hidden p-2.5 bg-white border border-neutral-200 rounded-xl shadow-sm text-neutral-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
+               <button className="lg:hidden p-2.5 bg-white/50 border border-white rounded-xl shadow-sm text-slate-600 active:scale-95" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : 'پرۆفایل'}</h2>
-                  <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-0.5">بەخێربێیتەوە بۆ داشبۆرد</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{activeTab === 'links' ? 'بەستەرەکان' : 'پرۆفایل'}</h2>
                </div>
             </div>
             <div className="flex gap-2 sm:gap-3">
-               <button onClick={() => { navigator.clipboard.writeText(`https://biokurd.com/${profile?.slug}`); showNotif('لینکەکە کۆپی کرا'); }} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-neutral-200 rounded-xl font-black text-neutral-700 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-xs sm:text-sm">
-                 <Copy size={18} className="text-neutral-400" /> <span className="hidden sm:block">کۆپی لینک</span>
+               <button onClick={() => { navigator.clipboard.writeText(`https://biokurd.com/${profile?.slug}`); showNotif('لینکەکە کۆپی کرا'); }} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white/80 border border-white rounded-xl font-black text-slate-700 hover:bg-white shadow-sm transition-all active:scale-95 text-xs sm:text-sm">
+                 <Copy size={18} className="text-slate-400" /> <span className="hidden sm:block">کۆپی لینک</span>
                </button>
-               <button onClick={() => setShowCard(true)} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black shadow-[0_4px_15px_rgba(249,115,22,0.3)] transition-all active:scale-95 text-xs sm:text-sm">
+               <button onClick={() => setShowCard(true)} className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-gradient-to-br from-orange-400 to-orange-500 hover:to-orange-600 text-white rounded-xl font-black shadow-lg shadow-orange-500/20 transition-all active:scale-95 text-xs sm:text-sm">
                  <Share2 size={18} /> <span className="hidden sm:block">بڵاوکردنەوە</span>
                </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-8 bg-[#f8fafc] scrollbar-hide pb-20">
+        <main className="flex-1 p-4 sm:p-8 scrollbar-hide pb-20">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-[fadeIn_0.4s_ease-out]">
             
-            {profile?.dbError && (
-              <div className="bg-red-50 border-2 border-red-500 text-red-700 p-5 rounded-[2rem] mb-6 font-bold flex flex-col gap-2 shadow-sm text-sm">
-                 <div className="flex items-center gap-2 text-red-600 text-lg"><DatabaseBackup /> <span>هەڵە لە بەستنەوەی داتابەیس هەیە!</span></div>
-                 <p dir="ltr" className="font-mono bg-red-100 p-3 rounded-xl text-xs overflow-x-auto text-left border border-red-200">{profile.dbError}</p>
-              </div>
-            )}
-
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3 px-1">
-                 <h3 className="text-lg font-black text-neutral-800">ئامارەکانی پرۆفایلەکەت</h3>
-                 <button onClick={() => fetchProfile(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-[10px] sm:text-xs font-bold border border-blue-100 transition-colors">
-                   <RefreshCw size={14} className={refreshingStats ? 'animate-spin' : ''} /> نوێکردنەوەی ئامار
-                 </button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-orange-200 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0"><TrendingUp size={24} /></div>
-                  <div><h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.visits || 0}</h4><p className="text-xs font-bold text-neutral-500">سەردانەکان</p></div>
-                </div>
-                <div className="bg-white p-5 rounded-[2rem] border border-neutral-200 shadow-sm flex items-center gap-4 hover:border-blue-200 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><MousePointerClick size={24} /></div>
-                  <div><h4 className="text-2xl sm:text-3xl font-black text-neutral-900">{profile?.clicks || 0}</h4><p className="text-xs font-bold text-neutral-500">کلیکەکان</p></div>
-                </div>
-              </div>
-            </div>
-
             {activeTab === 'profile' && (
               <ProfileSettings profile={profile} setProfile={setProfile} saving={saving} handleUpdateProfile={handleUpdateProfile} handleImageUpload={handleImageUpload} isUploadingAvatar={isUploadingAvatar} avatarInputRef={avatarInputRef} />
             )}
 
             {activeTab === 'links' && (
               <>
-                <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-neutral-200 mb-6 sm:mb-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black text-neutral-900 flex items-center gap-3"><LinkIcon className="text-orange-500" size={24}/> بەستەرەکانت</h2>
-                    <button onClick={handleAddLinkClick} className={`p-3 rounded-full transition-transform active:scale-95 shadow-md ${showAddForm ? 'bg-red-50 text-red-500 hover:bg-red-100 rotate-45' : 'bg-orange-500 text-white hover:bg-orange-600 hover:-translate-y-0.5'}`}>
+                <div className="bg-white/60 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white mb-6 sm:mb-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-black text-slate-800 flex items-center gap-3"><LinkIcon className="text-orange-500" size={24}/> بەستەرەکانت</h2>
+                    <button onClick={handleAddLinkClick} className={`p-3 rounded-2xl transition-all active:scale-95 shadow-lg ${showAddForm ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 rotate-45 shadow-none' : 'bg-slate-900 text-white hover:bg-black shadow-slate-900/20 hover:-translate-y-0.5'}`}>
                       <Plus size={24} strokeWidth={3}/>
                     </button>
                   </div>
 
                   {settings?.globalButtons?.length > 0 && (
-                     <div className="mb-8 p-5 bg-blue-50/50 border border-blue-100 rounded-3xl">
-                       <h3 className="text-[13px] font-black text-blue-800 mb-4 flex items-center gap-1.5"><Globe size={16}/> بەستەرە گشتییەکان (لە لایەن ئەدمینەوە دانراوە)</h3>
+                     <div className="mb-8 p-5 bg-blue-50/50 border border-blue-100/50 rounded-3xl">
+                       <h3 className="text-[13px] font-black text-blue-800 mb-4 flex items-center gap-1.5"><Globe size={16}/> بەستەرە گشتییەکان</h3>
                        <div className="space-y-3 pointer-events-none opacity-90">
                           {settings.globalButtons.map((btn: any, idx: number) => {
                              const Icon = (icons as any)[btn.icon || 'Globe'] || Globe;
                              return (
-                               <div key={`global-${idx}`} className="flex items-center gap-3 p-3.5 bg-white border border-blue-200 rounded-2xl shadow-sm">
+                               <div key={`global-${idx}`} className="flex items-center gap-3 p-3.5 bg-white/80 border border-white rounded-2xl shadow-sm">
                                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                                      {btn.imageUrl ? <img src={btn.imageUrl} className="w-6 h-6 object-contain" /> : <Icon size={20} className="text-blue-500" />}
                                   </div>
                                   <div>
-                                     <h4 className="font-black text-sm text-neutral-800">{btn.title}</h4>
-                                     <p className="text-[10px] font-bold text-neutral-400 mt-0.5 max-w-[150px] truncate" dir="ltr">{btn.url}</p>
+                                     <h4 className="font-black text-sm text-slate-800">{btn.title}</h4>
+                                     <p className="text-[10px] font-bold text-slate-400 mt-0.5 max-w-[150px] truncate" dir="ltr">{btn.url}</p>
                                   </div>
                                   <span className="mr-auto px-2 py-1 bg-blue-100 text-blue-600 rounded-md text-[10px] font-black">گشتی</span>
                                </div>
@@ -350,29 +311,29 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                   <AnimatePresence>
                     {(showAddForm || editLink) && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-8 overflow-hidden">
-                        <div className="bg-neutral-50 p-5 sm:p-6 rounded-[1.5rem] border border-neutral-100 space-y-4 shadow-inner">
-                          <h3 className="font-black text-neutral-800 border-b border-neutral-200 pb-3 mb-4">{editLink ? 'دەستکاریکردنی بەستەر' : 'بەستەری نوێ'}</h3>
+                        <div className="bg-white/80 p-5 sm:p-6 rounded-[1.5rem] border border-white shadow-sm space-y-4">
+                          <h3 className="font-black text-slate-800 border-b border-slate-100 pb-3 mb-4">{editLink ? 'دەستکاریکردنی بەستەر' : 'بەستەری نوێ'}</h3>
                           
                           <div className="mb-4">
-                            <label className="text-xs font-bold text-neutral-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
-                            <select value={editLink ? editLink.platformId || 'facebook' : newLink.platformId || 'facebook'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer">
+                            <label className="text-xs font-bold text-slate-500 block mb-2">جۆری بەستەرەکە هەڵبژێرە</label>
+                            <select value={editLink ? editLink.platformId || 'facebook' : newLink.platformId || 'facebook'} onChange={(e) => handlePlatformChange(!!editLink, e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-500 font-bold text-sm shadow-sm cursor-pointer transition-colors">
                                 {DEFAULT_SOCIALS.map(social => (<option key={social.id} value={social.id}>{social.name}</option>))}
                             </select>
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 mb-4">
                             <div>
-                              <label className="text-xs font-bold text-neutral-500 block mb-2">ناوی بەستەر</label>
-                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-white border border-neutral-200 rounded-xl outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all" />
+                              <label className="text-xs font-bold text-slate-500 block mb-2">ناوی بەستەر</label>
+                              <input type="text" placeholder="بۆ نمونە: ئینستاگرامەکەم" value={editLink ? editLink.title : newLink.title} onChange={e => editLink ? setEditLink({...editLink, title: e.target.value}) : setNewLink({...newLink, title: e.target.value})} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-500 focus:bg-white font-bold text-sm transition-all" />
                             </div>
                             
                             <div>
-                              <label className="text-xs font-bold text-neutral-500 block mb-2">
+                              <label className="text-xs font-bold text-slate-500 block mb-2">
                                 {getUrlInputDetails(editLink || newLink).isCustom ? 'بەستەر (URL)' : 'یوزەرنەیم یان ژمارە مۆبایل'}
                               </label>
                               <div className="flex items-center" dir="ltr">
                                  {!getUrlInputDetails(editLink || newLink).isCustom && getUrlInputDetails(editLink || newLink).baseUrl && (
-                                    <span className="bg-neutral-100 px-3 py-3.5 border border-r-0 border-neutral-200 rounded-l-xl text-neutral-500 font-mono text-xs md:text-sm font-bold opacity-80 whitespace-nowrap overflow-hidden max-w-[120px] md:max-w-none text-ellipsis">
+                                    <span className="bg-slate-100 px-3 py-3.5 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 font-mono text-xs md:text-sm font-bold opacity-80 whitespace-nowrap overflow-hidden max-w-[120px] md:max-w-none text-ellipsis">
                                        {getUrlInputDetails(editLink || newLink).baseUrl}
                                     </span>
                                  )}
@@ -381,7 +342,7 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                                     placeholder={getUrlInputDetails(editLink || newLink).isCustom ? "https://..." : "بینووسە لێرە..."} 
                                     value={getUrlInputDetails(editLink || newLink).userTypedValue} 
                                     onChange={(e) => handleUrlInputChange(!!editLink, e)} 
-                                    className={`w-full p-3.5 bg-white border border-neutral-200 outline-none focus:border-orange-500 focus:shadow-sm font-bold text-sm transition-all text-left ${!getUrlInputDetails(editLink || newLink).isCustom && getUrlInputDetails(editLink || newLink).baseUrl ? 'rounded-r-xl' : 'rounded-xl'}`} 
+                                    className={`w-full p-3.5 bg-slate-50 border border-slate-200 outline-none focus:border-orange-500 focus:bg-white font-bold text-sm transition-all text-left ${!getUrlInputDetails(editLink || newLink).isCustom && getUrlInputDetails(editLink || newLink).baseUrl ? 'rounded-r-xl' : 'rounded-xl'}`} 
                                  />
                               </div>
                             </div>
@@ -389,32 +350,32 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="text-xs font-bold text-neutral-500 block mb-2">ئایکۆن یان لۆگۆ</label>
+                              <label className="text-xs font-bold text-slate-500 block mb-2">ئایکۆن یان لۆگۆ</label>
                               <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 bg-white border border-neutral-200 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-sm shrink-0" style={{ backgroundColor: (editLink ? editLink.color : newLink.color) + '15' }}>
-                                  {isUploadingIcon ? <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : (editLink?.imageUrl || newLink.imageUrl) ? <img src={editLink ? editLink.imageUrl : newLink.imageUrl} className="w-10 h-10 object-contain" /> : <ImageIcon size={24} className="text-neutral-400" />}
-                                  <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                                <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-sm shrink-0" style={{ backgroundColor: (editLink ? editLink.color : newLink.color) + '15' }}>
+                                  {isUploadingIcon ? <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> : (editLink?.imageUrl || newLink.imageUrl) ? <img src={editLink ? editLink.imageUrl : newLink.imageUrl} className="w-10 h-10 object-contain" /> : <ImageIcon size={24} className="text-slate-300" />}
+                                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity backdrop-blur-sm">
                                     <input type="file" accept="image/*" className="hidden" ref={iconInputRef} onChange={(e) => handleImageUpload(e, 'icon')} />
                                     <ImageIcon size={18} className="text-white"/>
                                   </label>
                                 </div>
-                                <button onClick={() => iconInputRef.current?.click()} className="px-4 py-2.5 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold text-xs hover:bg-neutral-50 hover:text-orange-500 transition-colors shadow-sm">
+                                <button onClick={() => iconInputRef.current?.click()} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 hover:text-orange-500 transition-colors shadow-sm">
                                   وێنەیەک هەڵبژێرە
                                 </button>
                               </div>
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-neutral-500 block mb-2">ڕەنگی دوگمە</label>
-                                <div className="flex items-center gap-3 p-2 bg-white border border-neutral-200 rounded-xl">
+                                <label className="text-xs font-bold text-slate-500 block mb-2">ڕەنگی دوگمە</label>
+                                <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
                                   <input type="color" value={editLink ? editLink.color || '#333333' : newLink.color} onChange={e => editLink ? setEditLink({...editLink, color: e.target.value}) : setNewLink({...newLink, color: e.target.value})} className="w-12 h-12 rounded-lg cursor-pointer border-0 p-0" />
-                                  <span className="text-xs font-mono font-bold text-neutral-400" dir="ltr">{editLink ? editLink.color || '#333333' : newLink.color}</span>
+                                  <span className="text-xs font-mono font-bold text-slate-400" dir="ltr">{editLink ? editLink.color || '#333333' : newLink.color}</span>
                                 </div>
                             </div>
                           </div>
 
-                          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 mt-2">
-                            <button onClick={() => { setShowAddForm(false); setEditLink(null); }} className="px-5 py-3 text-neutral-500 font-bold hover:bg-neutral-200 rounded-xl text-sm transition-colors">پاشگەزبوونەوە</button>
-                            <button disabled={saving} onClick={editLink ? handleEditLink : handleAddLink} className="px-8 py-3 bg-neutral-900 hover:bg-black text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-70">
+                          <div className="flex justify-end gap-3 pt-6 mt-2">
+                            <button onClick={() => { setShowAddForm(false); setEditLink(null); }} className="px-5 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl text-sm transition-colors">پاشگەزبوونەوە</button>
+                            <button disabled={saving} onClick={editLink ? handleEditLink : handleAddLink} className="px-8 py-3 bg-gradient-to-br from-orange-400 to-orange-500 hover:to-orange-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-70">
                               {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Save size={18} /> پاشەکەوتکردن</>}
                             </button>
                           </div>
@@ -425,9 +386,9 @@ export default function Dashboard({ user, onLogout, settings, theme }: Props) {
 
                   <div className="space-y-4">
                     {!profile?.links?.length ? (
-                      <div className="text-center py-12 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><LinkIcon size={32} className="text-neutral-300" /></div>
-                        <p className="text-neutral-500 font-bold text-sm">هیچ بەستەرێکت نییە. یەکەم بەستەرت زیاد بکە!</p>
+                      <div className="text-center py-16 bg-white/40 rounded-3xl border border-dashed border-slate-200">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><LinkIcon size={32} className="text-slate-300" /></div>
+                        <p className="text-slate-400 font-bold text-sm">هیچ بەستەرێکت نییە. یەکەم بەستەرت زیاد بکە!</p>
                       </div>
                     ) : (
                       <DraggableLinkList links={profile.links} setLinks={saveLinksOrder} onEdit={(l: any) => { setEditLink(l); setShowAddForm(true); }} onDelete={handleDeleteLink} />

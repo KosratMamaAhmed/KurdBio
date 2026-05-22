@@ -28,47 +28,33 @@ export async function onRequest(context: any) {
     const { payload } = jwt.decode(token);
     if (payload.id !== "admin" && payload.role !== "admin") return json({ error: "ڕێگەپێنەدراوە بۆ ئەم بەشە" }, 403);
 
-    if (method === "GET" && path === "/api/admin/stats") {
-        return json({ totalVisits: 0, totalClicks: 0, dailyActiveUsers: 0, monthlyActiveUsers: 0 });
-    }
-
-    // 🌟 هێنانی بەکارهێنەران زۆر بە خێرایی بە Promise.all 🌟
+    // Fetching users efficiently by only looking at the master list to save KV reads
     if (method === "GET" && path === "/api/admin/users") {
         const allUsersStr = await env.KV.get("all_users_list");
-        const fastKeys = allUsersStr ? JSON.parse(allUsersStr).map((id: any) => `user_id:${id}`) : [];
-        const list = await env.KV.list({prefix: "user_id:"});
-        const kvKeys = list.keys.map((k: any) => k.name);
-        const allKeys = Array.from(new Set([...kvKeys, ...fastKeys]));
+        let userIds = [];
+        if (allUsersStr) {
+            userIds = JSON.parse(allUsersStr);
+        } else {
+            const list = await env.KV.list({prefix: "user_id:"});
+            userIds = list.keys.map((k: any) => k.name.replace('user_id:', ''));
+        }
 
-        let statsMap: any = {};
-        try {
-            if (env.DB) {
-                const { results } = await env.DB.prepare("SELECT * FROM stats").all();
-                if(results) results.forEach((s: any) => { statsMap[String(s.user_id)] = s; });
-            }
-        } catch(e) {}
+        // Limit the parallel reads to avoid subrequest limits (Batched promises)
+        const users = [];
+        const chunkSize = 20;
+        
+        for (let i = 0; i < userIds.length; i += chunkSize) {
+            const chunk = userIds.slice(i, i + chunkSize);
+            const chunkPromises = chunk.map(async (id: string) => {
+                const uStr = await env.KV.get(`user_id:${id}`);
+                if (!uStr) return null;
+                const { password, links, ...safeUser } = JSON.parse(uStr); 
+                return safeUser;
+            });
+            const results = await Promise.all(chunkPromises);
+            users.push(...results.filter(u => u !== null));
+        }
 
-        // 🚀 لێرەدا هەموو یوزەرەکان لە یەک کاتدا دەهێنێت نەک یەک بە یەک 🚀
-        const userPromises = allKeys.map(async (key: any) => {
-            const uStr = await env.KV.get(key);
-            if (!uStr) return null;
-            const { password, ...safeUser } = JSON.parse(uStr); 
-            
-            const userIdStr = String(key.replace('user_id:', ''));
-            
-            let kvVisits = 0, kvClicks = 0;
-            try {
-                const kvSt = await env.KV.get(`stats_fallback:${userIdStr}`, "json");
-                if (kvSt) { kvVisits = (kvSt as any).visits || 0; kvClicks = (kvSt as any).clicks || 0; }
-            } catch(e) {}
-
-            safeUser.visits = (statsMap[userIdStr]?.visits || 0) + kvVisits;
-            safeUser.clicks = (statsMap[userIdStr]?.clicks || 0) + kvClicks;
-            
-            return safeUser;
-        });
-
-        const users = (await Promise.all(userPromises)).filter(u => u !== null);
         return json(users);
     }
 
@@ -138,13 +124,8 @@ export async function onRequest(context: any) {
                  env.KV.delete(`user:${user.username}`),
                  env.KV.delete(`user_id:${idToDelete}`),
                  env.KV.delete(`slug:${user.slug || user.username}`),
-                 env.KV.delete(`email:${user.email}`),
-                 env.KV.delete(`stats_fallback:${idToDelete}`)
+                 env.KV.delete(`email:${user.email}`)
              ]);
-             
-             try { 
-                 if (env.DB) await env.DB.prepare("DELETE FROM stats WHERE user_id = ?").bind(idToDelete).run(); 
-             } catch(e) {}
 
              const allUsersStr = await env.KV.get("all_users_list");
              if (allUsersStr) {

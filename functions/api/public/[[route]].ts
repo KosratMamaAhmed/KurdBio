@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 
-// 🌟 چارەسەری کراشبوونی سێرڤەر 🌟
 const escapeHTML = (str: any) => {
   if (!str || typeof str !== 'string') return '';
   return str.replace(/[&<>'"]/g, (tag: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
@@ -26,31 +25,6 @@ const DEFAULT_SETTINGS = {
     { id: 'telegram', name: 'تێلیگرام', iconName: 'Send', imageUrl: '/social/telegram.png', baseUrl: 'https://t.me/', color: '#26A5E4' }
   ]
 };
-
-async function saveStat(env: any, userId: string, type: 'visit' | 'click') {
-  let savedToD1 = false;
-  try {
-      if (env.DB) {
-          await env.DB.prepare(`CREATE TABLE IF NOT EXISTS stats (user_id TEXT PRIMARY KEY, visits INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0)`).run();
-          if (type === 'visit') {
-              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 1, 0) ON CONFLICT(user_id) DO UPDATE SET visits = visits + 1`).bind(userId).run();
-          } else {
-              await env.DB.prepare(`INSERT INTO stats (user_id, visits, clicks) VALUES (?, 0, 1) ON CONFLICT(user_id) DO UPDATE SET clicks = clicks + 1`).bind(userId).run();
-          }
-          savedToD1 = true;
-      }
-  } catch (e) { console.error("D1 Failed", e); }
-
-  if (!savedToD1) {
-      try {
-          let kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json");
-          if (!kvStats) kvStats = { visits: 0, clicks: 0 };
-          if (type === 'visit') kvStats.visits += 1;
-          else kvStats.clicks += 1;
-          await env.KV.put(`stats_fallback:${userId}`, JSON.stringify(kvStats));
-      } catch (e) {}
-  }
-}
 
 export async function onRequest(context: any) {
   const { request, env, waitUntil } = context;
@@ -81,32 +55,6 @@ export async function onRequest(context: any) {
        const res = json(data, 200, { "Cache-Control": "public, max-age=300, s-maxage=300" });
        waitUntil(cache.put(cacheKey, res.clone()));
        return res;
-    }
-
-    if (method === "POST" && (path.startsWith("/api/public/v/") || path.startsWith("/api/public/visit/"))) {
-       const slug = escapeHTML(path.split("/").pop() || "");
-       if (slug) {
-           let targetUserId = await env.KV.get(`slug:${slug}`);
-           if (!targetUserId) {
-               const userStr = await env.KV.get(`user:${slug}`);
-               if (userStr) targetUserId = JSON.parse(userStr).id;
-           }
-           if (targetUserId) await saveStat(env, targetUserId.toString(), 'visit');
-       }
-       return json({ success: true });
-    }
-
-    if (method === "POST" && (path.startsWith("/api/public/c/") || path.startsWith("/api/public/click/"))) {
-       const slug = escapeHTML(path.split("/").pop() || "");
-       if (slug) {
-           let targetUserId = await env.KV.get(`slug:${slug}`);
-           if (!targetUserId) {
-               const userStr = await env.KV.get(`user:${slug}`);
-               if (userStr) targetUserId = JSON.parse(userStr).id;
-           }
-           if (targetUserId) await saveStat(env, targetUserId.toString(), 'click');
-       }
-       return json({ success: true });
     }
 
     if (method === "POST" && (path === "/api/auth/login" || path === "/api/login")) {
@@ -147,7 +95,6 @@ export async function onRequest(context: any) {
        if (isFreeMode) user.isPro = true;
        if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
        if (!user.bgImage) user.bgImage = getDefaultBg();
-       // 🌟 چارەسەری کێشەی undefined بۆ هەژمارە کۆنەکان 🌟
        if (!user.slug) user.slug = user.username;
 
        return json({ success: true, token, user });
@@ -178,14 +125,7 @@ export async function onRequest(context: any) {
         const userId = Date.now().toString();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const defaultBackgrounds = [
-          'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80',
-          'https://images.unsplash.com/photo-1511497584788-876760111969?w=1200&q=80',
-          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80',
-          'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80',
-          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1200&q=80'
-        ];
-        const randomBg = defaultBackgrounds[Math.floor(Math.random() * defaultBackgrounds.length)];
+        const randomBg = 'https://images.unsplash.com/photo-1506744626753-1fa44df31c25?w=1200&q=80';
 
         const newUser = {
           id: userId, username: normalizedUsername, displayName: escapeHTML(name), 
@@ -209,6 +149,7 @@ export async function onRequest(context: any) {
 
         await Promise.all(putPromises);
 
+        // Update central user list efficiently
         const allUsersStr = await env.KV.get("all_users_list");
         const allUsersList = allUsersStr ? JSON.parse(allUsersStr) : [];
         allUsersList.push(userId);
@@ -235,12 +176,13 @@ export async function onRequest(context: any) {
          links: user.links || [], theme: user.theme, 
          bgImage: user.bgImage || getDefaultBg(), 
          isPro: isFreeMode ? true : user.isPro, 
-         slug: user.slug || user.username, // 🌟 چارەسەری کێشەی undefined 🌟
+         slug: user.slug || user.username,
          nameColor: user.nameColor, bioColor: user.bioColor, btnTextColor: user.btnTextColor  
        };
        return json(profileData, 200, { "Cache-Control": "public, max-age=60, s-maxage=60" });
     }
 
+    // --- PROTECTED ROUTES ---
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) return json({ error: "ڕێگەپێنەدراوە" }, 401);
     const token = authHeader.split(" ")[1];
@@ -257,21 +199,14 @@ export async function onRequest(context: any) {
        let user;
        try { user = JSON.parse(userStr); } catch(e) { return json({error: "کێشە هەیە"}, 500); }
        
-       let totalVisits = 0; let totalClicks = 0;
-       try { if(env.DB) { const stat: any = await env.DB.prepare("SELECT visits, clicks FROM stats WHERE user_id = ?").bind(userId.toString()).first(); if(stat) { totalVisits += stat.visits; totalClicks += stat.clicks; } } } catch(e) {}
-       try { const kvStats: any = await env.KV.get(`stats_fallback:${userId}`, "json"); if(kvStats) { totalVisits += (kvStats.visits || 0); totalClicks += (kvStats.clicks || 0); } } catch(e) {}
-
-       user.visits = totalVisits; user.clicks = totalClicks;
-       
        user.isPro = isFreeMode ? true : user.isPro;
        if (!user.avatarUrl) user.avatarUrl = getDefaultAvatar(user.displayName || user.username);
        if (!user.bgImage) user.bgImage = getDefaultBg();
-       if (!user.slug) user.slug = user.username; // 🌟 چارەسەری undefined 🌟
+       if (!user.slug) user.slug = user.username;
 
        return json(user);
     }
 
-    // 🌟 چارەسەری هەڵەی سێرڤەر 500 لە کاتی سەیڤکردن 🌟
     if (method === "PUT" && path === "/api/profile") {
        const updates = await request.json().catch(() => ({}));
        const userStr = await env.KV.get(`user_id:${userId}`);

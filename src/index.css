@@ -3,9 +3,17 @@
 
 /* فۆنتی سەمیم (Samim) بەستراوەتەوە بە CDN */
 @font-face {
-  font-family: 'Samim';
-  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/samim-font@v3.1.0/dist/Samim.woff2') format('woff2');
-  font-display: swap;
+  font-family: 'NRT';
+  /* لەبەر ئەوەی فایلی فۆنتەکە لەناو فۆڵدەری public دایە، ڕاستەوخۆ بەم شێوەیە بانگ دەکرێت */
+  src: url('/font/nrt.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* یارمەتی خێرایی لۆدبوون دەدات پێش ئەوەی فۆنتەکە بەتەواوی دابەزێت */
+}
+
+/* جێگیرکردنی فۆنتەکە بۆ هەموو ئەپەکە بە شێوەی زۆرەملێ */
+html, body, * {
+  font-family: 'NRT', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 /* ١٠ فۆنتە لۆکاڵییەکەی خۆت لەناو فۆڵدەری public/font/ */
